@@ -20,6 +20,14 @@ This repository is a plugin that ships three Agent Skills for Claude Code and Co
 
 Never use em dashes or en dashes in any text. Use commas, colons or parentheses. Write simple, plain English.
 
+## Checks
+
+Run these from the repository root. All need `jq`; only `test-check.sh` also needs `git`, and `smoke-install.sh` needs the `claude` and `codex` CLIs.
+
+- `sh scripts/check.sh [repo-root]`: static checks on manifests, links, old names, skills and README. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
+- `sh scripts/test-check.sh`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
+- `sh scripts/smoke-install.sh [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the three skills arrived. `--keep` leaves the folders and prints their paths.
+
 ## Install warning
 
 Do not install this plugin alongside `playbook@pragmatic-engineer`. Both prefix their skills with `playbook:`, so the names clash.
