@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "playbook",
+  "version": "0.1.0",
+  "description": "Planner, implementer and researcher skills for Codex and Claude Code.",
+  "author": {
+    "name": "Igor Santos"
+  },
+  "license": "Apache-2.0",
+  "repository": "https://github.com/amplifiedengineer/skills",
+  "homepage": "https://github.com/amplifiedengineer/skills",
+  "skills": "./skills/"
+}
