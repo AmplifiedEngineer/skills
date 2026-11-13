@@ -31,4 +31,4 @@ This skill provides architectural reasoning and artefacts. It does not implement
 
 ## Licence
 
-No licence terms were supplied with this package, so no `LICENSE` file is included.
+Apache-2.0. See the `LICENSE` file at the repository root.
