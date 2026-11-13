@@ -1,9 +1,10 @@
 # Discovery State
 
-## Status
+Status: Draft
+
+## Metadata
 - Updated:
 - Owner:
-- State: Draft | In review | Accepted | Superseded
 
 ## Problem
 <!-- Concise statement of the problem and desired outcome. -->

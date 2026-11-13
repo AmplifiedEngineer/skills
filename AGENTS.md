@@ -16,6 +16,8 @@ This repository is a plugin that ships three Agent Skills for Claude Code and Co
 - `skills/implementer`: user-facing. Scoped code changes and verification.
 - `skills/researcher`: not called by users. The planner and implementer call it to fetch project information.
 
+The document storage contract is [skills/planner/references/document-storage.md](skills/planner/references/document-storage.md).
+
 ## Writing rule
 
 Never use em dashes or en dashes in any text. Use commas, colons or parentheses. Write simple, plain English.

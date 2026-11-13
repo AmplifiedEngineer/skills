@@ -1,5 +1,7 @@
 # Architecture Drift Report
 
+Status: draft
+
 ## Scope and sources
 - System:
 - Documents and decisions:

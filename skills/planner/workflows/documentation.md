@@ -4,6 +4,7 @@
 Maintain useful, accurate and non-duplicated engineering documentation.
 
 ## Required references
+- `../references/document-storage.md`
 - `../references/document-lifecycle.md`
 - `../references/evidence.md`
 
@@ -14,9 +15,10 @@ Maintain useful, accurate and non-duplicated engineering documentation.
 4. Identify missing information and contradictions.
 5. Decide the appropriate lifecycle action.
 6. Identify ownership and dependencies.
-7. Generate or update only justified artefacts.
-8. Cross-reference related requirements and decisions.
-9. Validate consistency and completeness.
+7. Before writing, pick the document type, the target path and the status, using the storage contract.
+8. Generate or update only justified artefacts.
+9. Cross-reference related requirements and decisions.
+10. Validate consistency and completeness.
 
 ## Lifecycle actions
 - GENERATE
@@ -30,4 +32,4 @@ Maintain useful, accurate and non-duplicated engineering documentation.
 A documentation change plan or the requested documents.
 
 Never create documents merely to populate a template catalogue.
-Preserve existing project conventions.
+Preserve existing project conventions for content and style. They do not decide where a document is saved or what status it carries: the storage contract does that.

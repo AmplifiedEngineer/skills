@@ -1,6 +1,7 @@
 # ADR-NNN: <Decision title>
 
-- Status: Proposed | Accepted | Rejected | Superseded
+Status: Proposed
+
 - Date: YYYY-MM-DD
 - Decision owners:
 - Supersedes:

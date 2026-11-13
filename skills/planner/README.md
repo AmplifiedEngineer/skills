@@ -7,7 +7,7 @@ A platform-neutral Agent Skill for engineering discovery, architecture reconstru
 - `SKILL.md` is the short entry point and workflow router.
 - `agents/openai.yaml` contains optional Codex presentation metadata.
 - `workflows/` contains eight independently loadable procedures.
-- `references/` contains seven supporting knowledge modules.
+- `references/` contains eight supporting knowledge modules.
 - `templates/` contains seven reusable engineering deliverable structures.
 - `examples/architecture-finding.md` demonstrates a finding format.
 
