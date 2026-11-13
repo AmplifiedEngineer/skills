@@ -1,9 +1,9 @@
 ---
-name: engineering-context
+name: researcher
 description: Retrieve, organise and synchronize relevant engineering context across configured repositories, issue trackers and documentation systems. Use when gathering or updating project information across engineering tools.
 ---
 
-# Engineering Context
+# Researcher
 
 Gather the project information needed for engineering work. Preserve source links, status and freshness. Prepare concise context briefs or explicitly requested synchronization plans.
 

@@ -1,9 +1,9 @@
 ---
-name: engineering-implementation
+name: implementer
 description: Plan and implement software changes in a repository, including focused verification, architecture compliance and implementation handover. Use when changing application code or project configuration.
 ---
 
-# Engineering Implementation
+# Implementer
 
 Implement agreed engineering work in the relevant repository. Keep changes within scope, follow established conventions and report what changed and how it was verified.
 
