@@ -26,6 +26,8 @@ skills/implementer/workflows/implementation-execution.md"
 EXECUTION_WORKFLOW="skills/implementer/workflows/implementation-execution.md"
 STOP_RULE_PHRASE="stop and return the question to the planner"
 STATUS_GATE_PHRASE="run only documents whose Status is approved"
+RESEARCHER_SKILL="skills/researcher/SKILL.md"
+INTERNAL_LINE="user-invocable: false"
 # One row per template: file name, then the exact Status line it must carry.
 TEMPLATE_STATUS_TABLE="implementation-plan.md|Status: draft
 adr.md|Status: Proposed
@@ -51,6 +53,7 @@ REASON_UNEXPECTED_STATUS="unexpected Status line"
 REASON_MISSING_STORAGE_LINK="missing link to references/document-storage.md"
 REASON_MISSING_STOP_RULE="missing stop rule"
 REASON_MISSING_STATUS_GATE="missing status gate"
+REASON_NOT_INTERNAL="user-invocable: false missing"
 
 fail() { echo "FAIL check=$1 file=$2: $3"; }
 
@@ -172,6 +175,23 @@ check_skills() {
   done
 }
 
+# Prints the frontmatter lines: between the first two --- lines.
+skill_frontmatter() {
+  awk 'NR == 1 && $0 != "---" { exit }
+       NR > 1 && $0 == "---" { exit }
+       NR > 1 { print }' "$1"
+}
+
+check_researcher_internal() {
+  f="$RESEARCHER_SKILL"
+  if [ ! -f "$f" ]; then
+    fail 6 "$f" "$REASON_MISSING_FILE"
+    return 0
+  fi
+  skill_frontmatter "$f" | grep -Fqx -- "$INTERNAL_LINE" ||
+    fail 6 "$f" "$REASON_NOT_INTERNAL"
+}
+
 check_readme() {
   if [ ! -f "$README" ]; then
     fail 7 "$README" "$REASON_MISSING_FILE"
@@ -251,6 +271,7 @@ run_checks() {
   check_links
   check_old_names
   check_skills
+  check_researcher_internal
   check_readme
   check_storage_copies
   check_template_statuses

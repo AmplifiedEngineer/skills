@@ -1,9 +1,12 @@
 ---
 name: researcher
-description: Retrieve, organise and synchronize relevant project context across configured repositories, issue trackers and documentation systems. Use when gathering or updating project information across engineering tools.
+description: "Internal: called by planner and implementer. Retrieve, organise and synchronize relevant project context across configured repositories, issue trackers and documentation systems. Use when gathering or updating project information across engineering tools."
+user-invocable: false
 ---
 
 # Researcher
+
+Planner and implementer call this skill when they need information. Users do not call it directly.
 
 Gather the project information needed for engineering work. Preserve source links, status and freshness. Prepare concise context briefs or explicitly requested synchronization plans.
 
@@ -16,6 +19,9 @@ Gather the project information needed for engineering work. Preserve source link
 6. Read by default; make external changes only when explicitly requested and within scope.
 7. Report access gaps, stale data and conflicts clearly.
 
+## Tool discovery
+At the start of every run, list the tools and MCP servers you can use. Then use the hints file to rank sources. It is never proof of access. See [references/hints-file.md](references/hints-file.md).
+
 ## Workflows
 | Mode | Guide |
 |---|---|
@@ -27,6 +33,7 @@ Gather the project information needed for engineering work. Preserve source link
 Identify the task and project; discover available tools; select authoritative sources; retrieve only relevant records; preserve direct links and dates; reconcile conflicts; prepare the requested brief or change plan.
 
 ## Supporting files
+- references/hints-file.md
 - references/provider-neutrality.md
 - references/evidence-and-authority.md
 - references/integration-safety.md
