@@ -1,5 +1,6 @@
 #!/bin/sh
-# Static checks for the plugin tree: manifests, links, old names, skills, README.
+# Static checks for the plugin tree: manifests, links, old names, skills, README,
+# the shared storage contract, template Status lines and the execution stop rules.
 # Usage: sh scripts/check.sh [repo-root]. Prints one FAIL line per problem, exit 1 if any.
 # Requires jq.
 
@@ -15,6 +16,24 @@ SKILL_FILE="SKILL.md"
 OLD_NAME_PATTERN='engineering[ -](architect|implementation|context)'
 LINK_PREFIXES="../ references/ workflows/ templates/ examples/ agents/"
 SKIP_PREFIXES="docs/ .playbook/ #"
+STORAGE_PLANNER="skills/planner/references/document-storage.md"
+STORAGE_IMPLEMENTER="skills/implementer/references/document-storage.md"
+TEMPLATES_DIR="skills/planner/templates"
+STORAGE_LINK="references/document-storage.md"
+STORAGE_LINK_FILES="skills/planner/workflows/documentation.md
+skills/planner/workflows/implementation-handover.md
+skills/implementer/workflows/implementation-execution.md"
+EXECUTION_WORKFLOW="skills/implementer/workflows/implementation-execution.md"
+STOP_RULE_PHRASE="stop and return the question to the planner"
+STATUS_GATE_PHRASE="run only documents whose Status is approved"
+# One row per template: file name, then the exact Status line it must carry.
+TEMPLATE_STATUS_TABLE="implementation-plan.md|Status: draft
+adr.md|Status: Proposed
+architecture-assessment.md|Status: draft
+architecture-findings.md|Status: draft
+drift-report.md|Status: draft
+impact-report.md|Status: draft
+discovery-state.md|Status: Draft"
 
 REASON_INVALID_JSON="invalid JSON"
 REASON_MISSING_FILE="missing file"
@@ -27,6 +46,11 @@ REASON_UNEXPECTED_FOLDER="unexpected skill folder"
 REASON_README_MISSING="README missing"
 REASON_NO_FILES="no files match"
 REASON_MISSING_NAME="missing name"
+REASON_DIFFERS="differs from"
+REASON_UNEXPECTED_STATUS="unexpected Status line"
+REASON_MISSING_STORAGE_LINK="missing link to references/document-storage.md"
+REASON_MISSING_STOP_RULE="missing stop rule"
+REASON_MISSING_STATUS_GATE="missing status gate"
 
 fail() { echo "FAIL check=$1 file=$2: $3"; }
 
@@ -164,6 +188,63 @@ check_readme() {
   done
 }
 
+check_storage_copies() {
+  ok=1
+  for f in "$STORAGE_PLANNER" "$STORAGE_IMPLEMENTER"; do
+    [ -f "$f" ] || { fail 8 "$f" "$REASON_MISSING_FILE"; ok=0; }
+  done
+  [ "$ok" = 1 ] || return 0
+  cmp -s "$STORAGE_PLANNER" "$STORAGE_IMPLEMENTER" ||
+    fail 8 "$STORAGE_IMPLEMENTER" "$REASON_DIFFERS $STORAGE_PLANNER"
+}
+
+# Prints the first non-blank line after the H1.
+line_after_title() {
+  awk '!h && /^# / { h = 1; next }
+       h && NF { print; exit }' "$1"
+}
+
+template_status_ok() {
+  [ "$(grep -c '^Status: ' "$1")" = 1 ] &&
+    [ "$(line_after_title "$1")" = "$2" ]
+}
+
+check_template_statuses() {
+  printf '%s\n' "$TEMPLATE_STATUS_TABLE" | while IFS='|' read -r name expected; do
+    f="$TEMPLATES_DIR/$name"
+    if [ ! -f "$f" ]; then
+      fail 9 "$f" "$REASON_MISSING_FILE"
+    else
+      template_status_ok "$f" "$expected" || fail 9 "$f" "$REASON_UNEXPECTED_STATUS"
+    fi
+  done
+  for f in "$TEMPLATES_DIR"/*; do
+    [ -f "$f" ] || continue
+    printf '%s\n' "$TEMPLATE_STATUS_TABLE" | grep -q "^${f##*/}|" ||
+      fail 9 "$f" "$REASON_UNEXPECTED_STATUS"
+  done
+}
+
+check_storage_links() {
+  printf '%s\n' "$STORAGE_LINK_FILES" | while IFS= read -r f; do
+    if [ ! -f "$f" ]; then
+      fail 9 "$f" "$REASON_MISSING_FILE"
+    else
+      grep -Fq -- "$STORAGE_LINK" "$f" || fail 9 "$f" "$REASON_MISSING_STORAGE_LINK"
+    fi
+  done
+}
+
+check_execution_phrases() {
+  f="$EXECUTION_WORKFLOW"
+  if [ ! -f "$f" ]; then
+    fail 10 "$f" "$REASON_MISSING_FILE"
+    return 0
+  fi
+  grep -Fq -- "$STOP_RULE_PHRASE" "$f" || fail 10 "$f" "$REASON_MISSING_STOP_RULE"
+  grep -Fq -- "$STATUS_GATE_PHRASE" "$f" || fail 10 "$f" "$REASON_MISSING_STATUS_GATE"
+}
+
 run_checks() {
   check_json_parses
   check_manifests
@@ -171,6 +252,10 @@ run_checks() {
   check_old_names
   check_skills
   check_readme
+  check_storage_copies
+  check_template_statuses
+  check_storage_links
+  check_execution_phrases
 }
 
 root=${1:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}
