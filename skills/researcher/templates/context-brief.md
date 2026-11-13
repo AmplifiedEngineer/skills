@@ -1,4 +1,4 @@
-# Engineering Context Brief
+# Researcher Brief
 
 ## Task
 - Request:

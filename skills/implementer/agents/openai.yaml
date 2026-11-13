@@ -1,7 +1,7 @@
 interface:
-  display_name: "Engineering Implementation"
+  display_name: "Implementer"
   short_description: "Implement and verify scoped software changes"
-  default_prompt: "Use $engineering-implementation to implement this change and report the verification performed."
+  default_prompt: "Use $implementer to implement this change and report the verification performed."
 
 policy:
   allow_implicit_invocation: true

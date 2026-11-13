@@ -1,10 +1,10 @@
 # Engineering Skills V2
 
-A three-skill suite for architecture, implementation and engineering context. Skills can be installed independently.
+A three-skill suite for architecture, implementation and project context. Skills can be installed independently.
 
-- Engineering Architect: requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
-- Engineering Implementation: scoped code changes, focused verification, architecture compliance and implementation reporting.
-- Engineering Context: project information retrieval and explicitly requested synchronization across configured repositories and engineering systems.
+- Planner: requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
+- Implementer: scoped code changes, focused verification, architecture compliance and implementation reporting.
+- Researcher: project information retrieval and explicitly requested synchronization across configured repositories and engineering systems.
 
 Architect owns architectural decisions, Implementation owns code changes, and Context owns provider-neutral information acquisition and external-system synchronization.
 

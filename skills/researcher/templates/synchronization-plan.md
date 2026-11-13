@@ -1,4 +1,4 @@
-# Engineering Context Synchronization Plan
+# Researcher Synchronization Plan
 
 ## Request
 - Source:

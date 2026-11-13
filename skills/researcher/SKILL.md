@@ -1,6 +1,6 @@
 ---
 name: researcher
-description: Retrieve, organise and synchronize relevant engineering context across configured repositories, issue trackers and documentation systems. Use when gathering or updating project information across engineering tools.
+description: Retrieve, organise and synchronize relevant project context across configured repositories, issue trackers and documentation systems. Use when gathering or updating project information across engineering tools.
 ---
 
 # Researcher
@@ -35,4 +35,4 @@ Identify the task and project; discover available tools; select authoritative so
 - examples/project-context.example.yaml
 
 ## Boundaries
-Engineering Architect owns architectural reasoning and decisions. Engineering Implementation owns code changes. Engineering Context owns provider-neutral retrieval and explicitly requested synchronization across engineering systems.
+Planner owns architectural reasoning and decisions. Implementer owns code changes. Researcher owns provider-neutral retrieval and explicitly requested synchronization across engineering systems.

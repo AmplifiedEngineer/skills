@@ -1,7 +1,7 @@
 interface:
-  display_name: "Engineering Architect"
+  display_name: "Planner"
   short_description: "Architecture discovery, analysis and solution design"
-  default_prompt: "Analyse the engineering task, inspect the relevant repository context, and recommend an evidence-based architectural approach."
+  default_prompt: "Use $planner to analyse the engineering task, inspect the relevant repository context, and recommend an evidence-based architectural approach."
 
 policy:
   allow_implicit_invocation: true

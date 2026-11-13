@@ -37,6 +37,6 @@ Confirm objective, scope and acceptance criteria; inspect project guidance and i
 - templates/implementation-report.md
 
 ## Boundaries
-Engineering Architect owns architectural reasoning and unresolved design decisions. Engineering Context owns information retrieval and synchronization across external systems. Engineering Implementation owns code changes within the agreed scope.
+Planner owns architectural reasoning and unresolved design decisions. Researcher owns information retrieval and synchronization across external systems. Implementer owns code changes within the agreed scope.
 
 Do not claim a check passed unless it was run and its result observed.
