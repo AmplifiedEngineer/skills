@@ -1,0 +1,24 @@
+project:
+  name: "example-service"
+  repository: "https://example.invalid/org/example-service"
+  default_branch: "main"
+
+sources:
+  requirements:
+    - "Configured issue tracker or approved requirements document"
+  architecture:
+    - "Repository ADR directory or approved design documentation"
+  implementation:
+    - "Repository source and tests"
+
+integrations:
+  issue_tracker:
+    provider: "discover from configured tools"
+    project_key: "EXAMPLE"
+  documentation:
+    provider: "discover from configured tools"
+    collection: "Example"
+
+notes:
+  - "Illustrative only; does not configure credentials or grant service access."
+  - "Replace example values with project-specific sources."

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Engineering Context"
+  short_description: "Gather and synchronize engineering project context"
+  default_prompt: "Use $engineering-context to gather the project context relevant to this engineering task."
+
+policy:
+  allow_implicit_invocation: true
