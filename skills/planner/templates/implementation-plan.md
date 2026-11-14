@@ -1,5 +1,7 @@
 # Implementation Plan
 
+Status: draft
+
 ## Objective and scope
 - Objective:
 - In scope:

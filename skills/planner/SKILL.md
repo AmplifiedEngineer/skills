@@ -61,6 +61,21 @@ Multiple modes may be combined when necessary.
 
 Read only the supporting material relevant to the current task.
 
+## Documents
+
+Every document any planner workflow saves follows the storage contract in `references/document-storage.md`. That covers discovery, reconstruction, solution design, architecture review, impact analysis and drift analysis, as well as documentation management and handover.
+
+- The planner picks the document types each task needs.
+- Save each document in the type folder from the contract table, with the status line from its template.
+- Only the user's confirmation moves a document to `approved`.
+- Location: the user's instruction wins. Otherwise use the contract default, `docs/playbook/<type>/`.
+
+## Calling the researcher
+
+Use the researcher skill: `playbook:researcher` in Claude Code when installed as a plugin, `researcher` when copied in by hand, `$researcher` in Codex.
+
+If no researcher skill is available, do the retrieval yourself under the same rules: list the available tools first, cite sources with links and dates, and separate facts from inference. Say in your output that the researcher was not available.
+
 ## Project state
 
 Look for existing architecture documentation and discovery state before starting.

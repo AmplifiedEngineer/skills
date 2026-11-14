@@ -20,10 +20,21 @@ CODEX_MARKET=".agents/plugins/marketplace.json"
 PLANNER_SKILL="skills/planner/SKILL.md"
 PLANNER_DOC="skills/planner/workflows/documentation.md"
 BAD_JSON='{'
+STORAGE_IMPL="skills/implementer/references/document-storage.md"
+STORAGE_PLAN="skills/planner/references/document-storage.md"
+TEMPLATES_DIR="skills/planner/templates"
+PLAN_TEMPLATE="$TEMPLATES_DIR/implementation-plan.md"
+HANDOVER_DOC="skills/planner/workflows/implementation-handover.md"
+EXEC_DOC="skills/implementer/workflows/implementation-execution.md"
+STORAGE_LINK_TEXT="document-storage.md"
+STOP_RULE_TEXT="stop and return the question to the planner"
+STATUS_GATE_TEXT="run only documents whose Status is approved"
+WRONG_STATUS='s/^Status: .*/Status: wrong/'
 
 CASES="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
-42 43 44 45 46 50 51 52 53 54 55 56 57 58 59 67 69 70 72 73 74 75
-77 78 79 80 81 82 83 84 85 86 68"
+28 29 30 31 32 33 34 35 36 37 38 39
+42 43 44 45 46 47 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 69 70
+71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 68"
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
@@ -230,6 +241,30 @@ prepare_case() {
     27) runner=self
        remove scripts/check.sh
        want "FAIL test-check: $copy/scripts/check.sh not found" ;;
+    28) append "$STORAGE_IMPL" x
+       want "FAIL check=8 file=$STORAGE_IMPL: differs from $STORAGE_PLAN" ;;
+    29) remove "$STORAGE_IMPL"
+       want "FAIL check=8 file=$STORAGE_IMPL: missing file" ;;
+    30) remove "$STORAGE_PLAN"
+       want "FAIL check=8 file=$STORAGE_PLAN: missing file" ;;
+    31) remove "$PLAN_TEMPLATE"
+       want "FAIL check=9 file=$PLAN_TEMPLATE: missing file" ;;
+    32) sub "$PLAN_TEMPLATE" 's/^Status: draft$/Status: approved/'
+       want "FAIL check=9 file=$PLAN_TEMPLATE: unexpected Status line" ;;
+    33) append "$TEMPLATES_DIR/extra.md" 'Status: draft'
+       want "FAIL check=9 file=$TEMPLATES_DIR/extra.md: unexpected Status line" ;;
+    34) sub "$PLANNER_DOC" "/$STORAGE_LINK_TEXT/d"
+       want "FAIL check=9 file=$PLANNER_DOC: missing link to references/document-storage.md" ;;
+    35) sub "$HANDOVER_DOC" "/$STORAGE_LINK_TEXT/d"
+       want "FAIL check=9 file=$HANDOVER_DOC: missing link to references/document-storage.md" ;;
+    36) sub "$EXEC_DOC" "/$STORAGE_LINK_TEXT/d"
+       want "FAIL check=9 file=$EXEC_DOC: missing link to references/document-storage.md" ;;
+    37) sub "$EXEC_DOC" "/$STOP_RULE_TEXT/d"
+       want "FAIL check=10 file=$EXEC_DOC: missing stop rule" ;;
+    38) sub "$EXEC_DOC" "/$STATUS_GATE_TEXT/d"
+       want "FAIL check=10 file=$EXEC_DOC: missing status gate" ;;
+    39) remove "$EXEC_DOC"
+       want "FAIL check=10 file=$EXEC_DOC: missing file" ;;
     42) append skills/implementer/README.md 'engineering-architect'
        want "FAIL check=4 file=skills/implementer/README.md: old skill name engineering-architect" ;;
     43) append skills/planner/README.md 'ENGINEERING-IMPLEMENTATION'
@@ -240,6 +275,8 @@ prepare_case() {
        want "FAIL check=1 file=.claude-plugin/marketplace.json: invalid JSON" ;;
     46) append "$PLANNER_SKILL" '`templates/missing.md`'
        want "FAIL check=3 file=skills/planner/SKILL.md: broken link templates/missing.md" ;;
+    47) sub "$TEMPLATES_DIR/adr.md" '/^Status: /d'
+       want "FAIL check=9 file=$TEMPLATES_DIR/adr.md: unexpected Status line" ;;
     50) append "$PLANNER_SKILL" '`workflows/missing.md`'
        want "FAIL check=3 file=skills/planner/SKILL.md: broken link workflows/missing.md" ;;
     51) append "$PLANNER_SKILL" '`examples/missing.md`'
@@ -261,6 +298,20 @@ prepare_case() {
        want "FAIL host=codex: codex CLI not found on PATH" ;;
     59) runner=smoke; smoke_args=bogus
        want "FAIL host=bogus: unknown host" ;;
+    60) remove "$PLANNER_DOC"
+       want "FAIL check=9 file=$PLANNER_DOC: missing file" ;;
+    61) remove "$HANDOVER_DOC"
+       want "FAIL check=9 file=$HANDOVER_DOC: missing file" ;;
+    62) sub "$TEMPLATES_DIR/architecture-assessment.md" "$WRONG_STATUS"
+       want "FAIL check=9 file=$TEMPLATES_DIR/architecture-assessment.md: unexpected Status line" ;;
+    63) sub "$TEMPLATES_DIR/architecture-findings.md" "$WRONG_STATUS"
+       want "FAIL check=9 file=$TEMPLATES_DIR/architecture-findings.md: unexpected Status line" ;;
+    64) sub "$TEMPLATES_DIR/drift-report.md" "$WRONG_STATUS"
+       want "FAIL check=9 file=$TEMPLATES_DIR/drift-report.md: unexpected Status line" ;;
+    65) sub "$TEMPLATES_DIR/impact-report.md" "$WRONG_STATUS"
+       want "FAIL check=9 file=$TEMPLATES_DIR/impact-report.md: unexpected Status line" ;;
+    66) sub "$TEMPLATES_DIR/discovery-state.md" "$WRONG_STATUS"
+       want "FAIL check=9 file=$TEMPLATES_DIR/discovery-state.md: unexpected Status line" ;;
     67) append "$PLANNER_SKILL" '[x](references/missing.md#section)'
        want "FAIL check=3 file=skills/planner/SKILL.md: broken link references/missing.md" ;;
     69) printf '```\n[x](references/missing.md)\n```\n' >> "$copy/$PLANNER_SKILL"
@@ -268,6 +319,8 @@ prepare_case() {
     70) sed '/^name:/d' "$copy/$PLANNER_SKILL" > "$copy/$PLANNER_SKILL.tmp" \
          && mv "$copy/$PLANNER_SKILL.tmp" "$copy/$PLANNER_SKILL"
        want "FAIL check=5 file=skills/planner/SKILL.md: missing name" ;;
+    71) append "$PLAN_TEMPLATE" 'Status: draft'
+       want "FAIL check=9 file=$PLAN_TEMPLATE: unexpected Status line" ;;
     72) runner=self; cli_dirs="$copy/stubbin"
        mkdir "$copy/stubbin"
        empty_exec "$copy/stubbin/codex"
@@ -281,6 +334,9 @@ prepare_case() {
        printf '%s\n' "$BAD_JSON" > "$copy/.playbook/x.json"
        printf 'Engineering Architect\n' > "$copy/.playbook/x.md"
        want_exit=0 ;;
+    76) sub "$PLAN_TEMPLATE" '/^Status: /d'
+       append "$PLAN_TEMPLATE" 'Status: draft'
+       want "FAIL check=9 file=$PLAN_TEMPLATE: unexpected Status line" ;;
     77) runner=smoke; smoke_args=claude
        stub_env claude partial; stub_tmp
        want "FAIL host=claude: skill researcher missing after install" ;;

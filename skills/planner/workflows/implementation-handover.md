@@ -4,6 +4,7 @@
 Translate architectural decisions into actionable implementation instructions.
 
 ## Required references
+- `../references/document-storage.md`
 - `../references/knowledge-model.md`
 - `../references/evidence.md`
 
@@ -20,7 +21,7 @@ Translate architectural decisions into actionable implementation instructions.
 10. Identify unresolved decisions and risks.
 
 ## Output
-A traceable implementation plan containing:
+A traceable implementation plan, saved to `docs/playbook/plans/<slug>.md` with `Status: draft` as the storage contract says, containing:
 - Objective and scope
 - Requirements
 - Design decisions

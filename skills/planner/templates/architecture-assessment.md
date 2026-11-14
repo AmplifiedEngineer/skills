@@ -1,10 +1,11 @@
 # Architecture Assessment
 
+Status: draft
+
 ## Assessment metadata
 - System:
 - Scope:
 - Date:
-- Status:
 - Authors:
 
 ## Executive summary

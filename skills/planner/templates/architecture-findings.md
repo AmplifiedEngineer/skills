@@ -1,5 +1,7 @@
 # Architecture Findings
 
+Status: draft
+
 ## Review context
 - System:
 - Scope:
