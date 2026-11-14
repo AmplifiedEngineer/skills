@@ -1,4 +1,4 @@
-# Optional hints file, saved as docs/playbook/context.yaml. Written by hand.
+# Optional hints file, saved as context.yaml at the document root (default docs/playbook/context.yaml). Written by hand.
 # Holds no secrets. A hint is never proof of access.
 
 project:

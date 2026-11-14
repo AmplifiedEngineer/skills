@@ -21,7 +21,7 @@ Translate architectural decisions into actionable implementation instructions.
 10. Identify unresolved decisions and risks.
 
 ## Output
-A traceable implementation plan, saved to `docs/playbook/plans/<slug>.md` with `Status: draft` as the storage contract says, containing:
+A traceable implementation plan, saved in the plans folder of the document root (default `docs/playbook/plans/<slug>.md`) with `Status: draft` as the storage contract says. Ask the user to approve it. Set `Status: approved` only on their confirmation, and hand the plan to the implementer only after that. The plan contains:
 - Objective and scope
 - Requirements
 - Design decisions

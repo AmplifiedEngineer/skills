@@ -6,7 +6,7 @@ user-invocable: false
 
 # Researcher
 
-Planner and implementer call this skill when they need information. Users do not call it directly.
+Planner and implementer call this skill when they need information. Users do not need to call it. In Codex a user can still call `$researcher` directly.
 
 Gather the project information needed for engineering work. Preserve source links, status and freshness. Prepare concise context briefs or explicitly requested synchronization plans.
 
