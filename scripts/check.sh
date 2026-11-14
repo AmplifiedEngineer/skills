@@ -92,6 +92,9 @@ check_manifests() {
     [ -f "$f" ] || continue
     has_plugin_entry "$f" "$ref_name" || fail 2 "$f" "$REASON_NAME_MISMATCH $ROOT_PLUGIN"
   done
+  [ -f "$CLAUDE_MARKET" ] && [ -f "$CODEX_MARKET" ] || return 0
+  [ "$(json_name "$CODEX_MARKET")" = "$(json_name "$CLAUDE_MARKET")" ] ||
+    fail 2 "$CODEX_MARKET" "$REASON_NAME_MISMATCH $CLAUDE_MARKET"
 }
 
 # Prints each link target of a Markdown file: link targets, then backticked paths.
