@@ -1,4 +1,4 @@
-# Engineering Architect V2
+# Planner
 
 A platform-neutral Agent Skill for engineering discovery, architecture reconstruction, solution design, architecture reviews, change impact and drift analysis, documentation management, and implementation handover.
 
@@ -15,11 +15,11 @@ The workflows and references use relative paths within this package. Load only t
 
 ## Install
 
-Copy the `engineering-architect` directory into one of these locations:
+Copy the `planner` directory into one of these locations:
 
-- **Claude Code, project-level:** `.claude/skills/engineering-architect/`
-- **Codex, project-level:** `.agents/skills/engineering-architect/`
-- **Codex, user-level:** `~/.agents/skills/engineering-architect/`
+- **Claude Code, project-level:** `.claude/skills/planner/`
+- **Codex, project-level:** `.agents/skills/planner/`
+- **Codex, user-level:** `~/.agents/skills/planner/`
 
 The shared `SKILL.md` and supporting files are the implementation for both products. Codex can load the skill without `agents/openai.yaml`; that file only supplies optional UI metadata.
 

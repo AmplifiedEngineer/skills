@@ -1,6 +1,6 @@
-# Engineering Context Handover
+# Researcher Handover
 
-Pass verified project context to Architecture or Implementation.
+Pass verified project context to the planner or the implementer.
 
 Include the task and outcome, relevant requirements and acceptance criteria, accepted decisions with source links, affected repositories and components, dependencies, risks and blockers. Separate verified facts, inferences, assumptions and unknowns. Identify open decisions and their owners.
 

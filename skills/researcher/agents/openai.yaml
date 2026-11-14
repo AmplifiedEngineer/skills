@@ -1,0 +1,7 @@
+interface:
+  display_name: "Researcher"
+  short_description: "Gather and synchronize engineering project context"
+  default_prompt: "Use $researcher to gather the project context relevant to this engineering task."
+
+policy:
+  allow_implicit_invocation: true
