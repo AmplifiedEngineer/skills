@@ -1,0 +1,17 @@
+{
+  "name": "amplifiedengineer-skills",
+  "owner": {
+    "name": "Igor Santos",
+    "email": "2278164+igorjs@users.noreply.github.com"
+  },
+  "metadata": {
+    "description": "Planner, implementer and researcher skills for Codex and Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "playbook",
+      "source": "./",
+      "description": "Planner, implementer and researcher skills for Codex and Claude Code."
+    }
+  ]
+}

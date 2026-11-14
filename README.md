@@ -1,21 +1,39 @@
-# Engineering Skills V2
+# Amplified Engineer Skills
 
-A three-skill suite for architecture, implementation and project context. Skills can be installed independently.
+Three Agent Skills for Claude Code and Codex. Install them together as the `playbook` plugin, or copy one skill on its own.
 
-- Planner: requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
-- Implementer: scoped code changes, focused verification, architecture compliance and implementation reporting.
-- Researcher: project information retrieval and explicitly requested synchronization across configured repositories and engineering systems.
-
-Architect owns architectural decisions, Implementation owns code changes, and Context owns provider-neutral information acquisition and external-system synchronization.
+- `planner`: user-facing. Requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
+- `implementer`: user-facing. Scoped code changes, focused verification, architecture compliance and implementation reporting.
+- `researcher`: called by the planner and implementer. Project information retrieval and explicitly requested synchronization across configured repositories and engineering systems.
 
 ## Install
 
-Copy the desired skill directory into one of these locations:
+Claude Code:
 
-- Claude Code, project-level: .claude/skills/<skill-name>/
-- Codex, project-level: .agents/skills/<skill-name>/
-- Codex, user-level: ~/.agents/skills/<skill-name>/
+```sh
+claude plugin marketplace add amplifiedengineer/skills
+claude plugin install playbook@amplifiedengineer-skills
+```
 
-The shared SKILL.md and supporting files work across both environments. The agents/openai.yaml file is optional Codex UI metadata. Discover integrations actually available in the environment; example provider names do not configure access.
+Codex:
 
-No licence terms were supplied, so this package does not include a LICENSE file.
+```sh
+codex plugin marketplace add amplifiedengineer/skills
+codex plugin add playbook@amplifiedengineer-skills
+```
+
+Do not install this plugin alongside `playbook@pragmatic-engineer`. Both prefix their skills with `playbook:`, so the names clash.
+
+## Manual install
+
+Copy `skills/<name>/` into one of these locations:
+
+- Claude Code, project-level: `.claude/skills/<name>/`
+- Codex, project-level: `.agents/skills/<name>/`
+- Codex, user-level: `~/.agents/skills/<name>/`
+
+The shared `SKILL.md` and supporting files work in both hosts. The `agents/openai.yaml` file is optional Codex UI metadata. Discover integrations actually available in the environment; example provider names do not configure access.
+
+## Licence
+
+Apache-2.0. See the `LICENSE` file.
