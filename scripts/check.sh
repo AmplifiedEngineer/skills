@@ -1,0 +1,181 @@
+#!/bin/sh
+# Static checks for the plugin tree: manifests, links, old names, skills, README.
+# Usage: sh scripts/check.sh [repo-root]. Prints one FAIL line per problem, exit 1 if any.
+# Requires jq.
+
+ROOT_PLUGIN="plugin.json"
+CLAUDE_PLUGIN=".claude-plugin/plugin.json"
+CLAUDE_MARKET=".claude-plugin/marketplace.json"
+CODEX_MARKET=".agents/plugins/marketplace.json"
+README="README.md"
+SKILLS_DIR="skills"
+SKILLS_GLOB="skills/**/*.md"
+SKILL_NAMES="planner implementer researcher"
+SKILL_FILE="SKILL.md"
+OLD_NAME_PATTERN='engineering[ -](architect|implementation|context)'
+LINK_PREFIXES="../ references/ workflows/ templates/ examples/ agents/"
+SKIP_PREFIXES="docs/ .playbook/ #"
+
+REASON_INVALID_JSON="invalid JSON"
+REASON_MISSING_FILE="missing file"
+REASON_NAME_MISMATCH="name mismatch with"
+REASON_VERSION_MISMATCH="version mismatch with"
+REASON_BROKEN_LINK="broken link"
+REASON_OLD_NAME="old skill name"
+REASON_NAME_FOLDER="does not match folder"
+REASON_UNEXPECTED_FOLDER="unexpected skill folder"
+REASON_README_MISSING="README missing"
+REASON_NO_FILES="no files match"
+REASON_MISSING_NAME="missing name"
+
+fail() { echo "FAIL check=$1 file=$2: $3"; }
+
+json_name() { jq -r '.name // empty' "$1" 2>/dev/null; }
+
+has_plugin_entry() {
+  jq -e --arg n "$2" '.plugins | map(.name) | index($n) != null' "$1" >/dev/null 2>&1
+}
+
+check_json_parses() {
+  find . \( -path ./.git -o -path ./.playbook \) -prune -o -type f -name '*.json' -print |
+    while IFS= read -r f; do
+      f=${f#./}
+      jq empty "$f" >/dev/null 2>&1 || fail 1 "$f" "$REASON_INVALID_JSON"
+    done
+}
+
+check_manifests() {
+  for f in "$ROOT_PLUGIN" "$CLAUDE_PLUGIN" "$CLAUDE_MARKET" "$CODEX_MARKET"; do
+    [ -f "$f" ] || fail 2 "$f" "$REASON_MISSING_FILE"
+  done
+  [ -f "$ROOT_PLUGIN" ] || return 0
+  ref_name=$(json_name "$ROOT_PLUGIN")
+  if [ -z "$ref_name" ]; then
+    fail 2 "$ROOT_PLUGIN" "$REASON_MISSING_NAME"
+    return 0
+  fi
+  if [ -f "$CLAUDE_PLUGIN" ]; then
+    [ "$(json_name "$CLAUDE_PLUGIN")" = "$ref_name" ] ||
+      fail 2 "$CLAUDE_PLUGIN" "$REASON_NAME_MISMATCH $ROOT_PLUGIN"
+    [ "$(jq -r '.version // empty' "$CLAUDE_PLUGIN" 2>/dev/null)" = \
+      "$(jq -r '.version // empty' "$ROOT_PLUGIN" 2>/dev/null)" ] ||
+      fail 2 "$CLAUDE_PLUGIN" "$REASON_VERSION_MISMATCH $ROOT_PLUGIN"
+  fi
+  for f in "$CLAUDE_MARKET" "$CODEX_MARKET"; do
+    [ -f "$f" ] || continue
+    has_plugin_entry "$f" "$ref_name" || fail 2 "$f" "$REASON_NAME_MISMATCH $ROOT_PLUGIN"
+  done
+}
+
+# Prints each link target of a Markdown file: link targets, then backticked paths.
+link_targets() {
+  grep -o '\]([^)]*)' "$1" | sed 's/^\](//; s/)$//' | sed 's/#.*//' | sed 's/^/L /'
+  grep -o '`[^`]*`' "$1" | sed 's/^`//; s/`$//' | sed 's/#.*//' | sed 's/^/B /'
+}
+
+starts_with_any() {
+  for p in $2; do
+    case "$1" in "$p"*) return 0 ;; esac
+  done
+  return 1
+}
+
+link_is_skipped() {
+  case "$1" in
+    "" | *://* | mailto:* | *"<"*) return 0 ;;
+  esac
+  starts_with_any "$1" "$SKIP_PREFIXES"
+}
+
+check_links() {
+  files=$(find "$SKILLS_DIR" -name '*.md' 2>/dev/null)
+  if [ -z "$files" ]; then
+    fail 3 "$SKILLS_GLOB" "$REASON_NO_FILES"
+    return 0
+  fi
+  printf '%s\n' "$files" | while IFS= read -r f; do
+    dir=$(dirname "$f")
+    link_targets "$f" | while IFS= read -r line; do
+      kind=${line%% *}
+      target=${line#* }
+      [ "$line" != "$kind" ] || continue
+      link_is_skipped "$target" && continue
+      if [ "$kind" = B ]; then
+        starts_with_any "$target" "$LINK_PREFIXES" || continue
+      fi
+      [ -e "$dir/$target" ] || fail 3 "$f" "$REASON_BROKEN_LINK $target"
+    done
+  done
+}
+
+check_old_names() {
+  find . \( -path ./.git -o -path ./.playbook -o -path ./scripts \) -prune -o -type f -print |
+    while IFS= read -r f; do
+      grep -IioE "$OLD_NAME_PATTERN" "$f" 2>/dev/null | while IFS= read -r match; do
+        fail 4 "${f#./}" "$REASON_OLD_NAME $match"
+      done
+    done
+}
+
+skill_frontmatter_name() {
+  awk 'NR == 1 && $0 != "---" { exit }
+       NR > 1 && $0 == "---" { exit }
+       /^name:/ { sub(/^name:[ ]*/, ""); print; exit }' "$1"
+}
+
+check_skills() {
+  for n in $SKILL_NAMES; do
+    if [ ! -d "$SKILLS_DIR/$n" ]; then
+      fail 5 "$SKILLS_DIR/$n" "$REASON_MISSING_FILE"
+    elif [ ! -f "$SKILLS_DIR/$n/$SKILL_FILE" ]; then
+      fail 5 "$SKILLS_DIR/$n/$SKILL_FILE" "$REASON_MISSING_FILE"
+    else
+      found=$(skill_frontmatter_name "$SKILLS_DIR/$n/$SKILL_FILE")
+      if [ -z "$found" ]; then
+        fail 5 "$SKILLS_DIR/$n/$SKILL_FILE" "$REASON_MISSING_NAME"
+      elif [ "$found" != "$n" ]; then
+        fail 5 "$SKILLS_DIR/$n/$SKILL_FILE" "name $found $REASON_NAME_FOLDER"
+      fi
+    fi
+  done
+  for d in "$SKILLS_DIR"/*/; do
+    [ -d "$d" ] || continue
+    d=${d%/}
+    case " $SKILL_NAMES " in
+      *" ${d##*/} "*) ;;
+      *) fail 5 "$d" "$REASON_UNEXPECTED_FOLDER" ;;
+    esac
+  done
+}
+
+check_readme() {
+  if [ ! -f "$README" ]; then
+    fail 7 "$README" "$REASON_MISSING_FILE"
+    return 0
+  fi
+  plugin_name=$(json_name "$ROOT_PLUGIN")
+  market_name=$(json_name "$CLAUDE_MARKET")
+  for n in "$plugin_name" "$market_name"; do
+    if [ -z "$n" ]; then
+      fail 7 "$README" "$REASON_MISSING_NAME"
+      continue
+    fi
+    grep -Fq -- "$n" "$README" || fail 7 "$README" "$REASON_README_MISSING $n"
+  done
+}
+
+run_checks() {
+  check_json_parses
+  check_manifests
+  check_links
+  check_old_names
+  check_skills
+  check_readme
+}
+
+root=${1:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}
+cd "$root" || exit 1
+out=$(run_checks)
+[ -z "$out" ] && exit 0
+printf '%s\n' "$out"
+exit 1
