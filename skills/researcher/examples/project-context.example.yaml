@@ -1,13 +1,19 @@
+# Optional hints file, saved as context.yaml at the document root (default docs/playbook/context.yaml). Written by hand.
+# Holds no secrets. A hint is never proof of access.
+
 project:
   name: "example-service"
   repository: "https://example.invalid/org/example-service"
   default_branch: "main"
 
+# For each request type, list order is the ranking: earlier entries are preferred.
 sources:
   requirements:
-    - "Configured issue tracker or approved requirements document"
+    - "Configured issue tracker"
+    - "Approved requirements document"
   architecture:
-    - "Repository ADR directory or approved design documentation"
+    - "Repository ADR directory"
+    - "Approved design documentation"
   implementation:
     - "Repository source and tests"
 
@@ -18,7 +24,3 @@ integrations:
   documentation:
     provider: "discover from configured tools"
     collection: "Example"
-
-notes:
-  - "Illustrative only; does not configure credentials or grant service access."
-  - "Replace example values with project-specific sources."

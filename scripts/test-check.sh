@@ -18,6 +18,7 @@ CLAUDE_PLUGIN=".claude-plugin/plugin.json"
 CLAUDE_MARKET=".claude-plugin/marketplace.json"
 CODEX_MARKET=".agents/plugins/marketplace.json"
 PLANNER_SKILL="skills/planner/SKILL.md"
+RESEARCHER_SKILL="skills/researcher/SKILL.md"
 PLANNER_DOC="skills/planner/workflows/documentation.md"
 BAD_JSON='{'
 STORAGE_IMPL="skills/implementer/references/document-storage.md"
@@ -32,9 +33,9 @@ STATUS_GATE_TEXT="run only documents whose Status is approved"
 WRONG_STATUS='s/^Status: .*/Status: wrong/'
 
 CASES="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
-28 29 30 31 32 33 34 35 36 37 38 39
-42 43 44 45 46 47 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 69 70
-71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 68"
+28 29 30 31 32 33 34 35 36 37 38 39 40 41
+42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 69 70
+71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 68"
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
@@ -42,6 +43,11 @@ if [ ! -e "$root/scripts/check.sh" ]; then
   echo "FAIL test-check: $root/scripts/check.sh not found"
   exit 1
 fi
+
+# A nested run carries its own copy root, so an inherited value cannot match.
+nested=0
+[ -n "${TEST_CHECK_NESTED:-}" ] && [ "$TEST_CHECK_NESTED" = "$root" ] && nested=1
+[ "$nested" = 1 ] || unset TEST_CHECK_CLI_DIRS
 
 for dir in ${TEST_CHECK_CLI_DIRS:-$CLI_DIRS_DEFAULT}; do
   for cli in $GUARDED_CLIS; do
@@ -53,7 +59,7 @@ for dir in ${TEST_CHECK_CLI_DIRS:-$CLI_DIRS_DEFAULT}; do
 done
 
 # A nested run (case 27, 68, 72, 79) stops here so it can never recurse.
-[ "${TEST_CHECK_NESTED:-}" = 1 ] && exit 0
+[ "$nested" = 1 ] && exit 0
 
 sh_bin=$(command -v sh)
 files=$(git -C "$root" ls-files --cached --others --exclude-standard)
@@ -265,6 +271,10 @@ prepare_case() {
        want "FAIL check=10 file=$EXEC_DOC: missing status gate" ;;
     39) remove "$EXEC_DOC"
        want "FAIL check=10 file=$EXEC_DOC: missing file" ;;
+    40) sub "$RESEARCHER_SKILL" '/^user-invocable: false$/d'
+       want "FAIL check=6 file=$RESEARCHER_SKILL: user-invocable: false missing" ;;
+    41) remove "$RESEARCHER_SKILL"
+       want "FAIL check=6 file=$RESEARCHER_SKILL: missing file" ;;
     42) append skills/implementer/README.md 'engineering-architect'
        want "FAIL check=4 file=skills/implementer/README.md: old skill name engineering-architect" ;;
     43) append skills/planner/README.md 'ENGINEERING-IMPLEMENTATION'
@@ -277,6 +287,11 @@ prepare_case() {
        want "FAIL check=3 file=skills/planner/SKILL.md: broken link templates/missing.md" ;;
     47) sub "$TEMPLATES_DIR/adr.md" '/^Status: /d'
        want "FAIL check=9 file=$TEMPLATES_DIR/adr.md: unexpected Status line" ;;
+    48) sub "$RESEARCHER_SKILL" 's/user-invocable: false/user-invocable: true/'
+       want "FAIL check=6 file=$RESEARCHER_SKILL: user-invocable: false missing" ;;
+    49) sub "$RESEARCHER_SKILL" '/^user-invocable: false$/d'
+       append "$RESEARCHER_SKILL" 'user-invocable: false'
+       want "FAIL check=6 file=$RESEARCHER_SKILL: user-invocable: false missing" ;;
     50) append "$PLANNER_SKILL" '`workflows/missing.md`'
        want "FAIL check=3 file=skills/planner/SKILL.md: broken link workflows/missing.md" ;;
     51) append "$PLANNER_SKILL" '`examples/missing.md`'
@@ -367,6 +382,8 @@ prepare_case() {
        want_exit=0; check_cfg=1 ;;
     86) sub "$ROOT_PLUGIN" '/"name": "playbook"/d'
        want "FAIL check=2 file=plugin.json: missing name" ;;
+    87) sub "$CODEX_MARKET" '2s/"amplifiedengineer-skills"/"other"/'
+       want "FAIL check=2 file=$CODEX_MARKET: name mismatch with $CLAUDE_MARKET" ;;
     68) runner=self; cli_dirs="$copy/stubbin"
        mkdir "$copy/stubbin"
        empty_exec "$copy/stubbin/claude"
@@ -387,7 +404,7 @@ run_runner() {
       out=$(
         cd / || exit 1
         [ -z "$cli_dirs" ] || export TEST_CHECK_CLI_DIRS="$cli_dirs"
-        TEST_CHECK_NESTED=1 "$sh_bin" "$copy/scripts/test-check.sh" 2>&1
+        TEST_CHECK_NESTED="$copy" "$sh_bin" "$copy/scripts/test-check.sh" 2>&1
       )
       ;;
   esac

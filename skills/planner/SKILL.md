@@ -66,7 +66,7 @@ Read only the supporting material relevant to the current task.
 Every document any planner workflow saves follows the storage contract in `references/document-storage.md`. That covers discovery, reconstruction, solution design, architecture review, impact analysis and drift analysis, as well as documentation management and handover.
 
 - The planner picks the document types each task needs.
-- Save each document in the type folder from the contract table, with the status line from its template.
+- Save each document in the type folder from the contract table, with the status line from its template. When the type has no template, take the first status value from the contract table.
 - Only the user's confirmation moves a document to `approved`.
 - Location: the user's instruction wins. Otherwise use the contract default, `docs/playbook/<type>/`.
 

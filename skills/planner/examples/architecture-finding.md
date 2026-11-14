@@ -2,7 +2,7 @@
 
 > Illustrative example only. The scenario and evidence below are fictional and must not be treated as repository facts.
 
-## ARCH-001 — A synchronous dependency can extend request availability risk
+## ARCH-001: A synchronous dependency can extend request availability risk
 
 - **Classification:** INFERRED
 - **Severity:** Medium
