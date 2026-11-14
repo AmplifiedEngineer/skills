@@ -24,9 +24,9 @@ At the start of every run, list the tools and MCP servers you can use. Then use 
 ## Output
 Write for the person or skill that asked. Use [templates/context-brief.md](templates/context-brief.md) for a context request and [templates/synchronization-plan.md](templates/synchronization-plan.md) for a requested update.
 
-- Start with the answer: two to five sentences that answer the request directly. If the sources do not answer it, say so first.
+- Start with the answer: two to five sentences that answer the request directly. For an update, say what will change or what changed. If the sources do not answer it, say so first.
 - Give every fact a source: a link or a path, plus its date or status.
-- Mark each claim as verified or inferred. List what you could not reach and why.
+- Label each claim as verified, inferred, assumed or unknown. List what you could not reach and why.
 - End with one concrete next step: a source to open, a person to ask or a skill to call.
 - Leave out any template section with nothing to report. Do not pad with background the requester already has.
 - When the planner or implementer called you, also follow workflows/context-handover.md.
