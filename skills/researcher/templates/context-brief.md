@@ -1,5 +1,8 @@
 # Researcher Brief
 
+## Answer
+-
+
 ## Task
 - Request:
 - Project or repository:
@@ -30,5 +33,8 @@
 ## Conflicts, risks and blockers
 -
 
-## Handover and next steps
+## Not reached
+-
+
+## Next step
 -

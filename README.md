@@ -4,7 +4,7 @@ Three Agent Skills for Claude Code and Codex. Install them together as the `play
 
 - `planner`: user-facing. Requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
 - `implementer`: user-facing. Scoped code changes, focused verification, architecture compliance and implementation reporting.
-- `researcher`: internal. The planner and implementer call it. Codex users can still call `$researcher` directly. Project information retrieval and explicitly requested synchronization across configured repositories and engineering systems.
+- `researcher`: finds project information and answers with sources. You can call it, and the planner and implementer call it too. Project information retrieval and explicitly requested synchronization across configured repositories and engineering systems.
 
 ## Install
 

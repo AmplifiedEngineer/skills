@@ -18,7 +18,7 @@ CLAUDE_PLUGIN=".claude-plugin/plugin.json"
 CLAUDE_MARKET=".claude-plugin/marketplace.json"
 CODEX_MARKET=".agents/plugins/marketplace.json"
 PLANNER_SKILL="skills/planner/SKILL.md"
-RESEARCHER_SKILL="skills/researcher/SKILL.md"
+RESEARCHER_BRIEF="skills/researcher/templates/context-brief.md"
 PLANNER_DOC="skills/planner/workflows/documentation.md"
 BAD_JSON='{'
 STORAGE_IMPL="skills/implementer/references/document-storage.md"
@@ -271,10 +271,10 @@ prepare_case() {
        want "FAIL check=10 file=$EXEC_DOC: missing status gate" ;;
     39) remove "$EXEC_DOC"
        want "FAIL check=10 file=$EXEC_DOC: missing file" ;;
-    40) sub "$RESEARCHER_SKILL" '/^user-invocable: false$/d'
-       want "FAIL check=6 file=$RESEARCHER_SKILL: user-invocable: false missing" ;;
-    41) remove "$RESEARCHER_SKILL"
-       want "FAIL check=6 file=$RESEARCHER_SKILL: missing file" ;;
+    40) sub "$RESEARCHER_BRIEF" '/^## Answer$/d'
+       want "FAIL check=6 file=$RESEARCHER_BRIEF: first section is not ## Answer" ;;
+    41) remove "$RESEARCHER_BRIEF"
+       want "FAIL check=6 file=$RESEARCHER_BRIEF: missing file" ;;
     42) append skills/implementer/README.md 'engineering-architect'
        want "FAIL check=4 file=skills/implementer/README.md: old skill name engineering-architect" ;;
     43) append skills/planner/README.md 'ENGINEERING-IMPLEMENTATION'
@@ -287,11 +287,11 @@ prepare_case() {
        want "FAIL check=3 file=skills/planner/SKILL.md: broken link templates/missing.md" ;;
     47) sub "$TEMPLATES_DIR/adr.md" '/^Status: /d'
        want "FAIL check=9 file=$TEMPLATES_DIR/adr.md: unexpected Status line" ;;
-    48) sub "$RESEARCHER_SKILL" 's/user-invocable: false/user-invocable: true/'
-       want "FAIL check=6 file=$RESEARCHER_SKILL: user-invocable: false missing" ;;
-    49) sub "$RESEARCHER_SKILL" '/^user-invocable: false$/d'
-       append "$RESEARCHER_SKILL" 'user-invocable: false'
-       want "FAIL check=6 file=$RESEARCHER_SKILL: user-invocable: false missing" ;;
+    48) sub "$RESEARCHER_BRIEF" 's/^## Answer$/## Summary/'
+       want "FAIL check=6 file=$RESEARCHER_BRIEF: first section is not ## Answer" ;;
+    49) sub "$RESEARCHER_BRIEF" '/^## Answer$/d'
+       append "$RESEARCHER_BRIEF" '## Answer'
+       want "FAIL check=6 file=$RESEARCHER_BRIEF: first section is not ## Answer" ;;
     50) append "$PLANNER_SKILL" '`workflows/missing.md`'
        want "FAIL check=3 file=skills/planner/SKILL.md: broken link workflows/missing.md" ;;
     51) append "$PLANNER_SKILL" '`examples/missing.md`'
