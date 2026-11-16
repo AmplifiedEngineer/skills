@@ -22,8 +22,6 @@ codex plugin marketplace add amplifiedengineer/skills
 codex plugin add playbook@amplifiedengineer-skills
 ```
 
-Do not install this plugin alongside `playbook@pragmatic-engineer`. Both prefix their skills with `playbook:`, so the names clash.
-
 ## Manual install
 
 Copy `skills/<name>/` into one of these locations:
