@@ -29,7 +29,3 @@ Run these from the repository root. All need `jq`; only `test-check.sh` also nee
 - `sh scripts/check.sh [repo-root]`: static checks on manifests, links, old names, skills, the researcher brief, README, the storage contract, template Status lines and the implementer stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
 - `sh scripts/test-check.sh`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
 - `sh scripts/smoke-install.sh [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the three skills arrived. `--keep` leaves the folders and prints their paths.
-
-## Install warning
-
-Do not install this plugin alongside `playbook@pragmatic-engineer`. Both prefix their skills with `playbook:`, so the names clash.
