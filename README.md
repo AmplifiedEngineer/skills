@@ -1,6 +1,6 @@
 # Amplified Engineer Skills
 
-Three Agent Skills for Claude Code and Codex. Install them together as the `playbook` plugin, or copy one skill on its own.
+Three Agent Skills for Claude Code and Codex. Install them together as the `ae` plugin, or copy one skill on its own.
 
 - `planner`: user-facing. Requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
 - `implementer`: user-facing. Scoped code changes, focused verification, architecture compliance and implementation reporting.
@@ -12,14 +12,14 @@ Claude Code:
 
 ```sh
 claude plugin marketplace add amplifiedengineer/skills
-claude plugin install playbook@amplifiedengineer-skills
+claude plugin install ae@amplifiedengineer
 ```
 
 Codex:
 
 ```sh
 codex plugin marketplace add amplifiedengineer/skills
-codex plugin add playbook@amplifiedengineer-skills
+codex plugin add ae@amplifiedengineer
 ```
 
 ## Manual install

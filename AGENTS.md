@@ -4,9 +4,9 @@ This repository is a plugin that ships three Agent Skills for Claude Code and Co
 
 ## Layout
 
-- `plugin.json`: the Codex plugin manifest, name `playbook`.
+- `plugin.json`: the Codex plugin manifest, name `ae`.
 - `.claude-plugin/plugin.json`: the Claude Code plugin manifest, same name and version.
-- `.claude-plugin/marketplace.json`: the Claude Code marketplace, name `amplifiedengineer-skills`.
+- `.claude-plugin/marketplace.json`: the Claude Code marketplace, name `amplifiedengineer`.
 - `.agents/plugins/marketplace.json`: the Codex marketplace, same name.
 - `skills/`: one directory per skill, each with a `SKILL.md`.
 

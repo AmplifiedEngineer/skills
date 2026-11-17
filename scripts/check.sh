@@ -195,13 +195,12 @@ check_readme() {
   fi
   plugin_name=$(json_name "$ROOT_PLUGIN")
   market_name=$(json_name "$CLAUDE_MARKET")
-  for n in "$plugin_name" "$market_name"; do
-    if [ -z "$n" ]; then
-      fail 7 "$README" "$REASON_MISSING_NAME"
-      continue
-    fi
-    grep -Fq -- "$n" "$README" || fail 7 "$README" "$REASON_README_MISSING $n"
-  done
+  if [ -z "$plugin_name" ] || [ -z "$market_name" ]; then
+    fail 7 "$README" "$REASON_MISSING_NAME"
+    return 0
+  fi
+  install_ref="$plugin_name@$market_name"
+  grep -Fq -- "$install_ref" "$README" || fail 7 "$README" "$REASON_README_MISSING $install_ref"
 }
 
 check_storage_copies() {

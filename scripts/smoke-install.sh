@@ -6,8 +6,8 @@
 
 HOSTS_ALL="claude codex"
 KEEP_FLAG="--keep"
-MARKETPLACE="amplifiedengineer-skills"
-PLUGIN="playbook"
+MARKETPLACE="amplifiedengineer"
+PLUGIN="ae"
 SKILL_NAMES="planner implementer researcher"
 SKILL_FILE="SKILL.md"
 MANIFEST="plugin.json"

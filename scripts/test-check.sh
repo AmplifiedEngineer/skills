@@ -6,8 +6,8 @@
 CLI_DIRS_DEFAULT="/usr/bin /bin"
 GUARDED_CLIS="claude codex"
 DEFAULT_PATH="/usr/bin:/bin"
-MARKETPLACE="amplifiedengineer-skills"
-PLUGIN="playbook"
+MARKETPLACE="amplifiedengineer"
+PLUGIN="ae"
 SKILLS_PARTIAL="planner implementer"
 SKILLS_FULL="planner implementer researcher"
 TMP_BASE="${TMPDIR:-/tmp}"
@@ -189,13 +189,13 @@ prepare_case() {
        want "FAIL check=2 file=.claude-plugin/plugin.json: version mismatch with plugin.json" ;;
     4) remove "$CODEX_MARKET"
        want "FAIL check=2 file=.agents/plugins/marketplace.json: missing file" ;;
-    5) sub "$CLAUDE_PLUGIN" 's/"name": "playbook"/"name": "other"/'
+    5) sub "$CLAUDE_PLUGIN" 's/"name": "ae"/"name": "other"/'
        want "FAIL check=2 file=.claude-plugin/plugin.json: name mismatch with plugin.json" ;;
-    6) sub "$CLAUDE_MARKET" 's/"name": "playbook"/"name": "other"/'
+    6) sub "$CLAUDE_MARKET" 's/"name": "ae"/"name": "other"/'
        want "FAIL check=2 file=.claude-plugin/marketplace.json: name mismatch with plugin.json" ;;
-    7) sub "$CODEX_MARKET" 's/"name": "playbook"/"name": "other"/'
+    7) sub "$CODEX_MARKET" 's/"name": "ae"/"name": "other"/'
        want "FAIL check=2 file=.agents/plugins/marketplace.json: name mismatch with plugin.json" ;;
-    8) sub "$ROOT_PLUGIN" 's/"name": "playbook"/"name": "other"/'
+    8) sub "$ROOT_PLUGIN" 's/"name": "ae"/"name": "other"/'
        want "FAIL check=2 file=.claude-plugin/plugin.json: name mismatch with plugin.json" ;;
     9) append "$PLANNER_DOC" '[x](../references/missing.md)'
        want "FAIL check=3 file=skills/planner/workflows/documentation.md: broken link ../references/missing.md" ;;
@@ -226,10 +226,10 @@ prepare_case() {
        want "FAIL check=5 file=skills/planner: missing file"
        want "FAIL check=5 file=skills/implementer: missing file"
        want "FAIL check=5 file=skills/researcher: missing file" ;;
-    18) sub README.md 's/playbook//g'
-       want "FAIL check=7 file=README.md: README missing playbook" ;;
-    19) sub README.md 's/amplifiedengineer-skills//g'
-       want "FAIL check=7 file=README.md: README missing amplifiedengineer-skills" ;;
+    18) sub README.md 's/ae@amplifiedengineer/x@amplifiedengineer/g'
+       want "FAIL check=7 file=README.md: README missing ae@amplifiedengineer" ;;
+    19) sub README.md 's/@amplifiedengineer/@x/g'
+       want "FAIL check=7 file=README.md: README missing ae@amplifiedengineer" ;;
     20) runner=smoke; smoke_args=codex
        want "FAIL host=codex: codex CLI not found on PATH" ;;
     21) runner=smoke; smoke_args=claude
@@ -380,9 +380,9 @@ prepare_case() {
     85) runner=smoke; smoke_args=codex
        stub_env codex full; stub_tmp
        want_exit=0; check_cfg=1 ;;
-    86) sub "$ROOT_PLUGIN" '/"name": "playbook"/d'
+    86) sub "$ROOT_PLUGIN" '/"name": "ae"/d'
        want "FAIL check=2 file=plugin.json: missing name" ;;
-    87) sub "$CODEX_MARKET" '2s/"amplifiedengineer-skills"/"other"/'
+    87) sub "$CODEX_MARKET" '2s/"amplifiedengineer"/"other"/'
        want "FAIL check=2 file=$CODEX_MARKET: name mismatch with $CLAUDE_MARKET" ;;
     68) runner=self; cli_dirs="$copy/stubbin"
        mkdir "$copy/stubbin"
