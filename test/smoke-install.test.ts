@@ -9,7 +9,6 @@ import {
   realpathSync,
   rmSync,
   symlinkSync,
-  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -17,8 +16,8 @@ import { test } from "node:test";
 import type { TestContext } from "node:test";
 import {
   REPO_ROOT,
+  STUB_LOG_MARKER,
   STUB_READY_NAME,
-  STUB_SENTINEL_NAME,
   resolveOnPath,
   runCommand,
   splitLines,
@@ -42,14 +41,23 @@ const READY_POLL_MS = 25;
 const EXIT_CLEAN = 0;
 const EXIT_FAILED = 1;
 const EXIT_SIGNALLED = 130;
+type Host = "claude" | "codex";
+
+const PID_GONE_GRACE_MS = 100;
+const PID_POLL_MS = 10;
+const BIG_LOG_MIN_LINES = 500;
+const MARKETPLACE_ADD_ARGS = ["plugin", "marketplace", "add", REPO_ROOT];
+const PLUGIN_REF = "ae@amplifiedengineer";
+const INSTALL_ARGS: Record<Host, string[]> = {
+  claude: ["plugin", "install", PLUGIN_REF],
+  codex: ["plugin", "add", PLUGIN_REF],
+};
 
 const CLAUDE_MISSING = "FAIL host=claude: claude CLI not found on PATH";
 const CODEX_MISSING = "FAIL host=codex: codex CLI not found on PATH";
 const SKILL_MISSING = "skill researcher missing after install";
 
-const EXPECTED_CASE_IDS = [20, 21, 58, 59, 74, 77, 78, 80, 81, 82, 83, 84, 85, 93];
-
-type Host = "claude" | "codex";
+const EXPECTED_CASE_IDS = [20, 21, 58, 59, 74, 77, 78, 80, 81, 82, 83, 84, 85, 93, 95, 96];
 
 interface Sandbox {
   binDir: string;
@@ -69,6 +77,7 @@ interface SmokeCase {
   lines: string[];
   absent?: Host[];
   tmpEmpty?: boolean;
+  bigLog?: boolean;
 }
 
 const registeredIds: number[] = [];
@@ -106,9 +115,42 @@ function runSmoke(box: Sandbox, args: string[]): RunResult {
   return runCommand(process.execPath, [SMOKE_SCRIPT, ...args], REPO_ROOT, box.env);
 }
 
+function recordedCalls(box: Sandbox): { args: string[]; configDir: string }[] {
+  return splitLines(readFileSync(box.recordFile, TEXT_ENCODING)).map((line) => JSON.parse(line));
+}
+
 function recordedConfigDir(box: Sandbox): string {
-  const first = readFileSync(box.recordFile, TEXT_ENCODING).split("\n")[0];
-  return JSON.parse(first).configDir;
+  return recordedCalls(box)[0].configDir;
+}
+
+function isGone(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return false;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "ESRCH";
+  }
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitUntilGone(pid: number): Promise<boolean> {
+  const deadline = Date.now() + PID_GONE_GRACE_MS;
+  while (!isGone(pid) && Date.now() < deadline) await sleep(PID_POLL_MS);
+  return isGone(pid);
+}
+
+async function readStubPid(box: Sandbox): Promise<number> {
+  const ready = path.join(box.signalDir, STUB_READY_NAME);
+  const deadline = Date.now() + READY_DEADLINE_MS;
+  while (Date.now() < deadline) {
+    const text = existsSync(ready) ? readFileSync(ready, TEXT_ENCODING) : "";
+    if (text !== "") return Number(text);
+    await sleep(READY_POLL_MS);
+  }
+  throw new Error(`stub did not signal ready within ${READY_DEADLINE_MS} ms`);
 }
 
 function assertPrivateTempFolder(box: Sandbox, dir: string): void {
@@ -116,9 +158,13 @@ function assertPrivateTempFolder(box: Sandbox, dir: string): void {
   assert.match(path.basename(dir), TEMP_FOLDER_NAME);
 }
 
+function defineTest(id: number, title: string, body: (t: TestContext) => void | Promise<void>) {
+  registeredIds.push(id);
+  test(`case ${id}: ${title}`, body);
+}
+
 function defineCase(spec: SmokeCase): void {
-  registeredIds.push(spec.id);
-  test(`case ${spec.id}: ${spec.fault}`, (t) => {
+  defineTest(spec.id, spec.fault, (t) => {
     // Arrange
     const box = createSandbox(t);
     if (spec.host !== undefined && spec.mode !== undefined) {
@@ -133,7 +179,13 @@ function defineCase(spec: SmokeCase): void {
 
     // Assert
     assert.equal(result.code, spec.code);
-    assert.deepEqual(result.lines, spec.lines);
+    if (spec.bigLog) {
+      assert.ok(result.lines.length > BIG_LOG_MIN_LINES, "log dump was cut short");
+      assert.equal(result.lines[0], "FAIL host=claude: claude plugin marketplace add failed");
+      assert.equal(result.lines.at(-1), STUB_LOG_MARKER);
+    } else {
+      assert.deepEqual(result.lines, spec.lines);
+    }
     if (spec.tmpEmpty) assert.deepEqual(readdirSync(box.tmpDir), []);
   });
 }
@@ -180,7 +232,7 @@ defineCase({
   mode: "allfail",
   args: ["claude"],
   code: EXIT_FAILED,
-  lines: ["FAIL host=claude: claude plugin marketplace add failed"],
+  lines: ["FAIL host=claude: claude plugin marketplace add failed", STUB_LOG_MARKER],
   tmpEmpty: true,
 });
 
@@ -191,7 +243,7 @@ defineCase({
   mode: "partial",
   args: ["claude"],
   code: EXIT_FAILED,
-  lines: [`FAIL host=claude: ${SKILL_MISSING}`],
+  lines: [`FAIL host=claude: ${SKILL_MISSING}`, STUB_LOG_MARKER],
   tmpEmpty: true,
 });
 
@@ -202,7 +254,7 @@ defineCase({
   mode: "install-fails",
   args: ["claude"],
   code: EXIT_FAILED,
-  lines: ["FAIL host=claude: claude plugin install failed"],
+  lines: ["FAIL host=claude: claude plugin install failed", STUB_LOG_MARKER],
   tmpEmpty: true,
 });
 
@@ -213,7 +265,7 @@ defineCase({
   mode: "allfail",
   args: ["codex"],
   code: EXIT_FAILED,
-  lines: ["FAIL host=codex: codex plugin marketplace add failed"],
+  lines: ["FAIL host=codex: codex plugin marketplace add failed", STUB_LOG_MARKER],
   tmpEmpty: true,
 });
 
@@ -224,7 +276,7 @@ defineCase({
   mode: "install-fails",
   args: ["codex"],
   code: EXIT_FAILED,
-  lines: ["FAIL host=codex: codex plugin add failed"],
+  lines: ["FAIL host=codex: codex plugin add failed", STUB_LOG_MARKER],
   tmpEmpty: true,
 });
 
@@ -235,11 +287,11 @@ defineCase({
   mode: "partial",
   args: ["codex"],
   code: EXIT_FAILED,
-  lines: [`FAIL host=codex: ${SKILL_MISSING}`],
+  lines: [`FAIL host=codex: ${SKILL_MISSING}`, STUB_LOG_MARKER],
   tmpEmpty: true,
 });
 
-test("case 83: full claude stub with --keep leaves one private temp folder", (t) => {
+defineTest(83, "full claude stub with --keep leaves one private temp folder", (t) => {
   // Arrange
   const box = createSandbox(t);
   installStub(box, "claude", "full");
@@ -258,61 +310,80 @@ test("case 83: full claude stub with --keep leaves one private temp folder", (t)
   assert.ok(existsSync(dir), `${dir} should exist`);
   assertPrivateTempFolder(box, dir);
 });
-registeredIds.push(83);
 
-for (const [id, host] of [
-  [84, "claude"],
-  [85, "codex"],
-] as const) {
-  registeredIds.push(id);
-  test(`case ${id}: full ${host} stub succeeds silently in a private temp folder`, (t) => {
+for (const host of ["claude", "codex"] as const) {
+  defineTest(
+    host === "claude" ? 84 : 85,
+    `full ${host} stub succeeds silently in a private temp folder`,
+    (t) => {
+      // Arrange
+      const box = createSandbox(t);
+      installStub(box, host, "full");
+
+      // Act
+      const result = runSmoke(box, [host]);
+
+      // Assert
+      assert.equal(result.code, EXIT_CLEAN);
+      assert.deepEqual(result.lines, []);
+      const calls = recordedCalls(box);
+      assert.deepEqual(
+        calls.map((call) => call.args),
+        [MARKETPLACE_ADD_ARGS, INSTALL_ARGS[host]],
+      );
+      assertPrivateTempFolder(box, calls[0].configDir);
+      assert.deepEqual(readdirSync(box.tmpDir), []);
+    },
+  );
+}
+
+defineCase({
+  id: 95,
+  fault: "claude stub writes more than 70 KB of log before failing",
+  host: "claude",
+  mode: "bigfail",
+  args: ["claude"],
+  code: EXIT_FAILED,
+  lines: [],
+  tmpEmpty: true,
+  bigLog: true,
+});
+
+// Stops the smoke script while its CLI runs, then checks the CLI is gone and cleanup ran.
+function defineSignalCase(id: number, mode: StubMode, title: string): void {
+  defineTest(id, title, async (t) => {
     // Arrange
     const box = createSandbox(t);
-    installStub(box, host, "full");
+    installStub(box, "claude", mode);
+    const child = spawn(process.execPath, [SMOKE_SCRIPT, "claude"], {
+      cwd: REPO_ROOT,
+      env: box.env,
+    });
+    let stdout = "";
+    child.stdout.on("data", (chunk) => (stdout += chunk));
+    const exited = new Promise<number | null>((resolve) => child.on("close", resolve));
+    t.after(() => {
+      child.kill("SIGKILL");
+    });
+    const stubPid = await readStubPid(box);
+    t.after(() => {
+      if (!isGone(stubPid)) process.kill(stubPid, "SIGKILL");
+    });
 
     // Act
-    const result = runSmoke(box, [host]);
+    child.kill("SIGTERM");
+    const code = await exited;
 
     // Assert
-    assert.equal(result.code, EXIT_CLEAN);
-    assert.deepEqual(result.lines, []);
-    assertPrivateTempFolder(box, recordedConfigDir(box));
+    assert.equal(code, EXIT_SIGNALLED);
+    assert.deepEqual(splitLines(stdout), []);
     assert.deepEqual(readdirSync(box.tmpDir), []);
+    assert.ok(await waitUntilGone(stubPid), `stub ${stubPid} still running after exit`);
   });
 }
 
-registeredIds.push(93);
-test("case 93: SIGTERM while a stub runs exits 130 and removes the temp folder", async (t) => {
-  // Arrange
-  const box = createSandbox(t);
-  installStub(box, "claude", "block");
-  const child = spawn(process.execPath, [SMOKE_SCRIPT, "claude"], {
-    cwd: REPO_ROOT,
-    env: box.env,
-  });
-  let stdout = "";
-  child.stdout.on("data", (chunk) => (stdout += chunk));
-  const exited = new Promise<number | null>((resolve) => child.on("close", resolve));
-  t.after(() => {
-    child.kill("SIGKILL");
-  });
-  const ready = path.join(box.signalDir, STUB_READY_NAME);
-  const deadline = Date.now() + READY_DEADLINE_MS;
-  while (!existsSync(ready) && Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, READY_POLL_MS));
-  }
-  assert.ok(existsSync(ready), `stub did not signal ready within ${READY_DEADLINE_MS} ms`);
-
-  // Act
-  child.kill("SIGTERM");
-  writeFileSync(path.join(box.signalDir, STUB_SENTINEL_NAME), "");
-  const code = await exited;
-
-  // Assert
-  assert.equal(code, EXIT_SIGNALLED);
-  assert.deepEqual(splitLines(stdout), []);
-  assert.deepEqual(readdirSync(box.tmpDir), []);
-});
+defineSignalCase(93, "block", "SIGTERM while a slow-stopping stub runs waits for it and cleans up");
+defineSignalCase(96, "stubborn", "SIGTERM while a stub ignores it kills the stub and cleans up");
 
 test("every expected smoke case is defined exactly once", () => {
   // Arrange

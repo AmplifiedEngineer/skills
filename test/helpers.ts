@@ -146,14 +146,21 @@ const STUB_FILE_MODE = 0o755;
 const STUB_SHEBANG = "#!/usr/bin/env node";
 const PATH_SEPARATOR = path.delimiter;
 
-export type StubMode = "allfail" | "install-fails" | "partial" | "full" | "block";
+export type StubMode =
+  | "allfail"
+  | "install-fails"
+  | "partial"
+  | "full"
+  | "block"
+  | "stubborn"
+  | "bigfail";
 
 export interface StubOptions {
   host: "claude" | "codex";
   mode: StubMode;
   repoRoot: string;
   recordFile: string;
-  /** Directory for the ready and sentinel files used by the `block` mode. */
+  /** Directory for the ready file the `block` and `stubborn` modes write their pid to. */
   signalDir?: string;
 }
 
@@ -187,36 +194,63 @@ function installSkills(skills) {
   }
 }
 
-function blockUntilSentinel() {
-  const ready = path.join(options.signalDir, options.readyName);
-  const sentinel = path.join(options.signalDir, options.sentinelName);
-  fs.writeFileSync(ready, "");
-  const wait = new Int32Array(new SharedArrayBuffer(4));
-  const deadline = Date.now() + options.blockLimitMs;
-  while (!fs.existsSync(sentinel)) {
-    if (Date.now() > deadline) process.exit(1);
-    Atomics.wait(wait, 0, 0, options.pollMs);
-  }
+function say(text) {
+  fs.writeSync(1, text);
+}
+
+function failWithOutput() {
+  say(options.marker + "\n");
+  process.exit(1);
+}
+
+function failWithBigOutput() {
+  const filler = "x".repeat(options.fillerLineLength) + "\n";
+  for (let written = 0; written < options.bigOutputBytes; written += filler.length) say(filler);
+  failWithOutput();
+}
+
+// Records its pid, then waits. block exits a little after SIGTERM, stubborn ignores it.
+function blockUntilStopped() {
+  fs.writeFileSync(path.join(options.signalDir, options.readyName), String(process.pid));
+  process.on("SIGTERM", () => {
+    if (options.mode === "block") setTimeout(() => process.exit(0), options.sigtermDelayMs);
+  });
+  setTimeout(() => process.exit(1), options.blockLimitMs);
 }
 
 const isMarketplace = args[0] === "plugin" && args[1] === "marketplace";
 const isInstall = args.slice(0, 2).join(" ") === options.installWords;
-if (options.mode === "allfail") process.exit(1);
-if (isMarketplace) {
-  if (options.mode === "block") blockUntilSentinel();
+const waits = options.mode === "block" || options.mode === "stubborn";
+
+function run() {
+  if (options.mode === "allfail") failWithOutput();
+  if (options.mode === "bigfail") failWithBigOutput();
+  if (isMarketplace) {
+    if (waits) return blockUntilStopped();
+    process.exit(0);
+  }
+  if (!isInstall) process.exit(1);
+  if (options.mode === "install-fails") failWithOutput();
+  if (options.mode === "partial") {
+    say(options.marker + "\n");
+    installSkills(options.partialSkills);
+  } else if (options.mode === "full") {
+    installSkills(options.fullSkills);
+  } else {
+    process.exit(1);
+  }
   process.exit(0);
 }
-if (isInstall && options.mode === "install-fails") process.exit(1);
-if (isInstall && options.mode === "partial") installSkills(options.partialSkills);
-else if (isInstall && options.mode === "full") installSkills(options.fullSkills);
-else process.exit(1);
-process.exit(0);
+
+run();
 `;
 
 export const STUB_READY_NAME = "stub-ready";
-export const STUB_SENTINEL_NAME = "stub-sentinel";
+export const STUB_LOG_MARKER = "stub-log-end-marker";
+const STUB_SIGTERM_DELAY_MS = 500;
+const STUB_FILLER_LINE_LENGTH = 99;
+const STUB_BIG_OUTPUT_BYTES = 80_000;
 const STUB_BLOCK_LIMIT_MS = 30_000;
-const STUB_POLL_MS = 20;
 const STUB_MARKETPLACE = "amplifiedengineer";
 const STUB_PLUGIN = "ae";
 const STUB_PARTIAL_SKILLS = ["planner", "implementer"];
@@ -227,8 +261,9 @@ const STUB_HOSTS = {
 } as const;
 
 /**
- * Writes a Node stub CLI named after the host into `binDir`. It prints nothing, appends
- * its argv and config dir to `recordFile`, and behaves according to `mode`.
+ * Writes a Node stub CLI named after the host into `binDir`. It appends its argv and config
+ * dir to `recordFile`, prints the log marker (after filler in `bigfail`) in the failing modes,
+ * and otherwise behaves according to `mode`.
  */
 export function writeStubCli(binDir: string, stub: StubOptions): void {
   const options = {
@@ -238,9 +273,11 @@ export function writeStubCli(binDir: string, stub: StubOptions): void {
     recordFile: stub.recordFile,
     signalDir: stub.signalDir,
     readyName: STUB_READY_NAME,
-    sentinelName: STUB_SENTINEL_NAME,
     blockLimitMs: STUB_BLOCK_LIMIT_MS,
-    pollMs: STUB_POLL_MS,
+    sigtermDelayMs: STUB_SIGTERM_DELAY_MS,
+    marker: STUB_LOG_MARKER,
+    fillerLineLength: STUB_FILLER_LINE_LENGTH,
+    bigOutputBytes: STUB_BIG_OUTPUT_BYTES,
     marketplace: STUB_MARKETPLACE,
     plugin: STUB_PLUGIN,
     partialSkills: STUB_PARTIAL_SKILLS,

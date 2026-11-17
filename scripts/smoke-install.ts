@@ -17,6 +17,7 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  writeSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -59,6 +60,9 @@ const REASON_NOT_REMOVED = "temp folder not removed";
 const EXIT_OK = 0;
 const EXIT_FAILED = 1;
 const EXIT_SIGNALLED = 130;
+const KILL_GRACE_MS = 2_000;
+const STDOUT_FD = 1;
+const WRITE_RETRY_ERROR = "EAGAIN";
 const STOP_SIGNALS: NodeJS.Signals[] = ["SIGINT", "SIGTERM", "SIGHUP"];
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), PARENT_DIR);
@@ -67,9 +71,23 @@ let keep = false;
 let running: ChildProcess | undefined;
 let cleanedUp = false;
 let cleanupFailed = false;
+let stopping = false;
+
+// process.exit can drop buffered stdout on a pipe, so every stdout write is synchronous.
+function writeOut(text: string): void {
+  const bytes = Buffer.from(text, TEXT_ENCODING);
+  let offset = 0;
+  while (offset < bytes.length) {
+    try {
+      offset += writeSync(STDOUT_FD, bytes, offset);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== WRITE_RETRY_ERROR) throw error;
+    }
+  }
+}
 
 function fail(host: string, message: string): void {
-  console.log(`FAIL host=${host}: ${message}`);
+  writeOut(`FAIL host=${host}: ${message}\n`);
 }
 
 function isHost(arg: string): arg is Host {
@@ -131,7 +149,7 @@ function cleanup(): void {
   cleanedUp = true;
   for (const [host, dir] of hostDirs) {
     if (keep) {
-      console.log(`KEEP host=${host}: ${dir}`);
+      writeOut(`KEEP host=${host}: ${dir}\n`);
       continue;
     }
     rmSync(dir, { recursive: true, force: true });
@@ -147,8 +165,22 @@ function finish(status: number): never {
   process.exit(cleanupFailed ? EXIT_FAILED : status);
 }
 
-function onSignal(): void {
-  running?.kill("SIGTERM");
+// Resolves once the child has closed, so cleanup never removes a folder it is still writing to.
+function stopChild(child: ChildProcess): Promise<void> {
+  return new Promise((resolve) => {
+    const killTimer = setTimeout(() => child.kill("SIGKILL"), KILL_GRACE_MS);
+    child.once("close", () => {
+      clearTimeout(killTimer);
+      resolve();
+    });
+    child.kill("SIGTERM");
+  });
+}
+
+async function onSignal(): Promise<void> {
+  if (stopping) return;
+  stopping = true;
+  if (running) await stopChild(running);
   finish(EXIT_SIGNALLED);
 }
 
@@ -167,10 +199,15 @@ function runChild(
       stdio: ["ignore", logFd, logFd],
     });
     running = child;
+    let settled = false;
     const settle = (ok: boolean): void => {
+      // A failed spawn emits both error and close.
+      if (settled) return;
+      settled = true;
       if (running === child) running = undefined;
       closeSync(logFd);
-      resolve(ok);
+      // After a stop signal the handler owns the exit, so the steps must not go on or print.
+      if (!stopping) resolve(ok);
     };
     child.once("error", () => settle(false));
     child.once("close", (code) => settle(code === EXIT_OK));
@@ -178,7 +215,7 @@ function runChild(
 }
 
 function dumpLog(log: string): void {
-  process.stdout.write(readFileSync(log, TEXT_ENCODING));
+  writeOut(readFileSync(log, TEXT_ENCODING));
 }
 
 async function runCli(
