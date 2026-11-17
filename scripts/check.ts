@@ -67,6 +67,7 @@ const REASON_OLD_NAME = "old skill name";
 const REASON_NAME_FOLDER = "does not match folder";
 const REASON_UNEXPECTED_FOLDER = "unexpected skill folder";
 const REASON_README_MISSING = "README missing";
+const REASON_NO_ROOT = "cannot change into repo root";
 const REASON_NO_FILES = "no files match";
 const REASON_MISSING_NAME = "missing name";
 const REASON_DIFFERS = "differs from";
@@ -126,7 +127,7 @@ function readText(file: string): string | undefined {
 function parseJson(file: string): { ok: true; value: Json } | { ok: false } {
   const text = readText(file);
   if (text === undefined) return { ok: false };
-  // jq accepts an empty document, JSON.parse does not.
+  // An empty or blank file counts as a valid, empty document.
   if (!NOT_BLANK.test(text)) return { ok: true, value: undefined };
   try {
     return { ok: true, value: JSON.parse(text) };
@@ -139,7 +140,7 @@ function isObject(value: Json): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-// Mirrors `jq -r '.key // empty'`: missing, null and false all read as "".
+// Reads a top-level key as text: a missing, null or false value reads as "".
 function jsonField(file: string, key: string): string {
   const parsed = parseJson(file);
   if (!parsed.ok || !isObject(parsed.value)) return "";
@@ -148,7 +149,8 @@ function jsonField(file: string, key: string): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
-// Mirrors `jq '.plugins | map(.name) | index($n) != null'`, where any type error is false.
+// True when `plugins` (an array or an object of entries) lists an entry with this name;
+// any other shape is false.
 function hasPluginEntry(file: string, name: string): boolean {
   const parsed = parseJson(file);
   if (!parsed.ok || !isObject(parsed.value)) return false;
@@ -252,7 +254,7 @@ function linkTargets(text: string): LinkTarget[] {
     lines.flatMap((line) =>
       (line.match(pattern) ?? []).map((match) => {
         const target = strip(match).split(FRAGMENT_MARK)[0] ?? "";
-        // The shell reads each target back through `read`, which drops trailing blanks.
+        // Trailing blanks are not part of the target.
         return { kind, target: target.replace(TRAILING_BLANKS, "") };
       }),
     );
@@ -307,7 +309,7 @@ function checkOldNames(): string[] {
     } catch {
       continue;
     }
-    // Like `grep -I`: a file with a NUL byte is binary and is skipped.
+    // A file with a NUL byte is binary and is skipped.
     if (content.includes(NUL_BYTE)) continue;
     for (const match of content.toString(ENCODING).matchAll(OLD_NAME_PATTERN)) {
       out.push(fail(CHECK_OLD_NAMES, file, `${REASON_OLD_NAME} ${match[0]}`));
@@ -356,7 +358,7 @@ function checkSkills(): string[] {
   return out;
 }
 
-// Sorted entry names without dotfiles, like a shell glob of `dir/*`.
+// Sorted entry names, leaving out names that start with a dot.
 function visibleEntries(dir: string): string[] {
   try {
     return readdirSync(dir)
@@ -482,6 +484,7 @@ function main(): number {
   try {
     process.chdir(root);
   } catch {
+    console.error(`${REASON_NO_ROOT} ${root}`);
     return 1;
   }
   const failures = CHECKS.flatMap((check) => check());
