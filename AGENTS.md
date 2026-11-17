@@ -24,8 +24,13 @@ Never use em dashes or en dashes in any text. Use commas, colons or parentheses.
 
 ## Checks
 
-Run these from the repository root. All need `jq`; only `test-check.sh` also needs `git`, and `smoke-install.sh` needs the `claude` and `codex` CLIs.
+Run these from the repository root. They need Node 24 and a prior `npm ci`; `npm test` also needs `git`, and `npm run smoke` needs the `claude` and `codex` CLIs.
 
-- `sh scripts/check.sh [repo-root]`: static checks on manifests, links, old names, skills, the researcher brief, README, the storage contract, template Status lines and the implementer stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
-- `sh scripts/test-check.sh`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
-- `sh scripts/smoke-install.sh [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the three skills arrived. `--keep` leaves the folders and prints their paths.
+- `npm run check [-- repo-root]`: static checks on manifests, links, old names, skills, the researcher brief, README, the storage contract, template Status lines and the implementer stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
+- `npm test`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
+- `npm run smoke -- [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the three skills arrived. `--keep` leaves the folders and prints their paths.
+- `npm run typecheck`: type checks the scripts and tests.
+
+## Releases
+
+Releases come from release-please. Merging the release PR tags the version, writes `CHANGELOG.md` and bumps `package.json` and both `plugin.json` files.

@@ -18,12 +18,9 @@ import type { TestContext } from "node:test";
 
 export const REPO_ROOT = path.resolve(import.meta.dirname, "..");
 
-const CHECK_CMD_ENV = "AE_CHECK_CMD";
 const CHECK_SCRIPT = "scripts/check.ts";
 const COPY_PREFIX = "ae-test-";
 const GIT_LIST_ARGS = ["ls-files", "--cached", "--others", "--exclude-standard"];
-const SHELL = "sh";
-const SHELL_FLAG = "-c";
 const TEXT_ENCODING = "utf8";
 
 export type JsonObject = Record<string, any>;
@@ -140,12 +137,8 @@ export function runCommand(
   return { code: run.status, lines: splitLines(run.stdout) };
 }
 
-/** Runs the check script, from `AE_CHECK_CMD` when set, with cwd at the copy. */
+/** Runs the check script with cwd at the copy. */
 export function runCheck(cwd: string): RunResult {
-  const override = process.env[CHECK_CMD_ENV];
-  if (override !== undefined && override !== "") {
-    return runCommand(SHELL, [SHELL_FLAG, override], cwd);
-  }
   return runCommand(process.execPath, [CHECK_SCRIPT], cwd);
 }
 

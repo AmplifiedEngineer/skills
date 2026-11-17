@@ -107,7 +107,6 @@ interface CheckCase {
   fault: string;
   apply: (copy: TreeCopy) => void;
   lines: string[];
-  anyOrder?: boolean;
 }
 
 const registeredIds: number[] = [];
@@ -131,8 +130,7 @@ function defineCase(spec: CheckCase): void {
     const result = runCheck(copy.root);
 
     // Assert
-    const order = (lines: string[]) => (spec.anyOrder ? [...lines].sort() : lines);
-    assert.deepEqual(order(result.lines), order(spec.lines));
+    assert.deepEqual(result.lines, spec.lines);
     assert.equal(result.code, spec.lines.length === 0 ? EXIT_CLEAN : EXIT_FAILED);
   });
 }
@@ -385,7 +383,6 @@ interface RemoveRow {
   id: number;
   path: string;
   lines: string[];
-  anyOrder?: boolean;
 }
 
 const removeRows: RemoveRow[] = [
@@ -413,8 +410,6 @@ const removeRows: RemoveRow[] = [
   {
     id: 30,
     path: STORAGE_PLANNER,
-    // The script lists markdown files in directory order, which differs per filesystem.
-    anyOrder: true,
     lines: [
       fail(3, PLANNER_SKILL, `${BROKEN_LINK} ${STORAGE_LINK_TARGET}`),
       fail(3, PLANNER_DOC, `${BROKEN_LINK} ../${STORAGE_LINK_TARGET}`),
@@ -456,7 +451,6 @@ for (const row of removeRows) {
     fault: `remove ${row.path}`,
     apply: (copy) => copy.remove(row.path),
     lines: row.lines,
-    anyOrder: row.anyOrder,
   });
 }
 

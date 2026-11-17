@@ -17,16 +17,22 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Show jq version
-        run: jq --version
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
 
       - name: Repo self-check
-        run: sh scripts/check.sh
+        run: npm run check
 
-      # Must stay before the npm install step: cases 20, 21 and 58 need no
-      # claude or codex CLI on PATH, and the script's own guard checks that.
-      - name: Fault tests for the self-check
-        run: sh scripts/test-check.sh
+      - name: Tests
+        run: npm test
 
       - name: Install Claude Code
         run: npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
@@ -35,4 +41,4 @@ jobs:
         run: claude plugin validate .
 
       - name: Install smoke test (Claude Code)
-        run: sh scripts/smoke-install.sh claude
+        run: npm run smoke -- claude

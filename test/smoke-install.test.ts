@@ -26,10 +26,8 @@ import {
 } from "./helpers.ts";
 import type { RunResult, StubMode } from "./helpers.ts";
 
-const SMOKE_CMD_ENV = "AE_SMOKE_CMD";
 const SMOKE_SCRIPT = "scripts/smoke-install.ts";
 const SANDBOX_PREFIX = "ae-smoke-test-";
-const SYSTEM_TOOLS = ["sh", "jq", "mktemp", "rm", "cat", "env", "dirname"];
 const NODE_LINK = "node";
 const BIN_DIR = "bin";
 const TMP_DIR = "tmp";
@@ -75,16 +73,6 @@ interface SmokeCase {
 
 const registeredIds: number[] = [];
 
-function commandWords(): string[] {
-  const override = process.env[SMOKE_CMD_ENV];
-  if (override === undefined || override === "") return [process.execPath, SMOKE_SCRIPT];
-  return override.split(/\s+/).filter((word) => word !== "");
-}
-
-function usesShellScript(): boolean {
-  return commandWords()[0] !== process.execPath;
-}
-
 function createSandbox(t: TestContext): Sandbox {
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), SANDBOX_PREFIX)));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -93,14 +81,8 @@ function createSandbox(t: TestContext): Sandbox {
     mkdirSync(dir);
     return dir;
   });
+  // The stub CLIs start with `#!/usr/bin/env node`, so node must resolve on the sandbox PATH.
   symlinkSync(process.execPath, path.join(binDir, NODE_LINK));
-  if (usesShellScript()) {
-    for (const tool of SYSTEM_TOOLS) {
-      const found = resolveOnPath(tool, process.env.PATH);
-      assert.ok(found, `${tool} must resolve on the outer PATH to run the shell script`);
-      symlinkSync(found, path.join(binDir, tool));
-    }
-  }
   return {
     binDir,
     tmpDir,
@@ -120,16 +102,8 @@ function installStub(box: Sandbox, host: Host, mode: StubMode): void {
   });
 }
 
-function launch(box: Sandbox, args: string[]) {
-  const [file, ...words] = commandWords();
-  const resolved = file === process.execPath ? file : resolveOnPath(file, process.env.PATH);
-  assert.ok(resolved, `${file} must resolve on the outer PATH`);
-  return { resolved, args: [...words, ...args], env: box.env };
-}
-
 function runSmoke(box: Sandbox, args: string[]): RunResult {
-  const run = launch(box, args);
-  return runCommand(run.resolved, run.args, REPO_ROOT, run.env);
+  return runCommand(process.execPath, [SMOKE_SCRIPT, ...args], REPO_ROOT, box.env);
 }
 
 function recordedConfigDir(box: Sandbox): string {
@@ -312,8 +286,10 @@ test("case 93: SIGTERM while a stub runs exits 130 and removes the temp folder",
   // Arrange
   const box = createSandbox(t);
   installStub(box, "claude", "block");
-  const run = launch(box, ["claude"]);
-  const child = spawn(run.resolved, run.args, { cwd: REPO_ROOT, env: run.env });
+  const child = spawn(process.execPath, [SMOKE_SCRIPT, "claude"], {
+    cwd: REPO_ROOT,
+    env: box.env,
+  });
   let stdout = "";
   child.stdout.on("data", (chunk) => (stdout += chunk));
   const exited = new Promise<number | null>((resolve) => child.on("close", resolve));
