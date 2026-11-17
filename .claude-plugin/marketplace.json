@@ -1,5 +1,5 @@
 {
-  "name": "amplifiedengineer-skills",
+  "name": "amplifiedengineer",
   "owner": {
     "name": "Igor Santos",
     "email": "2278164+igorjs@users.noreply.github.com"
@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "playbook",
+      "name": "ae",
       "source": "./",
       "description": "Planner, implementer and researcher skills for Codex and Claude Code."
     }

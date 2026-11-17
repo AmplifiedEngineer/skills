@@ -41,12 +41,12 @@ Confirm objective, scope and acceptance criteria; inspect project guidance and i
 - references/verification.md
 - references/change-safety.md
 - references/document-storage.md
-- templates/execution-plan.md (save the filled plan in `.playbook/`)
+- templates/execution-plan.md (save the filled plan in `.ae/`)
 - templates/implementation-report.md
 
 ## Calling the researcher
 
-Use the researcher skill: `playbook:researcher` in Claude Code when installed as a plugin, `researcher` when copied in by hand, `$researcher` in Codex.
+Use the researcher skill: `ae:researcher` in Claude Code when installed as a plugin, `researcher` when copied in by hand, `$researcher` in Codex.
 
 If no researcher skill is available, do the retrieval yourself under the same rules: list the available tools first, cite sources with links and dates, and separate facts from inference. Say in your output that the researcher was not available.
 

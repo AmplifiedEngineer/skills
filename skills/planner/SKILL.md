@@ -68,11 +68,11 @@ Every document any planner workflow saves follows the storage contract in `refer
 - The planner picks the document types each task needs.
 - Save each document in the type folder from the contract table, with the status line from its template. When the type has no template, take the first status value from the contract table.
 - Only the user's confirmation moves a document to `approved`.
-- Location: the user's instruction wins. Otherwise use the contract default, `docs/playbook/<type>/`.
+- Location: the user's instruction wins. Otherwise use the contract default, `docs/ae/<type>/`.
 
 ## Calling the researcher
 
-Use the researcher skill: `playbook:researcher` in Claude Code when installed as a plugin, `researcher` when copied in by hand, `$researcher` in Codex.
+Use the researcher skill: `ae:researcher` in Claude Code when installed as a plugin, `researcher` when copied in by hand, `$researcher` in Codex.
 
 If no researcher skill is available, do the retrieval yourself under the same rules: list the available tools first, cite sources with links and dates, and separate facts from inference. Say in your output that the researcher was not available.
 

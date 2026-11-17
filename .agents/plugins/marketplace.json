@@ -1,8 +1,8 @@
 {
-  "name": "amplifiedengineer-skills",
+  "name": "amplifiedengineer",
   "plugins": [
     {
-      "name": "playbook",
+      "name": "ae",
       "source": {
         "source": "local",
         "path": "./"
