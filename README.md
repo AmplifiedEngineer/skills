@@ -32,6 +32,10 @@ Copy `skills/<name>/` into one of these locations:
 
 The shared `SKILL.md` and supporting files work in both hosts. The `agents/openai.yaml` file is optional Codex UI metadata. Discover integrations actually available in the environment; example provider names do not configure access.
 
+## Releases
+
+Release notes are on the [releases page](https://github.com/AmplifiedEngineer/skills/releases). The full history is in the [changelog](https://github.com/AmplifiedEngineer/skills/blob/main/CHANGELOG.md).
+
 ## Licence
 
 Apache-2.0. See the `LICENSE` file.
