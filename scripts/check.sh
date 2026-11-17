@@ -15,7 +15,7 @@ SKILL_NAMES="planner implementer researcher"
 SKILL_FILE="SKILL.md"
 OLD_NAME_PATTERN='engineering[ -](architect|implementation|context)'
 LINK_PREFIXES="../ references/ workflows/ templates/ examples/ agents/"
-SKIP_PREFIXES="docs/ .playbook/ #"
+SKIP_PREFIXES="docs/ .ae/ #"
 STORAGE_PLANNER="skills/planner/references/document-storage.md"
 STORAGE_IMPLEMENTER="skills/implementer/references/document-storage.md"
 TEMPLATES_DIR="skills/planner/templates"
@@ -64,7 +64,7 @@ has_plugin_entry() {
 }
 
 check_json_parses() {
-  find . \( -path ./.git -o -path ./.playbook \) -prune -o -type f -name '*.json' -print |
+  find . \( -path ./.git -o -path ./.ae \) -prune -o -type f -name '*.json' -print |
     while IFS= read -r f; do
       f=${f#./}
       jq empty "$f" >/dev/null 2>&1 || fail 1 "$f" "$REASON_INVALID_JSON"
@@ -139,7 +139,7 @@ check_links() {
 }
 
 check_old_names() {
-  find . \( -path ./.git -o -path ./.playbook -o -path ./scripts \) -prune -o -type f -print |
+  find . \( -path ./.git -o -path ./.ae -o -path ./scripts \) -prune -o -type f -print |
     while IFS= read -r f; do
       grep -IioE "$OLD_NAME_PATTERN" "$f" 2>/dev/null | while IFS= read -r match; do
         fail 4 "${f#./}" "$REASON_OLD_NAME $match"

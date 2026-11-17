@@ -41,7 +41,7 @@ Confirm objective, scope and acceptance criteria; inspect project guidance and i
 - references/verification.md
 - references/change-safety.md
 - references/document-storage.md
-- templates/execution-plan.md (save the filled plan in `.playbook/`)
+- templates/execution-plan.md (save the filled plan in `.ae/`)
 - templates/implementation-report.md
 
 ## Calling the researcher

@@ -4,10 +4,10 @@ This file says where documents go, what status line they carry and which ones th
 
 ## Location
 
-- The default document root is `docs/playbook/`. It has one subfolder per type, as listed in the table below: `plans/`, `specs/`, `prd/`, `adr/`, `reports/` and `discovery/`.
+- The default document root is `docs/ae/`. It has one subfolder per type, as listed in the table below: `plans/`, `specs/`, `prd/`, `adr/`, `reports/` and `discovery/`.
 - The user may name another root. When the request leaves the root unclear, ask.
-- Temporary working files go in `.playbook/` at the repo root. Delete them when the work ends.
-- The implementer's own outputs are working files. Its filled execution plan lives in `.playbook/`. Its implementation report goes in its final output and the PR body. It is never saved under `docs/playbook/` unless the user asks.
+- Temporary working files go in `.ae/` at the repo root. Delete them when the work ends.
+- The implementer's own outputs are working files. Its filled execution plan lives in `.ae/`. Its implementation report goes in its final output and the PR body. It is never saved under `docs/ae/` unless the user asks.
 
 ## Status line
 

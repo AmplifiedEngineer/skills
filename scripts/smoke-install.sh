@@ -12,7 +12,7 @@ SKILL_NAMES="planner implementer researcher"
 SKILL_FILE="SKILL.md"
 MANIFEST="plugin.json"
 LOG_NAME="smoke.log"
-TMP_TEMPLATE="${TMPDIR:-/tmp}/playbook-smoke.XXXXXX"
+TMP_TEMPLATE="${TMPDIR:-/tmp}/ae-smoke.XXXXXX"
 CACHE_DIR="plugins/cache"
 
 REASON_NO_CLI="CLI not found on PATH"

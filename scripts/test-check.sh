@@ -203,10 +203,10 @@ prepare_case() {
        want "FAIL check=3 file=skills/planner/SKILL.md: broken link references/missing.md" ;;
     11) append "$PLANNER_DOC" '[licence](LICENSE)'
        want "FAIL check=3 file=skills/planner/workflows/documentation.md: broken link LICENSE" ;;
-    12) append "$PLANNER_DOC" '[x](docs/playbook/plans/x.md)'
-       append "$PLANNER_DOC" '[x](.playbook/plans/x.md)'
-       append "$PLANNER_DOC" '`docs/playbook/plans/x.md`'
-       append "$PLANNER_DOC" '`.playbook/plans/x.md`'
+    12) append "$PLANNER_DOC" '[x](docs/ae/plans/x.md)'
+       append "$PLANNER_DOC" '[x](.ae/plans/x.md)'
+       append "$PLANNER_DOC" '`docs/ae/plans/x.md`'
+       append "$PLANNER_DOC" '`.ae/plans/x.md`'
        append "$PLANNER_DOC" '[x](../SKILL.md#section)'
        append "$PLANNER_DOC" '`references/<name>.md`'
        append "$PLANNER_DOC" '[x](#anchor)'
@@ -345,9 +345,9 @@ prepare_case() {
     74) runner=smoke; smoke_args=claude
        stub_env claude allfail; stub_tmp
        want "FAIL host=claude: claude plugin marketplace add failed" ;;
-    75) mkdir "$copy/.playbook"
-       printf '%s\n' "$BAD_JSON" > "$copy/.playbook/x.json"
-       printf 'Engineering Architect\n' > "$copy/.playbook/x.md"
+    75) mkdir "$copy/.ae"
+       printf '%s\n' "$BAD_JSON" > "$copy/.ae/x.json"
+       printf 'Engineering Architect\n' > "$copy/.ae/x.md"
        want_exit=0 ;;
     76) sub "$PLAN_TEMPLATE" '/^Status: /d'
        append "$PLAN_TEMPLATE" 'Status: draft'
@@ -422,7 +422,7 @@ assert_keep() {
   esac
   kept=${out#"KEEP host=claude: "}
   case "$kept" in
-    "$TMP_BASE/playbook-smoke."* | "${TMPDIR:-/tmp}/playbook-smoke."*) ;;
+    "$TMP_BASE/ae-smoke."* | "${TMPDIR:-/tmp}/ae-smoke."*) ;;
     *) fail "kept folder $kept is outside the smoke temp location, not deleted"; return ;;
   esac
   [ -d "$kept" ] || { fail "kept folder $kept is not an existing folder"; return; }
@@ -455,8 +455,8 @@ assert_case() {
   fi
   if [ "$check_cfg" = 1 ]; then
     case "$(cat "$copy/stub-config-path" 2>/dev/null)" in
-      "$copy/tmp/playbook-smoke."*) ;;
-      *) fail "config folder not created under $copy/tmp/playbook-smoke." ;;
+      "$copy/tmp/ae-smoke."*) ;;
+      *) fail "config folder not created under $copy/tmp/ae-smoke." ;;
     esac
   fi
 }
