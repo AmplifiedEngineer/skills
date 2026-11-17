@@ -6,6 +6,7 @@
 
 ROOT_PLUGIN="plugin.json"
 CLAUDE_PLUGIN=".claude-plugin/plugin.json"
+PACKAGE_JSON="package.json"
 CLAUDE_MARKET=".claude-plugin/marketplace.json"
 CODEX_MARKET=".agents/plugins/marketplace.json"
 README="README.md"
@@ -64,7 +65,8 @@ has_plugin_entry() {
 }
 
 check_json_parses() {
-  find . \( -path ./.git -o -path ./.ae \) -prune -o -type f -name '*.json' -print |
+  find . \( -path ./.git -o -path ./.ae -o -path ./node_modules \) -prune \
+    -o -type f -name '*.json' -print |
     while IFS= read -r f; do
       f=${f#./}
       jq empty "$f" >/dev/null 2>&1 || fail 1 "$f" "$REASON_INVALID_JSON"
@@ -87,6 +89,13 @@ check_manifests() {
     [ "$(jq -r '.version // empty' "$CLAUDE_PLUGIN" 2>/dev/null)" = \
       "$(jq -r '.version // empty' "$ROOT_PLUGIN" 2>/dev/null)" ] ||
       fail 2 "$CLAUDE_PLUGIN" "$REASON_VERSION_MISMATCH $ROOT_PLUGIN"
+  fi
+  if [ -f "$PACKAGE_JSON" ]; then
+    [ "$(jq -r '.version // empty' "$PACKAGE_JSON" 2>/dev/null)" = \
+      "$(jq -r '.version // empty' "$ROOT_PLUGIN" 2>/dev/null)" ] ||
+      fail 2 "$PACKAGE_JSON" "$REASON_VERSION_MISMATCH $ROOT_PLUGIN"
+  else
+    fail 2 "$PACKAGE_JSON" "$REASON_MISSING_FILE"
   fi
   for f in "$CLAUDE_MARKET" "$CODEX_MARKET"; do
     [ -f "$f" ] || continue
@@ -139,7 +148,8 @@ check_links() {
 }
 
 check_old_names() {
-  find . \( -path ./.git -o -path ./.ae -o -path ./scripts \) -prune -o -type f -print |
+  find . \( -path ./.git -o -path ./.ae -o -path ./scripts -o -path ./node_modules \
+    -o -path ./test -o -path ./CHANGELOG.md \) -prune -o -type f -print |
     while IFS= read -r f; do
       grep -IioE "$OLD_NAME_PATTERN" "$f" 2>/dev/null | while IFS= read -r match; do
         fail 4 "${f#./}" "$REASON_OLD_NAME $match"

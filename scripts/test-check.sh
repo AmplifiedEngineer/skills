@@ -14,6 +14,8 @@ TMP_BASE="${TMPDIR:-/tmp}"
 TMP_BASE="${TMP_BASE%/}"
 
 ROOT_PLUGIN="plugin.json"
+PACKAGE_JSON="package.json"
+CHANGELOG="CHANGELOG.md"
 CLAUDE_PLUGIN=".claude-plugin/plugin.json"
 CLAUDE_MARKET=".claude-plugin/marketplace.json"
 CODEX_MARKET=".agents/plugins/marketplace.json"
@@ -35,7 +37,7 @@ WRONG_STATUS='s/^Status: .*/Status: wrong/'
 CASES="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
 28 29 30 31 32 33 34 35 36 37 38 39 40 41
 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 69 70
-71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 68"
+71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 68"
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
@@ -384,6 +386,12 @@ prepare_case() {
        want "FAIL check=2 file=plugin.json: missing name" ;;
     87) sub "$CODEX_MARKET" '2s/"amplifiedengineer"/"other"/'
        want "FAIL check=2 file=$CODEX_MARKET: name mismatch with $CLAUDE_MARKET" ;;
+    88) printf '{"name": "ae-skills", "version": "9.9.9"}\n' > "$copy/$PACKAGE_JSON"
+       want "FAIL check=2 file=$PACKAGE_JSON: version mismatch with plugin.json" ;;
+    89) append "$CHANGELOG" 'Engineering Architect'
+       want_exit=0 ;;
+    90) remove "$PACKAGE_JSON"
+       want "FAIL check=2 file=$PACKAGE_JSON: missing file" ;;
     68) runner=self; cli_dirs="$copy/stubbin"
        mkdir "$copy/stubbin"
        empty_exec "$copy/stubbin/claude"
