@@ -1,3 +1,4 @@
+// @ts-check
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import {
@@ -13,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import type { TestContext } from "node:test";
+
 import {
   REPO_ROOT,
   STUB_LOG_MARKER,
@@ -22,10 +23,9 @@ import {
   runCommand,
   splitLines,
   writeStubCli,
-} from "./helpers.ts";
-import type { RunResult, StubMode } from "./helpers.ts";
+} from "./helpers.mjs";
 
-const SMOKE_SCRIPT = "scripts/smoke-install.ts";
+const SMOKE_SCRIPT = "scripts/smoke-install.mjs";
 const SANDBOX_PREFIX = "ae-smoke-test-";
 const NODE_LINK = "node";
 const BIN_DIR = "bin";
@@ -41,14 +41,13 @@ const READY_POLL_MS = 25;
 const EXIT_CLEAN = 0;
 const EXIT_FAILED = 1;
 const EXIT_SIGNALLED = 130;
-type Host = "claude" | "codex";
 
 const PID_GONE_GRACE_MS = 100;
 const PID_POLL_MS = 10;
 const BIG_LOG_MIN_LINES = 500;
 const MARKETPLACE_ADD_ARGS = ["plugin", "marketplace", "add", REPO_ROOT];
 const PLUGIN_REF = "ae@amplifiedengineer";
-const INSTALL_ARGS: Record<Host, string[]> = {
+const INSTALL_ARGS = {
   claude: ["plugin", "install", PLUGIN_REF],
   codex: ["plugin", "add", PLUGIN_REF],
 };
@@ -59,30 +58,9 @@ const SKILL_MISSING = "skill researcher missing after install";
 
 const EXPECTED_CASE_IDS = [20, 21, 58, 59, 74, 77, 78, 80, 81, 82, 83, 84, 85, 93, 95, 96];
 
-interface Sandbox {
-  binDir: string;
-  tmpDir: string;
-  signalDir: string;
-  recordFile: string;
-  env: NodeJS.ProcessEnv;
-}
+const registeredIds = [];
 
-interface SmokeCase {
-  id: number;
-  fault: string;
-  host?: Host;
-  mode?: StubMode;
-  args: string[];
-  code: number;
-  lines: string[];
-  absent?: Host[];
-  tmpEmpty?: boolean;
-  bigLog?: boolean;
-}
-
-const registeredIds: number[] = [];
-
-function createSandbox(t: TestContext): Sandbox {
+function createSandbox(t) {
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), SANDBOX_PREFIX)));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const [binDir, tmpDir, signalDir] = [BIN_DIR, TMP_DIR, SIGNAL_DIR].map((name) => {
@@ -101,7 +79,7 @@ function createSandbox(t: TestContext): Sandbox {
   };
 }
 
-function installStub(box: Sandbox, host: Host, mode: StubMode): void {
+function installStub(box, host, mode) {
   writeStubCli(box.binDir, {
     host,
     mode,
@@ -111,38 +89,38 @@ function installStub(box: Sandbox, host: Host, mode: StubMode): void {
   });
 }
 
-function runSmoke(box: Sandbox, args: string[]): RunResult {
+function runSmoke(box, args) {
   return runCommand(process.execPath, [SMOKE_SCRIPT, ...args], REPO_ROOT, box.env);
 }
 
-function recordedCalls(box: Sandbox): { args: string[]; configDir: string }[] {
+function recordedCalls(box) {
   return splitLines(readFileSync(box.recordFile, TEXT_ENCODING)).map((line) => JSON.parse(line));
 }
 
-function recordedConfigDir(box: Sandbox): string {
+function recordedConfigDir(box) {
   return recordedCalls(box)[0].configDir;
 }
 
-function isGone(pid: number): boolean {
+function isGone(pid) {
   try {
     process.kill(pid, 0);
     return false;
   } catch (error) {
-    return (error as NodeJS.ErrnoException).code === "ESRCH";
+    return (error).code === "ESRCH";
   }
 }
 
-async function sleep(ms: number): Promise<void> {
+async function sleep(ms) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function waitUntilGone(pid: number): Promise<boolean> {
+async function waitUntilGone(pid) {
   const deadline = Date.now() + PID_GONE_GRACE_MS;
   while (!isGone(pid) && Date.now() < deadline) await sleep(PID_POLL_MS);
   return isGone(pid);
 }
 
-async function readStubPid(box: Sandbox): Promise<number> {
+async function readStubPid(box) {
   const ready = path.join(box.signalDir, STUB_READY_NAME);
   const deadline = Date.now() + READY_DEADLINE_MS;
   while (Date.now() < deadline) {
@@ -153,17 +131,17 @@ async function readStubPid(box: Sandbox): Promise<number> {
   throw new Error(`stub did not signal ready within ${READY_DEADLINE_MS} ms`);
 }
 
-function assertPrivateTempFolder(box: Sandbox, dir: string): void {
+function assertPrivateTempFolder(box, dir) {
   assert.equal(path.dirname(dir), box.tmpDir);
   assert.match(path.basename(dir), TEMP_FOLDER_NAME);
 }
 
-function defineTest(id: number, title: string, body: (t: TestContext) => void | Promise<void>) {
+function defineTest(id, title, body) {
   registeredIds.push(id);
   test(`case ${id}: ${title}`, body);
 }
 
-function defineCase(spec: SmokeCase): void {
+function defineCase(spec) {
   defineTest(spec.id, spec.fault, (t) => {
     // Arrange
     const box = createSandbox(t);
@@ -311,7 +289,7 @@ defineTest(83, "full claude stub with --keep leaves one private temp folder", (t
   assertPrivateTempFolder(box, dir);
 });
 
-for (const host of ["claude", "codex"] as const) {
+for (const host of ["claude", "codex"]) {
   defineTest(
     host === "claude" ? 84 : 85,
     `full ${host} stub succeeds silently in a private temp folder`,
@@ -350,7 +328,7 @@ defineCase({
 });
 
 // Stops the smoke script while its CLI runs, then checks the CLI is gone and cleanup ran.
-function defineSignalCase(id: number, mode: StubMode, title: string): void {
+function defineSignalCase(id, mode, title) {
   defineTest(id, title, async (t) => {
     // Arrange
     const box = createSandbox(t);
@@ -361,7 +339,7 @@ function defineSignalCase(id: number, mode: StubMode, title: string): void {
     });
     let stdout = "";
     child.stdout.on("data", (chunk) => (stdout += chunk));
-    const exited = new Promise<number | null>((resolve) => child.on("close", resolve));
+    const exited = new Promise((resolve) => child.on("close", resolve));
     t.after(() => {
       child.kill("SIGKILL");
     });

@@ -1,7 +1,7 @@
+// @ts-check
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createCopy, runCheck } from "./helpers.ts";
-import type { TreeCopy } from "./helpers.ts";
+import { createCopy, runCheck } from "./helpers.mjs";
 
 const ROOT_PLUGIN = "plugin.json";
 const PACKAGE_JSON = "package.json";
@@ -55,7 +55,7 @@ const WRONG_STATUS_TEMPLATES = [
   [64, "drift-report.md"],
   [65, "impact-report.md"],
   [66, "discovery-state.md"],
-] as const;
+];
 
 const BAD_JSON = "{\n";
 const WRONG_VERSION = "9.9.9";
@@ -102,24 +102,17 @@ const EXPECTED_CASE_IDS = [
   86, 87, 94, 97, 98, 99,
 ];
 
-interface CheckCase {
-  id: number;
-  fault: string;
-  apply: (copy: TreeCopy) => void;
-  lines: string[];
-}
+const registeredIds = [];
 
-const registeredIds: number[] = [];
-
-function fail(check: number, file: string, reason: string): string {
+function fail(check, file, reason) {
   return `FAIL check=${check} file=${file}: ${reason}`;
 }
 
-function missing(check: number, files: string[]): string[] {
+function missing(check, files) {
   return files.map((file) => fail(check, file, MISSING_FILE));
 }
 
-function defineCase(spec: CheckCase): void {
+function defineCase(spec) {
   registeredIds.push(spec.id);
   test(`case ${spec.id}: ${spec.fault}`, (t) => {
     // Arrange
@@ -135,13 +128,7 @@ function defineCase(spec: CheckCase): void {
   });
 }
 
-interface InvalidJsonRow {
-  id: number;
-  file: string;
-  lines: string[];
-}
-
-const invalidJsonRows: InvalidJsonRow[] = [
+const invalidJsonRows = [
   {
     id: 2,
     file: ROOT_PLUGIN,
@@ -191,7 +178,7 @@ for (const row of invalidJsonRows) {
   });
 }
 
-const nameMismatchCases: CheckCase[] = [
+const nameMismatchCases = [
   {
     id: 5,
     fault: "claude plugin.json name -> other",
@@ -231,17 +218,10 @@ const nameMismatchCases: CheckCase[] = [
 
 for (const spec of nameMismatchCases) defineCase(spec);
 
-interface StatusRow {
-  id: number;
-  fault: string;
-  file: string;
-  apply: (copy: TreeCopy) => void;
-}
-
-const dropStatusLines = (copy: TreeCopy, file: string) =>
+const dropStatusLines = (copy, file) =>
   copy.dropLines(file, (line) => line.startsWith("Status: "));
 
-const statusRows: StatusRow[] = [
+const statusRows = [
   {
     id: 32,
     fault: "implementation-plan.md Status: draft -> approved",
@@ -264,7 +244,7 @@ const statusRows: StatusRow[] = [
     id,
     fault: `${name} Status line -> ${STATUS_WRONG}`,
     file: `${TEMPLATES_DIR}/${name}`,
-    apply: (copy: TreeCopy) =>
+    apply: (copy) =>
       copy.replace(`${TEMPLATES_DIR}/${name}`, /^Status: .*$/m, STATUS_WRONG),
   })),
   {
@@ -293,14 +273,7 @@ for (const row of statusRows) {
   });
 }
 
-interface AppendRow {
-  id: number;
-  file: string;
-  text: string;
-  reportedAs: string;
-}
-
-const brokenLinkRows: AppendRow[] = [
+const brokenLinkRows = [
   {
     id: 9,
     file: PLANNER_DOC,
@@ -352,7 +325,7 @@ for (const row of brokenLinkRows) {
   });
 }
 
-const oldNameRows: AppendRow[] = [
+const oldNameRows = [
   { id: 13, file: IMPLEMENTER_README, text: OLD_NAME_TEXT, reportedAs: OLD_NAME_TEXT },
   {
     id: 42,
@@ -379,13 +352,7 @@ for (const row of oldNameRows) {
   });
 }
 
-interface RemoveRow {
-  id: number;
-  path: string;
-  lines: string[];
-}
-
-const removeRows: RemoveRow[] = [
+const removeRows = [
   { id: 4, path: CODEX_MARKET, lines: missing(2, [CODEX_MARKET]) },
   {
     id: 22,

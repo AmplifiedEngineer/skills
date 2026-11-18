@@ -1,12 +1,12 @@
+// @ts-check
 /**
  * Static checks for the plugin tree: manifests, links, old names, skills, the researcher
  * brief, README, the shared storage contract, template Status lines and the execution
  * stop rules.
  *
- * Usage: node scripts/check.ts [repo-root]. Prints one FAIL line per problem, exit 1 if any.
+ * Usage: node scripts/check.mjs [repo-root]. Prints one FAIL line per problem, exit 1 if any.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import type { Dirent } from "node:fs";
 import path from "node:path";
 
 const ROOT_PLUGIN = "plugin.json";
@@ -36,7 +36,7 @@ const STATUS_GATE_PHRASE = "run only documents whose Status is approved";
 const RESEARCHER_BRIEF = "skills/researcher/templates/context-brief.md";
 const ANSWER_HEADING = "## Answer";
 // One row per template: file name, then the exact Status line it must carry.
-const TEMPLATE_STATUS_TABLE: ReadonlyArray<readonly [string, string]> = [
+const TEMPLATE_STATUS_TABLE = [
   ["implementation-plan.md", "Status: draft"],
   ["adr.md", "Status: Proposed"],
   ["architecture-assessment.md", "Status: draft"],
@@ -99,23 +99,19 @@ const FRAGMENT_MARK = "#";
 const TRAILING_BLANKS = /[ \t]+$/;
 const LEADING_SPACES = /^ */;
 
-type Json = unknown;
-type JsonObject = Record<string, Json>;
-type Check = () => string[];
-
-function fail(check: number, file: string, reason: string): string {
+function fail(check, file, reason) {
   return `FAIL check=${check} file=${file}: ${reason}`;
 }
 
-function isFile(file: string): boolean {
+function isFile(file) {
   return statSync(file, { throwIfNoEntry: false })?.isFile() ?? false;
 }
 
-function isDir(dir: string): boolean {
+function isDir(dir) {
   return statSync(dir, { throwIfNoEntry: false })?.isDirectory() ?? false;
 }
 
-function readText(file: string): string | undefined {
+function readText(file) {
   try {
     return readFileSync(file, ENCODING);
   } catch {
@@ -123,7 +119,7 @@ function readText(file: string): string | undefined {
   }
 }
 
-function parseJson(file: string): { ok: true; value: Json } | { ok: false } {
+function parseJson(file) {
   const text = readText(file);
   if (text === undefined) return { ok: false };
   // An empty or blank file counts as a valid, empty document.
@@ -135,12 +131,12 @@ function parseJson(file: string): { ok: true; value: Json } | { ok: false } {
   }
 }
 
-function isObject(value: Json): value is JsonObject {
+function isObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 // Reads a top-level key as text: a missing, null or false value reads as "".
-function jsonField(file: string, key: string): string {
+function jsonField(file, key) {
   const parsed = parseJson(file);
   if (!parsed.ok || !isObject(parsed.value)) return "";
   const value = parsed.value[key];
@@ -150,15 +146,15 @@ function jsonField(file: string, key: string): string {
 
 // True when `plugins` (an array or an object of entries) lists an entry with this name;
 // any other shape is false.
-function hasPluginEntry(file: string, name: string): boolean {
+function hasPluginEntry(file, name) {
   const parsed = parseJson(file);
   if (!parsed.ok || !isObject(parsed.value)) return false;
   const plugins = parsed.value.plugins;
-  let entries: Json[];
+  let entries;
   if (Array.isArray(plugins)) entries = plugins;
   else if (isObject(plugins)) entries = Object.values(plugins);
   else return false;
-  const names: Json[] = [];
+  const names = [];
   for (const entry of entries) {
     if (entry === null) names.push(null);
     else if (isObject(entry)) names.push(entry.name ?? null);
@@ -168,10 +164,10 @@ function hasPluginEntry(file: string, name: string): boolean {
 }
 
 // Lists files under `dir` in sorted order, skipping `skip` names at the top level only.
-function walk(dir: string, keep: (entry: Dirent) => boolean, skip: string[] = []): string[] {
-  const found: string[] = [];
-  const visit = (current: string, prefix: string, skipNames: string[]): void => {
-    let entries: Dirent[];
+function walk(dir, keep, skip = []) {
+  const found = [];
+  const visit = (current, prefix, skipNames) => {
+    let entries;
     try {
       entries = readdirSync(current, { withFileTypes: true });
     } catch {
@@ -190,18 +186,18 @@ function walk(dir: string, keep: (entry: Dirent) => boolean, skip: string[] = []
   return found;
 }
 
-const isRegularFile = (entry: Dirent): boolean => entry.isFile();
-const isNotDirectory = (entry: Dirent): boolean => !entry.isDirectory();
+const isRegularFile = (entry) => entry.isFile();
+const isNotDirectory = (entry) => !entry.isDirectory();
 
-function checkJsonParses(): string[] {
+function checkJsonParses() {
   return walk(".", (entry) => entry.isFile() && entry.name.endsWith(JSON_SUFFIX), WALK_SKIP_COMMON)
     .filter((file) => !parseJson(file).ok)
     .map((file) => fail(CHECK_JSON, file, REASON_INVALID_JSON));
 }
 
-function checkManifests(): string[] {
-  const out: string[] = [];
-  const add = (file: string, reason: string): void => {
+function checkManifests() {
+  const out = [];
+  const add = (file, reason) => {
     out.push(fail(CHECK_MANIFESTS, file, reason));
   };
   for (const file of [ROOT_PLUGIN, CLAUDE_PLUGIN, CLAUDE_MARKET, CODEX_MARKET]) {
@@ -233,16 +229,10 @@ function checkManifests(): string[] {
   return out;
 }
 
-type LinkKind = "link" | "backtick";
-interface LinkTarget {
-  kind: LinkKind;
-  target: string;
-}
-
 // Link targets of a Markdown file, then backticked paths, each cut at the first fragment mark.
-function linkTargets(text: string): LinkTarget[] {
+function linkTargets(text) {
   const lines = text.split("\n");
-  const collect = (kind: LinkKind, pattern: RegExp, strip: (match: string) => string) =>
+  const collect = (kind, pattern, strip) =>
     lines.flatMap((line) =>
       (line.match(pattern) ?? []).map((match) => {
         const target = strip(match).split(FRAGMENT_MARK)[0] ?? "";
@@ -256,11 +246,11 @@ function linkTargets(text: string): LinkTarget[] {
   ];
 }
 
-function startsWithAny(value: string, prefixes: string[]): boolean {
+function startsWithAny(value, prefixes) {
   return prefixes.some((prefix) => value.startsWith(prefix));
 }
 
-function linkIsSkipped(target: string): boolean {
+function linkIsSkipped(target) {
   return (
     target === "" ||
     target.includes(URL_MARKER) ||
@@ -270,13 +260,13 @@ function linkIsSkipped(target: string): boolean {
   );
 }
 
-function checkLinks(): string[] {
+function checkLinks() {
   const files = walk(
     SKILLS_DIR,
     (entry) => isNotDirectory(entry) && entry.name.endsWith(MARKDOWN_SUFFIX),
   );
   if (files.length === 0) return [fail(CHECK_LINKS, SKILLS_GLOB, REASON_NO_FILES)];
-  const out: string[] = [];
+  const out = [];
   for (const file of files) {
     const text = readText(file);
     if (text === undefined) continue;
@@ -292,10 +282,10 @@ function checkLinks(): string[] {
   return out;
 }
 
-function checkOldNames(): string[] {
-  const out: string[] = [];
+function checkOldNames() {
+  const out = [];
   for (const file of walk(".", isRegularFile, WALK_SKIP_OLD_NAMES)) {
-    let content: Buffer;
+    let content;
     try {
       content = readFileSync(file);
     } catch {
@@ -311,7 +301,7 @@ function checkOldNames(): string[] {
 }
 
 // The `name:` value from a leading `---` frontmatter block, or "" when there is none.
-function skillFrontmatterName(file: string): string {
+function skillFrontmatterName(file) {
   const lines = (readText(file) ?? "").split("\n");
   for (const [index, line] of lines.entries()) {
     if (index === 0 && line !== FRONTMATTER_FENCE) return "";
@@ -323,8 +313,8 @@ function skillFrontmatterName(file: string): string {
   return "";
 }
 
-function checkSkills(): string[] {
-  const out: string[] = [];
+function checkSkills() {
+  const out = [];
   for (const name of SKILL_NAMES) {
     const dir = `${SKILLS_DIR}/${name}`;
     const skillFile = `${dir}/${SKILL_FILE}`;
@@ -351,7 +341,7 @@ function checkSkills(): string[] {
 }
 
 // Sorted entry names, leaving out names that start with a dot.
-function visibleEntries(dir: string): string[] {
+function visibleEntries(dir) {
   try {
     return readdirSync(dir)
       .filter((name) => !name.startsWith("."))
@@ -361,7 +351,7 @@ function visibleEntries(dir: string): string[] {
   }
 }
 
-function checkResearcherBrief(): string[] {
+function checkResearcherBrief() {
   const file = RESEARCHER_BRIEF;
   if (!isFile(file)) return [fail(CHECK_RESEARCHER, file, REASON_MISSING_FILE)];
   const firstSection = (readText(file) ?? "").split("\n").find((l) => l.startsWith(SECTION_PREFIX));
@@ -370,7 +360,7 @@ function checkResearcherBrief(): string[] {
     : [fail(CHECK_RESEARCHER, file, REASON_ANSWER_NOT_FIRST)];
 }
 
-function checkReadme(): string[] {
+function checkReadme() {
   if (!isFile(README)) return [fail(CHECK_README, README, REASON_MISSING_FILE)];
   const pluginName = jsonField(ROOT_PLUGIN, "name");
   const marketName = jsonField(CLAUDE_MARKET, "name");
@@ -383,7 +373,7 @@ function checkReadme(): string[] {
     : [fail(CHECK_README, README, `${REASON_README_MISSING} ${installRef}`)];
 }
 
-function checkStorageCopies(): string[] {
+function checkStorageCopies() {
   const missing = [STORAGE_PLANNER, STORAGE_IMPLEMENTER].filter((file) => !isFile(file));
   if (missing.length > 0) {
     return missing.map((file) => fail(CHECK_STORAGE_COPIES, file, REASON_MISSING_FILE));
@@ -395,7 +385,7 @@ function checkStorageCopies(): string[] {
 }
 
 // The first non-blank line after the first H1, or "" when there is none.
-function lineAfterTitle(text: string): string {
+function lineAfterTitle(text) {
   let seenTitle = false;
   for (const line of text.split("\n")) {
     if (!seenTitle) {
@@ -407,14 +397,14 @@ function lineAfterTitle(text: string): string {
   return "";
 }
 
-function templateStatusOk(file: string, expected: string): boolean {
+function templateStatusOk(file, expected) {
   const text = readText(file) ?? "";
   const statusLines = text.split("\n").filter((line) => line.startsWith(STATUS_LINE_PREFIX));
   return statusLines.length === 1 && lineAfterTitle(text) === expected;
 }
 
-function checkTemplateStatuses(): string[] {
-  const out: string[] = [];
+function checkTemplateStatuses() {
+  const out = [];
   for (const [name, expected] of TEMPLATE_STATUS_TABLE) {
     const file = `${TEMPLATES_DIR}/${name}`;
     if (!isFile(file)) out.push(fail(CHECK_TEMPLATES, file, REASON_MISSING_FILE));
@@ -432,8 +422,8 @@ function checkTemplateStatuses(): string[] {
   return out;
 }
 
-function checkStorageLinks(): string[] {
-  const out: string[] = [];
+function checkStorageLinks() {
+  const out = [];
   for (const file of STORAGE_LINK_FILES) {
     if (!isFile(file)) out.push(fail(CHECK_TEMPLATES, file, REASON_MISSING_FILE));
     else if (!(readText(file) ?? "").includes(STORAGE_LINK)) {
@@ -443,11 +433,11 @@ function checkStorageLinks(): string[] {
   return out;
 }
 
-function checkExecutionPhrases(): string[] {
+function checkExecutionPhrases() {
   const file = EXECUTION_WORKFLOW;
   if (!isFile(file)) return [fail(CHECK_EXECUTION, file, REASON_MISSING_FILE)];
   const text = readText(file) ?? "";
-  const out: string[] = [];
+  const out = [];
   if (!text.includes(STOP_RULE_PHRASE)) {
     out.push(fail(CHECK_EXECUTION, file, REASON_MISSING_STOP_RULE));
   }
@@ -457,7 +447,7 @@ function checkExecutionPhrases(): string[] {
   return out;
 }
 
-const CHECKS: Check[] = [
+const CHECKS = [
   checkJsonParses,
   checkManifests,
   checkLinks,
@@ -471,7 +461,7 @@ const CHECKS: Check[] = [
   checkExecutionPhrases,
 ];
 
-function main(): number {
+function main() {
   const root = process.argv[2] || path.resolve(import.meta.dirname, "..");
   try {
     process.chdir(root);

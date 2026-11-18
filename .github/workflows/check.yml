@@ -19,20 +19,13 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type check
-        run: npm run typecheck
+          node-version: 26
 
       - name: Repo self-check
-        run: npm run check
+        run: node scripts/check.mjs
 
       - name: Tests
-        run: npm test
+        run: node --test "test/**/*.test.mjs"
 
       - name: Install Claude Code
         run: npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
@@ -41,4 +34,4 @@ jobs:
         run: claude plugin validate .
 
       - name: Install smoke test (Claude Code)
-        run: npm run smoke -- claude
+        run: node scripts/smoke-install.mjs claude
