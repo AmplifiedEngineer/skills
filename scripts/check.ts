@@ -11,7 +11,6 @@ import path from "node:path";
 
 const ROOT_PLUGIN = "plugin.json";
 const CLAUDE_PLUGIN = ".claude-plugin/plugin.json";
-const PACKAGE_JSON = "package.json";
 const CLAUDE_MARKET = ".claude-plugin/marketplace.json";
 const CODEX_MARKET = ".agents/plugins/marketplace.json";
 const README = "README.md";
@@ -77,8 +76,8 @@ const REASON_MISSING_STOP_RULE = "missing stop rule";
 const REASON_MISSING_STATUS_GATE = "missing status gate";
 const REASON_ANSWER_NOT_FIRST = `first section is not ${ANSWER_HEADING}`;
 
-const WALK_SKIP_COMMON = [".git", ".ae", "node_modules"];
-const WALK_SKIP_OLD_NAMES = [...WALK_SKIP_COMMON, "scripts", "test", "CHANGELOG.md"];
+const WALK_SKIP_COMMON = [".git", ".ae"];
+const WALK_SKIP_OLD_NAMES = [...WALK_SKIP_COMMON, "scripts", "test"];
 const JSON_SUFFIX = ".json";
 const MARKDOWN_SUFFIX = ".md";
 const ENCODING = "utf8";
@@ -222,13 +221,6 @@ function checkManifests(): string[] {
     if (jsonField(CLAUDE_PLUGIN, "version") !== refVersion) {
       add(CLAUDE_PLUGIN, `${REASON_VERSION_MISMATCH} ${ROOT_PLUGIN}`);
     }
-  }
-  if (isFile(PACKAGE_JSON)) {
-    if (jsonField(PACKAGE_JSON, "version") !== refVersion) {
-      add(PACKAGE_JSON, `${REASON_VERSION_MISMATCH} ${ROOT_PLUGIN}`);
-    }
-  } else {
-    add(PACKAGE_JSON, REASON_MISSING_FILE);
   }
   for (const file of [CLAUDE_MARKET, CODEX_MARKET]) {
     if (!isFile(file)) continue;

@@ -99,7 +99,7 @@ const EXPECTED_CASE_IDS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26,
   28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
   50, 51, 52, 53, 54, 55, 56, 57, 60, 61, 62, 63, 64, 65, 66, 67, 69, 70, 71, 73, 75, 76,
-  86, 87, 88, 89, 90, 91, 92, 94,
+  86, 87, 94, 97, 98, 99,
 ];
 
 interface CheckCase {
@@ -641,50 +641,34 @@ defineCase({
 });
 
 defineCase({
-  id: 88,
-  fault: "package.json version -> 9.9.9",
-  apply: (copy) => copy.editJson(PACKAGE_JSON, (json) => (json.version = WRONG_VERSION)),
-  lines: [fail(2, PACKAGE_JSON, VERSION_MISMATCH_ROOT)],
-});
-
-defineCase({
-  id: 89,
-  fault: "CHANGELOG.md quoting an old skill name is skipped",
-  apply: (copy) => copy.write(CHANGELOG, `${OLD_NAME_TEXT}\n`),
-  lines: [],
-});
-
-defineCase({
-  id: 90,
-  fault: "remove package.json",
-  apply: (copy) => copy.remove(PACKAGE_JSON),
-  lines: missing(2, [PACKAGE_JSON]),
-});
-
-defineCase({
-  id: 91,
-  fault: "node_modules with invalid JSON and an old skill name is skipped",
-  apply: (copy) => {
-    copy.write(IGNORED_JSON, `{ ${OLD_NAME_TEXT}\n`);
-    assert.ok(copy.exists(IGNORED_JSON));
-  },
-  lines: [],
-});
-
-defineCase({
-  id: 92,
-  fault: "remove the version key from package.json",
-  apply: (copy) => copy.editJson(PACKAGE_JSON, (json) => delete json.version),
-  lines: [fail(2, PACKAGE_JSON, VERSION_MISMATCH_ROOT)],
-});
-
-defineCase({
   id: 94,
   fault: "test/ holding an old skill name is skipped",
   apply: (copy) => {
     copy.write(TEST_NOTE, `${OLD_NAME_TEXT}\n`);
     assert.ok(copy.exists(TEST_NOTE));
   },
+  lines: [],
+});
+
+defineCase({
+  id: 97,
+  fault: "CHANGELOG.md quoting an old skill name fails",
+  apply: (copy) => copy.write(CHANGELOG, `${OLD_NAME_TEXT}\n`),
+  lines: [fail(4, CHANGELOG, `${OLD_NAME} ${OLD_NAME_TEXT}`)],
+});
+
+defineCase({
+  id: 98,
+  fault: "node_modules with invalid JSON fails the JSON check",
+  apply: (copy) => copy.write(IGNORED_JSON, BAD_JSON),
+  lines: [fail(1, IGNORED_JSON, INVALID_JSON)],
+});
+
+defineCase({
+  id: 99,
+  fault: "a package.json with version 9.9.9 gives no failure",
+  apply: (copy) =>
+    copy.write(PACKAGE_JSON, `${JSON.stringify({ name: WRONG_NAME, version: WRONG_VERSION })}\n`),
   lines: [],
 });
 
