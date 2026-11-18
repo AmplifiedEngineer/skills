@@ -26,6 +26,7 @@ const GH_API = "api";
 const GH_RELEASE = "release";
 const GH_VIEW = "view";
 const GH_CREATE = "create";
+// gh reports a missing ref only through its stderr text; any other failure fails closed.
 const NOT_FOUND_MARKER = "HTTP 404";
 const RELEASE_NOT_FOUND_MARKER = "release not found";
 const ANNOTATED_TAG_TYPE = "tag";

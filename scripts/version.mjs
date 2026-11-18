@@ -18,10 +18,13 @@ const CLAUDE_MANIFEST = ".claude-plugin/plugin.json";
 const MANIFESTS = [ROOT_MANIFEST, CLAUDE_MANIFEST];
 const TEXT_ENCODING = "utf8";
 const TAG_PATTERN = "v*";
-const TAG_REGEX = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+const SEMVER_SOURCE = String.raw`(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)`;
+const TAG_REGEX = new RegExp(`^v${SEMVER_SOURCE}$`);
+const SEMVER_REGEX = new RegExp(`^${SEMVER_SOURCE}$`);
 const BREAKING_REGEX = /^[a-z]+(\([^)]*\))?!:/;
 const FEATURE_REGEX = /^feat(\([^)]*\))?!?:/;
-const FIRST_LINE_SEPARATOR = "\n";
+const NEWLINE = "\n";
+const SEMVER_FORMAT = "MAJOR.MINOR.PATCH";
 const NO_VERSION = "no version";
 const FAIL_PREFIX = "FAIL version:";
 
@@ -38,7 +41,7 @@ function usageError() {
 
 function parseArgs() {
   const [command, title] = process.argv.slice(2);
-  const firstLine = (title ?? "").trim().split(FIRST_LINE_SEPARATOR)[0];
+  const firstLine = (title ?? "").trim().split(NEWLINE)[0];
   if ((command !== NEXT && command !== VERIFY) || !firstLine) usageError();
   return { command, title: firstLine };
 }
@@ -50,7 +53,7 @@ function listTags() {
       encoding: TEXT_ENCODING,
       stdio: ["ignore", "pipe", "pipe"],
     });
-    return output.split(FIRST_LINE_SEPARATOR);
+    return output.split(NEWLINE);
   } catch (error) {
     const detail = error.stderr?.toString().trim() || error.message;
     console.error(`git failed: ${detail}`);
@@ -64,6 +67,7 @@ function latestVersion() {
     .map((tag) => TAG_REGEX.exec(tag))
     .filter((match) => match !== null)
     .map((match) => match.slice(1).map(Number));
+  // git's output order depends on the host's tag.sort setting, so sort numerically here.
   const [highest] = versions.sort(
     ([a1, b1, c1], [a2, b2, c2]) => a2 - a1 || b2 - b1 || c2 - c1,
   );
@@ -83,8 +87,12 @@ function manifestVersion(file) {
 function nextVersion(title) {
   const latest = latestVersion();
   if (!latest) {
+    // With no tag yet, the first release takes the version the manifest already holds.
     const current = manifestVersion(ROOT_MANIFEST);
     if (current === null) failWith(`${FAIL_PREFIX} ${ROOT_MANIFEST} has ${NO_VERSION}`);
+    if (!SEMVER_REGEX.test(current)) {
+      failWith(`${FAIL_PREFIX} ${ROOT_MANIFEST} has ${current}, set it to ${SEMVER_FORMAT}`);
+    }
     return current;
   }
   const [major, minor, patch] = latest;
@@ -102,7 +110,7 @@ function verify(expected) {
       ? []
       : [`${FAIL_PREFIX} ${file} has ${actual ?? NO_VERSION}, set it to ${expected}`];
   });
-  if (failures.length > 0) failWith(failures.join(FIRST_LINE_SEPARATOR));
+  if (failures.length > 0) failWith(failures.join(NEWLINE));
 }
 
 const { command, title } = parseArgs();

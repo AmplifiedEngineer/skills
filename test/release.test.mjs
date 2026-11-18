@@ -71,6 +71,10 @@ if (!answer) {
 }
 process.stdout.write(answer.stdout ?? "");
 process.stderr.write(answer.stderr ?? "");
+if (typeof answer.code !== "number") {
+  process.stderr.write("no exit code scripted for " + key);
+  process.exit(${EXIT_UNSCRIPTED});
+}
 process.exit(answer.code);
 `;
 
@@ -240,6 +244,12 @@ const ghFailRows = [
     [API_CALL],
   ],
   [
+    "R20",
+    { api: refAnswer("tag", OTHER_SHA) },
+    `tag ${TAG} is annotated: delete it or point it at a commit`,
+    [API_CALL],
+  ],
+  [
     "R9",
     { api: NOT_FOUND_404, "release create": failed("boom") },
     "gh release create failed: boom",
@@ -301,7 +311,7 @@ for (const [id, unset] of usageRows) {
   });
 }
 
-const EXPECTED_CASE_IDS = Array.from({ length: 19 }, (_, index) => `R${index + 1}`);
+const EXPECTED_CASE_IDS = Array.from({ length: 20 }, (_, index) => `R${index + 1}`);
 
 test("every expected release case is defined exactly once", () => {
   // Arrange

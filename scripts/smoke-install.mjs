@@ -74,7 +74,7 @@ function writeOut(text) {
     try {
       offset += writeSync(STDOUT_FD, bytes, offset);
     } catch (error) {
-      if ((error).code !== WRITE_RETRY_ERROR) throw error;
+      if (error.code !== WRITE_RETRY_ERROR) throw error;
     }
   }
 }
@@ -84,7 +84,7 @@ function fail(host, message) {
 }
 
 function isHost(arg) {
-  return (HOSTS_ALL).includes(arg);
+  return HOSTS_ALL.includes(arg);
 }
 
 function parseArgs(args) {

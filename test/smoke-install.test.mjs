@@ -106,7 +106,7 @@ function isGone(pid) {
     process.kill(pid, 0);
     return false;
   } catch (error) {
-    return (error).code === "ESRCH";
+    return error.code === "ESRCH";
   }
 }
 

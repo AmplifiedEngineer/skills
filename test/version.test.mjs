@@ -284,6 +284,15 @@ defineCase({
   stdout: `${NO_ROOT_VERSION}\n`,
   stderr: NO_STDERR,
 });
+defineCase({
+  id: "V41",
+  root: "v0.2.0",
+  claude: "v0.2.0",
+  args: [[VERIFY, "fix: x"]],
+  code: EXIT_FAILED,
+  stdout: "FAIL version: plugin.json has v0.2.0, set it to MAJOR.MINOR.PATCH\n",
+  stderr: NO_STDERR,
+});
 
 // git failures
 defineCase({
@@ -316,7 +325,7 @@ for (const [id, args] of usageRows) {
 }
 
 const EXPECTED_CASE_IDS = [
-  ...Array.from({ length: 40 }, (_, index) => `V${index + 1}`),
+  ...Array.from({ length: 41 }, (_, index) => `V${index + 1}`),
   "V16b",
 ];
 
