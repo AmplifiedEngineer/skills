@@ -29,7 +29,3 @@ Run these from the repository root. They need Node 26; the tests also need `git`
 - `node scripts/check.mjs [repo-root]`: static checks on manifests, links, old names, skills, the researcher brief, README, the storage contract, template Status lines and the implementer stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
 - `node --test "test/**/*.test.mjs"`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
 - `node scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the three skills arrived. `--keep` leaves the folders and prints their paths.
-
-## Releases
-
-Releases come from release-please. Merging the release PR tags the version, writes `CHANGELOG.md` and bumps `package.json` and both `plugin.json` files.
