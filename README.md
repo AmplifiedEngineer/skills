@@ -34,7 +34,7 @@ The shared `SKILL.md` and supporting files work in both hosts. The `agents/opena
 
 ## Releases
 
-Release notes are on the [releases page](https://github.com/AmplifiedEngineer/skills/releases).
+Each merge to main is a release. Release notes are on the [releases page](https://github.com/AmplifiedEngineer/skills/releases).
 
 ## Licence
 
