@@ -96,13 +96,17 @@ const GRADE_SCHEMA = JSON.stringify({
   },
 });
 
-const HANDLING_SCHEMA = JSON.stringify({
+const GRADE_ATTEMPTS = 3;
+
+const handlingSchema = (count) => JSON.stringify({
   type: "object",
   additionalProperties: false,
   required: ["items"],
   properties: {
     items: {
       type: "array",
+      minItems: count,
+      maxItems: count,
       items: {
         type: "object",
         additionalProperties: false,
@@ -275,9 +279,15 @@ async function gradeHandling(testCase, report) {
     "</output>",
   ].join("\n");
   const args = ["-p", "--model", GRADER_MODEL, "--output-format", "json", ...ISOLATION_FLAGS];
-  args.push("--tools", "", "--system-prompt", HANDLING_SYSTEM, "--json-schema", HANDLING_SCHEMA);
-  const reply = await claude(args, { cwd: REPO_ROOT, input: prompt, timeoutMs: GRADE_TIMEOUT_MS });
-  return reply.structured_output ?? JSON.parse(reply.result);
+  args.push("--tools", "", "--system-prompt", HANDLING_SYSTEM);
+  args.push("--json-schema", handlingSchema(items.length));
+  for (let attempt = 1; attempt <= GRADE_ATTEMPTS; attempt += 1) {
+    const reply = await claude(args, { cwd: REPO_ROOT, input: prompt, timeoutMs: GRADE_TIMEOUT_MS });
+    const grading = reply.structured_output ?? JSON.parse(reply.result);
+    const ids = new Set(grading.items.map((item) => item.id));
+    if (items.every((item) => ids.has(item.id))) return grading;
+  }
+  throw new Error(`the grader skipped a situation in ${GRADE_ATTEMPTS} attempts`);
 }
 
 async function review(testCase, skill, config, model, cwd) {
