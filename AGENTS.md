@@ -10,6 +10,7 @@ This repository is a plugin that ships four Agent Skills for Claude Code and Cod
 - `.agents/plugins/marketplace.json`: the Codex marketplace, same name.
 - `skills/`: one directory per skill, each with a `SKILL.md`.
 - `.github/`: workflows, checks and their tests.
+- `evals/`: trigger evals for the skills, run with `claude plugin eval`.
 
 ## Skills
 
@@ -39,6 +40,10 @@ Evals live in `.github/evals/`. Run one with `node .github/evals/run.mjs <skill>
 Every run calls a model and costs money, so evals run by hand and not in CI.
 
 A case is a JSON file under `.github/evals/<skill>/cases/` with `id`, `repo`, `ref`, `commit`, `prompt` and `expected` findings. Each expected finding has an `id`, a `severity` (`blocking` or `minor`) and a `text`.
+
+## Evals
+
+`evals/` holds one trigger case per skill: a prompt that must fire the skill. Run them from the repository root with `claude plugin eval . --runs 1 --max-cost-usd 3 --trust-plugin --no-publish`. A run costs about $1 and needs a signed-in `claude`. CI does not run them. Run them after you change a skill description. Results go to `evals/results/`, which git ignores.
 
 ## Releases
 
