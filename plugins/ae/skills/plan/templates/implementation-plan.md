@@ -39,8 +39,8 @@ Status: draft
 |---|---|---|
 | | | |
 
-## Open decisions
-None at approval. List any that remain and keep Status `draft`.
+## Open decisions and gaps
+None at approval. The implement skill must be able to run every increment with no question. List any decision or gap that remains and keep Status `draft`.
 
 ## Handover notes
 <!-- Record investigation areas and constraints for implementation. -->
