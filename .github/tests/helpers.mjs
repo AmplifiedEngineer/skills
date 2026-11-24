@@ -167,7 +167,7 @@ const STUB_SHEBANG = "#!/usr/bin/env node";
 const PATH_SEPARATOR = path.delimiter;
 
 /**
- * @typedef {"allfail" | "install-fails" | "partial" | "full" | "block" | "stubborn" | "bigfail"} StubMode
+ * @typedef {"allfail" | "install-fails" | "partial" | "full" | "block" | "stubborn" | "bigfail" | "shipdev"} StubMode
  */
 
 /**
@@ -206,12 +206,18 @@ const args = process.argv.slice(2);
 fs.appendFileSync(options.recordFile, JSON.stringify({ args, configDir }) + "\n");
 
 function installSkills(skills) {
-  const manifest = JSON.parse(fs.readFileSync(path.join(options.repoRoot, "plugin.json"), "utf8"));
+  const manifest = JSON.parse(fs.readFileSync(path.join(options.repoRoot, "plugins", "ae", "plugin.json"), "utf8"));
   for (const skill of skills) {
     const dir = path.join(configDir, "plugins", "cache", options.marketplace, options.plugin,
       manifest.version, "skills", skill);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, "SKILL.md"), "# " + skill + "\n");
+  }
+  if (options.mode === "shipdev") {
+    const root = path.join(configDir, "plugins", "cache", options.marketplace, options.plugin,
+      manifest.version);
+    fs.mkdirSync(path.join(root, ".github", "workflows"), { recursive: true });
+    fs.mkdirSync(path.join(root, "evals"), { recursive: true });
   }
 }
 
@@ -255,7 +261,7 @@ function run() {
   if (options.mode === "partial") {
     say(options.marker + "\n");
     installSkills(options.partialSkills);
-  } else if (options.mode === "full") {
+  } else if (options.mode === "full" || options.mode === "shipdev") {
     installSkills(options.fullSkills);
   } else {
     process.exit(1);

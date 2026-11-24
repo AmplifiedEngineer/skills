@@ -14,6 +14,7 @@ import {
   existsSync,
   mkdtempSync,
   openSync,
+  readdirSync,
   readFileSync,
   rmSync,
   statSync,
@@ -34,7 +35,7 @@ const PLUGIN = "ae";
 const MARKETPLACE_ADD_WORDS = "plugin marketplace add";
 const SKILL_NAMES = ["plan", "implement", "research", "review"];
 const SKILL_FILE = "SKILL.md";
-const MANIFEST = "plugin.json";
+const MANIFEST = "plugins/ae/plugin.json";
 const LOG_NAME = "smoke.log";
 const TMP_PREFIX = "ae-smoke.";
 const CACHE_DIR = "plugins/cache";
@@ -48,6 +49,8 @@ const PATH_SEPARATOR = path.delimiter;
 const REASON_NO_CLI = "CLI not found on PATH";
 const REASON_UNKNOWN_HOST = "unknown host";
 const REASON_SKILL_MISSING = "missing after install";
+const DEV_FOLDERS = [".github", "evals"];
+const REASON_DEV_SHIPPED = "development folder shipped in the installed plugin:";
 const REASON_NOT_REMOVED = "temp folder not removed";
 
 const EXIT_OK = 0;
@@ -224,6 +227,24 @@ async function runCli(
   return false;
 }
 
+// Folder names under `dir`, at any depth, that match one of `names`. Relative to `dir`.
+function findFolders(dir, names, prefix = "") {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const found = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const rel = prefix === "" ? entry.name : `${prefix}/${entry.name}`;
+    if (names.includes(entry.name)) found.push(rel);
+    found.push(...findFolders(path.join(dir, entry.name), names, rel));
+  }
+  return found;
+}
+
 async function smokeHost(host, version) {
   const configDir = mkdtempSync(path.join(tmpdir(), TMP_PREFIX));
   hostDirs.set(host, configDir);
@@ -238,6 +259,12 @@ async function smokeHost(host, version) {
     );
     if (isFile(skillFile)) continue;
     fail(host, `skill ${skill} ${REASON_SKILL_MISSING}`);
+    missing = true;
+  }
+  // Only the plugin folder may ship, so no development folder can be in the installed copy.
+  const installed = path.join(configDir, CACHE_DIR, MARKETPLACE, PLUGIN, version);
+  for (const folder of findFolders(installed, DEV_FOLDERS)) {
+    fail(host, `${REASON_DEV_SHIPPED} ${folder}`);
     missing = true;
   }
   if (!missing) return true;

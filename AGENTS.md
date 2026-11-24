@@ -4,21 +4,28 @@ This repository is a plugin that ships four Agent Skills for Claude Code and Cod
 
 ## Layout
 
-- `plugin.json`: the Codex plugin manifest, name `ae`.
-- `.claude-plugin/plugin.json`: the Claude Code plugin manifest, same name and version.
-- `.claude-plugin/marketplace.json`: the Claude Code marketplace, name `amplifiedengineer`.
-- `.agents/plugins/marketplace.json`: the Codex marketplace, same name.
-- `skills/`: one directory per skill, each with a `SKILL.md`.
-- `.github/`: workflows, checks and their tests.
+Only the `plugins/ae/` folder ships to people who install the plugin. Checks, tests, evals and workflows stay at the repository root and are never installed.
+
+- `plugins/ae/`: the plugin, name `ae`. This is the whole install.
+- `plugins/ae/plugin.json`: the Codex plugin manifest.
+- `plugins/ae/.claude-plugin/plugin.json`: the Claude Code plugin manifest, same name and version.
+- `plugins/ae/skills/`: one directory per skill, each with a `SKILL.md`.
+- `plugins/ae/LICENSE`: a copy of the root `LICENSE`, so the installed plugin carries its licence. The check fails if the two differ.
+- `.claude-plugin/marketplace.json`: the Claude Code marketplace, name `amplifiedengineer`. Its plugin source is `./plugins/ae`.
+- `.agents/plugins/marketplace.json`: the Codex marketplace, same name and the same source.
+- `.github/`: workflows, checks, tests and evals.
+- `README.md`, `LICENSE`, `AGENTS.md`, `CLAUDE.md`: repository files, not shipped.
+
+Do not put development files inside `plugins/ae/`. The smoke test fails if an installed plugin holds a `.github` or `evals` folder.
 
 ## Skills
 
-- `skills/plan`: user-facing. Discovery, design, reviews and handover.
-- `skills/implement`: user-facing. Scoped code changes and verification.
-- `skills/research`: user-facing. Finds project information and answers with sources. The plan and implement skills also call it.
-- `skills/review`: user-facing. Reviews a pull request, a branch or a diff and reports checked findings.
+- `plugins/ae/skills/plan`: user-facing. Discovery, design, reviews and handover.
+- `plugins/ae/skills/implement`: user-facing. Scoped code changes and verification.
+- `plugins/ae/skills/research`: user-facing. Finds project information and answers with sources. The plan and implement skills also call it.
+- `plugins/ae/skills/review`: user-facing. Reviews a pull request, a branch or a diff and reports checked findings.
 
-The document storage contract is [skills/plan/references/document-storage.md](skills/plan/references/document-storage.md).
+The document storage contract is [plugins/ae/skills/plan/references/document-storage.md](plugins/ae/skills/plan/references/document-storage.md).
 
 ## Writing rule
 
@@ -28,9 +35,9 @@ Never use em dashes or en dashes in any text. Use commas, colons or parentheses.
 
 Run these from the repository root. They need Node 26; the tests also need `git`, and the smoke script needs the `claude` and `codex` CLIs.
 
-- `node .github/scripts/check.mjs [repo-root]`: static checks on manifests, links, old names, skills, the research brief, README, the storage contract, template Status lines and the implement stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
+- `node .github/scripts/check.mjs [repo-root]`: static checks on manifests, marketplace sources, the plugin licence copy, links, old names, skills, the research brief, README, the storage contract, template Status lines and the implement stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
 - `node --test ".github/tests/**/*.test.mjs"`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
-- `node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the four skills arrived. `--keep` leaves the folders and prints their paths.
+- `node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host, checks the four skills arrived and checks no `.github` or `evals` folder came with them. `--keep` leaves the folders and prints their paths.
 
 ## Evals
 
@@ -42,7 +49,7 @@ A case is a JSON file under `.github/evals/<skill>/cases/` with `id`, `repo`, `r
 
 ## Releases
 
-A shared action from [AmplifiedEngineer/workflows](https://github.com/AmplifiedEngineer/workflows#version-rules) releases a PR merged to main only when it changes a file under `skills/`. Such a PR sets the next version in both `plugin.json` and `.claude-plugin/plugin.json`, and the PR title decides which version that is. A PR that touches nothing under `skills/` (ci, docs, manifests, tooling) needs no version change and releases nothing.
+A shared action from [AmplifiedEngineer/workflows](https://github.com/AmplifiedEngineer/workflows#version-rules) releases a PR merged to main only when it changes a file under `plugins/ae/skills/`. Such a PR sets the next version in both `plugins/ae/plugin.json` and `plugins/ae/.claude-plugin/plugin.json`, and the PR title decides which version that is. A PR that touches nothing under `plugins/ae/skills/` (ci, docs, manifests, tooling) needs no version change and releases nothing.
 
 The rule before 1.0.0: a `feat` or `!` title bumps the minor, anything else the patch. From 1.0.0: `!` bumps the major, `feat` the minor, anything else the patch. The first release (no tag yet) is the version both manifests hold. The workflows README has the full rules.
 

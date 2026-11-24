@@ -5,7 +5,7 @@
       "name": "ae",
       "source": {
         "source": "local",
-        "path": "./"
+        "path": "./plugins/ae"
       },
       "policy": {
         "installation": "AVAILABLE",

@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "ae",
-      "source": "./",
+      "source": "./plugins/ae",
       "description": "Plan, implement, research and review skills for Codex and Claude Code."
     }
   ]

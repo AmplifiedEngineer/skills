@@ -18,6 +18,7 @@ import { parseArgs, promisify } from "node:util";
 const run = promisify(execFile);
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const PLUGIN_DIR = join(REPO_ROOT, "plugins/ae");
 const EVALS_DIR = join(REPO_ROOT, ".github/evals");
 const PLUGIN_NAME = "ae";
 const CONFIG_WITH_SKILL = "with_skill";
@@ -158,7 +159,7 @@ async function review(testCase, skill, config, model, cwd) {
     : testCase.prompt;
   const args = ["-p", "--model", model, "--output-format", "stream-json", "--verbose"];
   args.push(...ISOLATION_FLAGS);
-  args.push(...(withSkill ? ["--plugin-dir", REPO_ROOT] : ["--disable-slash-commands"]));
+  args.push(...(withSkill ? ["--plugin-dir", PLUGIN_DIR] : ["--disable-slash-commands"]));
   args.push("--allowedTools", ...REVIEW_TOOLS);
   const started = Date.now();
   const reply = await claude(args, {

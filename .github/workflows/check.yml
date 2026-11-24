@@ -31,8 +31,11 @@ jobs:
       - name: Install Claude Code
         run: npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
 
-      - name: Validate plugin manifests
+      - name: Validate marketplace
         run: claude plugin validate .
+
+      - name: Validate plugin manifests
+        run: claude plugin validate plugins/ae
 
       - name: Install smoke test (Claude Code)
         run: node .github/scripts/smoke-install.mjs claude

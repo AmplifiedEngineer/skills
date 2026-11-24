@@ -56,7 +56,7 @@ const CLAUDE_MISSING = "FAIL host=claude: claude CLI not found on PATH";
 const CODEX_MISSING = "FAIL host=codex: codex CLI not found on PATH";
 const SKILL_MISSING = "skill review missing after install";
 
-const EXPECTED_CASE_IDS = [20, 21, 58, 59, 74, 77, 78, 80, 81, 82, 83, 84, 85, 93, 95, 96];
+const EXPECTED_CASE_IDS = [20, 21, 58, 59, 74, 77, 78, 80, 81, 82, 83, 84, 85, 93, 95, 96, 110, 111];
 
 const registeredIds = [];
 
@@ -325,6 +325,31 @@ defineCase({
   lines: [],
   tmpEmpty: true,
   bigLog: true,
+});
+
+defineCase({
+  id: 110,
+  fault: "claude install ships .github and evals folders",
+  host: "claude",
+  mode: "shipdev",
+  args: ["claude"],
+  code: EXIT_FAILED,
+  lines: [
+    "FAIL host=claude: development folder shipped in the installed plugin: .github",
+    "FAIL host=claude: development folder shipped in the installed plugin: evals",
+  ],
+  tmpEmpty: true,
+});
+
+defineCase({
+  id: 111,
+  fault: "claude install with only the plugin files passes the folder check",
+  host: "claude",
+  mode: "full",
+  args: ["claude"],
+  code: EXIT_CLEAN,
+  lines: [],
+  tmpEmpty: true,
 });
 
 // Stops the smoke script while its CLI runs, then checks the CLI is gone and cleanup ran.

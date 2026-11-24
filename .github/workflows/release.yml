@@ -16,7 +16,7 @@ jobs:
     uses: AmplifiedEngineer/workflows/.github/workflows/release-continuous.yml@a68b679eb96b8e30d5cafc63b1cf29c9a44452b6 # v0.2.0
     with:
       files: |
-        plugin.json
-        .claude-plugin/plugin.json
+        plugins/ae/plugin.json
+        plugins/ae/.claude-plugin/plugin.json
       paths: |
-        skills/
+        plugins/ae/skills/
