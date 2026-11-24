@@ -1,6 +1,6 @@
 # Agent instructions
 
-This repository is a plugin that ships four Agent Skills for Claude Code and Codex.
+This repository is a plugin that ships six Agent Skills for Claude Code and Codex.
 
 ## Layout
 
@@ -24,6 +24,8 @@ Do not put development files inside `plugins/ae/`. The smoke test fails if an in
 - `plugins/ae/skills/implement`: user-facing. Scoped code changes and verification.
 - `plugins/ae/skills/research`: user-facing. Finds project information and answers with sources. The plan and implement skills also call it.
 - `plugins/ae/skills/review`: user-facing. Reviews a pull request, a branch or a diff and reports checked findings.
+- `plugins/ae/skills/writing-style`: loaded by other skills and by the agent, not called by users. The plain, simple-English rules for any prose a person will read. The plan, implement, research and review skills load it.
+- `plugins/ae/skills/engineering-standards`: loaded by other skills and by the agent, not called by users. Guard rails for code design, commits, PRs, testing and deployment. The implement and review skills follow it.
 
 The document storage contract is [plugins/ae/skills/plan/references/document-storage.md](plugins/ae/skills/plan/references/document-storage.md).
 
@@ -37,7 +39,7 @@ Run these from the repository root. They need Node 26; the tests also need `git`
 
 - `node .github/scripts/check.mjs [repo-root]`: static checks on manifests, marketplace sources, the plugin licence copy, links, old names, skills, the research brief, README, the storage contract, template Status lines and the implement stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
 - `node --test ".github/tests/**/*.test.mjs"`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
-- `node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host, checks the four skills arrived and checks no `.github` or `evals` folder came with them. `--keep` leaves the folders and prints their paths.
+- `node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host, checks the six skills arrived and checks no `.github` or `evals` folder came with them. `--keep` leaves the folders and prints their paths.
 
 ## Evals
 

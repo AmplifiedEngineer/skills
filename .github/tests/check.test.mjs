@@ -17,11 +17,15 @@ const PLAN_DIR = "plugins/ae/skills/plan";
 const IMPLEMENT_DIR = "plugins/ae/skills/implement";
 const RESEARCH_DIR = "plugins/ae/skills/research";
 const REVIEW_DIR = "plugins/ae/skills/review";
+const STYLE_DIR = "plugins/ae/skills/writing-style";
+const STANDARDS_DIR = "plugins/ae/skills/engineering-standards";
 const SCRATCH_DIR = "plugins/ae/skills/scratch";
 const PLAN_SKILL = "plugins/ae/skills/plan/SKILL.md";
 const IMPLEMENT_SKILL = "plugins/ae/skills/implement/SKILL.md";
 const RESEARCH_SKILL = "plugins/ae/skills/research/SKILL.md";
 const REVIEW_SKILL = "plugins/ae/skills/review/SKILL.md";
+const STYLE_SKILL = "plugins/ae/skills/writing-style/SKILL.md";
+const STANDARDS_SKILL = "plugins/ae/skills/engineering-standards/SKILL.md";
 const SCRATCH_SKILL = "plugins/ae/skills/scratch/SKILL.md";
 const PLAN_README = "plugins/ae/skills/plan/README.md";
 const IMPLEMENT_README = "plugins/ae/skills/implement/README.md";
@@ -101,7 +105,7 @@ const EXPECTED_CASE_IDS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26,
   28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
   50, 51, 52, 53, 54, 55, 56, 57, 60, 61, 62, 63, 64, 65, 66, 67, 69, 70, 71, 73, 75, 76,
-  86, 87, 94, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+  86, 87, 94, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 112, 113, 114, 115,
 ];
 
 const registeredIds = [];
@@ -533,12 +537,40 @@ defineCase({
 });
 
 defineCase({
+  id: 112,
+  fault: "remove skills/writing-style",
+  apply: (copy) => copy.remove(STYLE_DIR),
+  lines: missing(5, [STYLE_DIR]),
+});
+
+defineCase({
+  id: 113,
+  fault: "remove skills/engineering-standards",
+  apply: (copy) => copy.remove(STANDARDS_DIR),
+  lines: missing(5, [STANDARDS_DIR]),
+});
+
+defineCase({
+  id: 114,
+  fault: "writing-style SKILL.md name writing-style -> style",
+  apply: (copy) => copy.replace(STYLE_SKILL, /^name: writing-style$/m, "name: style"),
+  lines: [fail(5, STYLE_SKILL, "name style does not match folder")],
+});
+
+defineCase({
+  id: 115,
+  fault: "engineering-standards SKILL.md name engineering-standards -> standards",
+  apply: (copy) => copy.replace(STANDARDS_SKILL, /^name: engineering-standards$/m, "name: standards"),
+  lines: [fail(5, STANDARDS_SKILL, "name standards does not match folder")],
+});
+
+defineCase({
   id: 17,
   fault: "remove the whole skills dir",
   apply: (copy) => copy.remove(SKILLS_DIR),
   lines: [
     fail(3, SKILLS_GLOB, NO_FILES),
-    ...missing(5, [PLAN_DIR, IMPLEMENT_DIR, RESEARCH_DIR, REVIEW_DIR]),
+    ...missing(5, [PLAN_DIR, IMPLEMENT_DIR, RESEARCH_DIR, REVIEW_DIR, STYLE_DIR, STANDARDS_DIR]),
     ...missing(6, [RESEARCH_BRIEF]),
     ...missing(8, [STORAGE_PLAN, STORAGE_IMPLEMENT]),
     ...missing(9, [...TEMPLATE_FILES, ...STORAGE_LINK_FILES]),
@@ -566,7 +598,7 @@ defineCase({
   apply: (copy) => copy.removeMarkdownUnder(SKILLS_DIR),
   lines: [
     fail(3, SKILLS_GLOB, NO_FILES),
-    ...missing(5, [PLAN_SKILL, IMPLEMENT_SKILL, RESEARCH_SKILL, REVIEW_SKILL]),
+    ...missing(5, [PLAN_SKILL, IMPLEMENT_SKILL, RESEARCH_SKILL, REVIEW_SKILL, STYLE_SKILL, STANDARDS_SKILL]),
     ...missing(6, [RESEARCH_BRIEF]),
     ...missing(8, [STORAGE_PLAN, STORAGE_IMPLEMENT]),
     ...missing(9, [...TEMPLATE_FILES, ...STORAGE_LINK_FILES]),

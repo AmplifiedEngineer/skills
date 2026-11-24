@@ -47,3 +47,5 @@ The verdict is APPROVE, REQUEST_CHANGES, COMMENT or INCONCLUSIVE.
 Review does not change code. When the author asks for fixes, hand the surviving findings to the implement skill, or fix them yourself when no such skill is available and the user asks.
 
 When a finding needs project context you do not have (a ticket, a decision record, a third-party API contract), call the research skill: `ae:research` in Claude Code when installed as a plugin, `research` when copied in by hand, `$research` in Codex. With no research skill, look it up yourself and cite the source.
+
+Before you write review comments or any other prose a person will read, load the writing-style skill: `ae:writing-style` in Claude Code when installed as a plugin, `writing-style` when copied in by hand, `$writing-style` in Codex. For code, follow the engineering-standards skill: `ae:engineering-standards` in Claude Code when installed as a plugin, `engineering-standards` when copied in by hand, `$engineering-standards` in Codex.

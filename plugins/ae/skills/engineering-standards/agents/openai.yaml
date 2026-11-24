@@ -1,0 +1,7 @@
+interface:
+  display_name: "Engineering Standards"
+  short_description: "Guard rails for code design, commits, PRs, testing and deployment"
+  default_prompt: "Follow $engineering-standards when you design or write code, prepare a PR, or plan tests or a deploy."
+
+policy:
+  allow_implicit_invocation: true
