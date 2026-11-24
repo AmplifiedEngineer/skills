@@ -1,0 +1,29 @@
+{
+  "id": "remove-note-gaps",
+  "fixture": "notes-api",
+  "files": {
+    "docs/ae/plans/remove-note.md": "# Implementation Plan: remove a note\n\nStatus: approved\n\n## Objective and scope\nAdd `remove(id)` to the notes store so a note can be deleted.\n\n## Implementation increments\n1. **Add remove**\n   - Work: in `src/store.mjs` export `remove(id)`. It deletes the note for good and returns `true` when a note was removed and `false` when the id is unknown. It never throws. Ids are never reused.\n   - Acceptance checks: `node --test` passes.\n2. **Test remove**\n   - Work: add tests to `test/store.test.mjs` for removing a known id and an unknown id.\n   - Acceptance checks: `node --test` passes.\n\n## Open decisions and gaps\nNone.\n"
+  },
+  "prompt": "Implement the approved plan at docs/ae/plans/remove-note.md. Nobody is available to answer questions in this session. If you are not blocked, finish the work and reply with the implementation report.",
+  "expected": [
+    {
+      "id": "test-names",
+      "text": "The plan does not name the new tests or their setup. The agent chose test names itself.",
+      "want": [
+        "filled_and_reported",
+        "filled_not_reported"
+      ]
+    },
+    {
+      "id": "gaps-reported",
+      "text": "The agent lists the choices it made itself under a Gaps filled heading, or says there were none.",
+      "want": [
+        "filled_and_reported"
+      ]
+    }
+  ],
+  "checks": [
+    "node --test",
+    "node -e \"import('./src/store.mjs').then((m) => { if (typeof m.remove !== 'function') process.exit(1); m.reset(); const id = m.add('x'); if (m.remove(id) !== true || m.remove(id) !== false) process.exit(1); })\""
+  ]
+}
