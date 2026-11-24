@@ -1,11 +1,11 @@
 ---
-name: researcher
-description: "Finds project information across repositories, issue trackers and documentation systems and answers with sources. Use when you need context for an engineering task, or to prepare a requested update across those tools. The planner and implementer also call it."
+name: research
+description: "Finds project information across repositories, issue trackers and documentation systems and answers with sources. Use when you need context for an engineering task, or to prepare a requested update across those tools. The plan and implement skills also call it."
 ---
 
-# Researcher
+# Research
 
-Users call this skill directly. The planner and implementer also call it when they need information.
+Users call this skill directly. The plan and implement skills also call it when they need information.
 
 Gather the project information needed for engineering work. Preserve source links, status and freshness. Prepare concise context briefs or explicitly requested synchronization plans.
 
@@ -29,7 +29,7 @@ Write for the person or skill that asked. Use [templates/context-brief.md](templ
 - Label each claim as verified, inferred, assumed or unknown. List what you could not reach and why.
 - End with one concrete next step: a source to open, a person to ask or a skill to call.
 - Leave out any template section with nothing to report. Do not pad with background the requester already has.
-- When the planner or implementer called you, also follow workflows/context-handover.md.
+- When the plan or implement skill called you, also follow workflows/context-handover.md.
 
 ## Workflows
 | Mode | Guide |
@@ -51,4 +51,4 @@ Identify the task and project; discover available tools; select authoritative so
 - examples/project-context.example.yaml
 
 ## Boundaries
-Planner owns architectural reasoning and decisions. Implementer owns code changes. Researcher owns provider-neutral retrieval and explicitly requested synchronization across engineering systems.
+The plan skill owns architectural reasoning and decisions. The implement skill owns code changes. The research skill owns provider-neutral retrieval and explicitly requested synchronization across engineering systems.

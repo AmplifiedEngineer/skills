@@ -1,4 +1,4 @@
-# Researcher Brief
+# Research Brief
 
 ## Answer
 -

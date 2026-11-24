@@ -7,7 +7,7 @@
    Storage rules are in [document-storage](../references/document-storage.md).
 3. Inspect relevant implementation, tests and neighbouring conventions.
 4. Map requirements to components and identify unresolved design choices.
-5. If a design decision is needed and the document does not give it, stop and return the question to the planner.
+5. If a design decision is needed and the document does not give it, stop and return the question to the plan skill.
    Do not decide it yourself.
 6. Plan small increments that preserve a coherent, reviewable diff.
 7. Implement while preserving compatibility and consistent failure handling.

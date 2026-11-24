@@ -13,27 +13,27 @@ const CLAUDE_MARKET = ".claude-plugin/marketplace.json";
 const CODEX_MARKET = ".agents/plugins/marketplace.json";
 const SKILLS_DIR = "skills";
 const SKILLS_GLOB = "skills/**/*.md";
-const PLANNER_DIR = "skills/planner";
-const IMPLEMENTER_DIR = "skills/implementer";
-const RESEARCHER_DIR = "skills/researcher";
+const PLAN_DIR = "skills/plan";
+const IMPLEMENT_DIR = "skills/implement";
+const RESEARCH_DIR = "skills/research";
 const SCRATCH_DIR = "skills/scratch";
-const PLANNER_SKILL = "skills/planner/SKILL.md";
-const IMPLEMENTER_SKILL = "skills/implementer/SKILL.md";
-const RESEARCHER_SKILL = "skills/researcher/SKILL.md";
+const PLAN_SKILL = "skills/plan/SKILL.md";
+const IMPLEMENT_SKILL = "skills/implement/SKILL.md";
+const RESEARCH_SKILL = "skills/research/SKILL.md";
 const SCRATCH_SKILL = "skills/scratch/SKILL.md";
-const PLANNER_README = "skills/planner/README.md";
-const IMPLEMENTER_README = "skills/implementer/README.md";
-const PLANNER_DOC = "skills/planner/workflows/documentation.md";
-const HANDOVER_DOC = "skills/planner/workflows/implementation-handover.md";
-const EXEC_DOC = "skills/implementer/workflows/implementation-execution.md";
-const STORAGE_PLANNER = "skills/planner/references/document-storage.md";
-const STORAGE_IMPLEMENTER = "skills/implementer/references/document-storage.md";
-const TEMPLATES_DIR = "skills/planner/templates";
-const PLAN_TEMPLATE = "skills/planner/templates/implementation-plan.md";
-const ADR_TEMPLATE = "skills/planner/templates/adr.md";
-const EXTRA_TEMPLATE = "skills/planner/templates/extra.md";
-const RESEARCHER_BRIEF = "skills/researcher/templates/context-brief.md";
-const EXTRA_JSON = "skills/planner/extra.json";
+const PLAN_README = "skills/plan/README.md";
+const IMPLEMENT_README = "skills/implement/README.md";
+const PLAN_DOC = "skills/plan/workflows/documentation.md";
+const HANDOVER_DOC = "skills/plan/workflows/implementation-handover.md";
+const EXEC_DOC = "skills/implement/workflows/implementation-execution.md";
+const STORAGE_PLAN = "skills/plan/references/document-storage.md";
+const STORAGE_IMPLEMENT = "skills/implement/references/document-storage.md";
+const TEMPLATES_DIR = "skills/plan/templates";
+const PLAN_TEMPLATE = "skills/plan/templates/implementation-plan.md";
+const ADR_TEMPLATE = "skills/plan/templates/adr.md";
+const EXTRA_TEMPLATE = "skills/plan/templates/extra.md";
+const RESEARCH_BRIEF = "skills/research/templates/context-brief.md";
+const EXTRA_JSON = "skills/plan/extra.json";
 const IGNORED_JSON = "node_modules/x.json";
 const TEST_NOTE = ".github/tests/x.md";
 const AE_JSON = ".ae/x.json";
@@ -48,7 +48,7 @@ const TEMPLATE_FILES = [
   `${TEMPLATES_DIR}/impact-report.md`,
   `${TEMPLATES_DIR}/discovery-state.md`,
 ];
-const STORAGE_LINK_FILES = [PLANNER_DOC, HANDOVER_DOC, EXEC_DOC];
+const STORAGE_LINK_FILES = [PLAN_DOC, HANDOVER_DOC, EXEC_DOC];
 const WRONG_STATUS_TEMPLATES = [
   [62, "architecture-assessment.md"],
   [63, "architecture-findings.md"],
@@ -67,7 +67,7 @@ const STATUS_WRONG = "Status: wrong";
 const ANSWER_HEADING = "## Answer";
 const STORAGE_LINK_TEXT = "document-storage.md";
 const STORAGE_LINK_TARGET = "references/document-storage.md";
-const STOP_RULE_TEXT = "stop and return the question to the planner";
+const STOP_RULE_TEXT = "stop and return the question to the plan skill";
 const STATUS_GATE_TEXT = "run only documents whose Status is approved";
 const FENCE = "```";
 
@@ -99,7 +99,7 @@ const EXPECTED_CASE_IDS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26,
   28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
   50, 51, 52, 53, 54, 55, 56, 57, 60, 61, 62, 63, 64, 65, 66, 67, 69, 70, 71, 73, 75, 76,
-  86, 87, 94, 97, 98, 99,
+  86, 87, 94, 97, 98, 99, 100, 101, 102,
 ];
 
 const registeredIds = [];
@@ -276,41 +276,41 @@ for (const row of statusRows) {
 const brokenLinkRows = [
   {
     id: 9,
-    file: PLANNER_DOC,
+    file: PLAN_DOC,
     text: "[x](../references/missing.md)",
     reportedAs: "../references/missing.md",
   },
   {
     id: 10,
-    file: PLANNER_SKILL,
+    file: PLAN_SKILL,
     text: "`references/missing.md`",
     reportedAs: "references/missing.md",
   },
-  { id: 11, file: PLANNER_DOC, text: "[licence](LICENSE)", reportedAs: "LICENSE" },
+  { id: 11, file: PLAN_DOC, text: "[licence](LICENSE)", reportedAs: "LICENSE" },
   {
     id: 46,
-    file: PLANNER_SKILL,
+    file: PLAN_SKILL,
     text: "`templates/missing.md`",
     reportedAs: "templates/missing.md",
   },
   {
     id: 50,
-    file: PLANNER_SKILL,
+    file: PLAN_SKILL,
     text: "`workflows/missing.md`",
     reportedAs: "workflows/missing.md",
   },
-  { id: 51, file: PLANNER_SKILL, text: "`examples/missing.md`", reportedAs: "examples/missing.md" },
-  { id: 52, file: PLANNER_SKILL, text: "`agents/missing.yaml`", reportedAs: "agents/missing.yaml" },
-  { id: 53, file: PLANNER_DOC, text: "`../missing.md`", reportedAs: "../missing.md" },
+  { id: 51, file: PLAN_SKILL, text: "`examples/missing.md`", reportedAs: "examples/missing.md" },
+  { id: 52, file: PLAN_SKILL, text: "`agents/missing.yaml`", reportedAs: "agents/missing.yaml" },
+  { id: 53, file: PLAN_DOC, text: "`../missing.md`", reportedAs: "../missing.md" },
   {
     id: 67,
-    file: PLANNER_SKILL,
+    file: PLAN_SKILL,
     text: "[x](references/missing.md#section)",
     reportedAs: "references/missing.md",
   },
   {
     id: 69,
-    file: PLANNER_SKILL,
+    file: PLAN_SKILL,
     text: `${FENCE}\n[x](references/missing.md)\n${FENCE}`,
     reportedAs: "references/missing.md",
   },
@@ -326,21 +326,24 @@ for (const row of brokenLinkRows) {
 }
 
 const oldNameRows = [
-  { id: 13, file: IMPLEMENTER_README, text: OLD_NAME_TEXT, reportedAs: OLD_NAME_TEXT },
+  { id: 13, file: IMPLEMENT_README, text: OLD_NAME_TEXT, reportedAs: OLD_NAME_TEXT },
   {
     id: 42,
-    file: IMPLEMENTER_README,
+    file: IMPLEMENT_README,
     text: "engineering-architect",
     reportedAs: "engineering-architect",
   },
   {
     id: 43,
-    file: PLANNER_README,
+    file: PLAN_README,
     text: "ENGINEERING-IMPLEMENTATION",
     reportedAs: "ENGINEERING-IMPLEMENTATION",
   },
   { id: 44, file: README, text: "engineering context", reportedAs: "engineering context" },
   { id: 73, file: AGENTS, text: "engineering-context", reportedAs: "engineering-context" },
+  { id: 100, file: README, text: "the planner", reportedAs: "planner" },
+  { id: 101, file: README, text: "the Implementer", reportedAs: "Implementer" },
+  { id: 102, file: README, text: "$researcher", reportedAs: "researcher" },
 ];
 
 for (const row of oldNameRows) {
@@ -368,45 +371,45 @@ const removeRows = [
   { id: 25, path: README, lines: missing(7, [README]) },
   {
     id: 29,
-    path: STORAGE_IMPLEMENTER,
+    path: STORAGE_IMPLEMENT,
     lines: [
       fail(3, EXEC_DOC, `${BROKEN_LINK} ../${STORAGE_LINK_TARGET}`),
-      ...missing(8, [STORAGE_IMPLEMENTER]),
+      ...missing(8, [STORAGE_IMPLEMENT]),
     ],
   },
   {
     id: 30,
-    path: STORAGE_PLANNER,
+    path: STORAGE_PLAN,
     lines: [
-      fail(3, PLANNER_SKILL, `${BROKEN_LINK} ${STORAGE_LINK_TARGET}`),
-      fail(3, PLANNER_DOC, `${BROKEN_LINK} ../${STORAGE_LINK_TARGET}`),
+      fail(3, PLAN_SKILL, `${BROKEN_LINK} ${STORAGE_LINK_TARGET}`),
+      fail(3, PLAN_DOC, `${BROKEN_LINK} ../${STORAGE_LINK_TARGET}`),
       fail(3, HANDOVER_DOC, `${BROKEN_LINK} ../${STORAGE_LINK_TARGET}`),
-      ...missing(8, [STORAGE_PLANNER]),
+      ...missing(8, [STORAGE_PLAN]),
     ],
   },
   { id: 39, path: EXEC_DOC, lines: [...missing(9, [EXEC_DOC]), ...missing(10, [EXEC_DOC])] },
   {
     id: 41,
-    path: RESEARCHER_BRIEF,
+    path: RESEARCH_BRIEF,
     lines: [
-      fail(3, RESEARCHER_SKILL, `${BROKEN_LINK} templates/context-brief.md`),
-      ...missing(6, [RESEARCHER_BRIEF]),
+      fail(3, RESEARCH_SKILL, `${BROKEN_LINK} templates/context-brief.md`),
+      ...missing(6, [RESEARCH_BRIEF]),
     ],
   },
-  { id: 57, path: PLANNER_SKILL, lines: missing(5, [PLANNER_SKILL]) },
+  { id: 57, path: PLAN_SKILL, lines: missing(5, [PLAN_SKILL]) },
   {
     id: 60,
-    path: PLANNER_DOC,
+    path: PLAN_DOC,
     lines: [
-      fail(3, PLANNER_SKILL, `${BROKEN_LINK} workflows/documentation.md`),
-      ...missing(9, [PLANNER_DOC]),
+      fail(3, PLAN_SKILL, `${BROKEN_LINK} workflows/documentation.md`),
+      ...missing(9, [PLAN_DOC]),
     ],
   },
   {
     id: 61,
     path: HANDOVER_DOC,
     lines: [
-      fail(3, PLANNER_SKILL, `${BROKEN_LINK} workflows/implementation-handover.md`),
+      fail(3, PLAN_SKILL, `${BROKEN_LINK} workflows/implementation-handover.md`),
       ...missing(9, [HANDOVER_DOC]),
     ],
   },
@@ -424,9 +427,9 @@ for (const row of removeRows) {
 const dropRows = [
   {
     id: 34,
-    file: PLANNER_DOC,
+    file: PLAN_DOC,
     text: STORAGE_LINK_TEXT,
-    line: fail(9, PLANNER_DOC, MISSING_STORAGE_LINK),
+    line: fail(9, PLAN_DOC, MISSING_STORAGE_LINK),
   },
   {
     id: 35,
@@ -476,7 +479,7 @@ defineCase({
       "[x](#anchor)",
       "[x](https://example.com)",
     ]) {
-      copy.append(PLANNER_DOC, text);
+      copy.append(PLAN_DOC, text);
     }
   },
   lines: [],
@@ -484,9 +487,12 @@ defineCase({
 
 defineCase({
   id: 14,
-  fault: "planner SKILL.md name: planner -> name: plan",
-  apply: (copy) => copy.replace(PLANNER_SKILL, /^name: planner$/m, "name: plan"),
-  lines: [fail(5, PLANNER_SKILL, "name plan does not match folder")],
+  fault: "plan SKILL.md name: plan -> name: planner",
+  apply: (copy) => copy.replace(PLAN_SKILL, /^name: plan$/m, "name: planner"),
+  lines: [
+    fail(4, PLAN_SKILL, `${OLD_NAME} planner`),
+    fail(5, PLAN_SKILL, "name planner does not match folder"),
+  ],
 });
 
 defineCase({
@@ -498,9 +504,9 @@ defineCase({
 
 defineCase({
   id: 16,
-  fault: "remove skills/researcher",
-  apply: (copy) => copy.remove(RESEARCHER_DIR),
-  lines: [...missing(5, [RESEARCHER_DIR]), ...missing(6, [RESEARCHER_BRIEF])],
+  fault: "remove skills/research",
+  apply: (copy) => copy.remove(RESEARCH_DIR),
+  lines: [...missing(5, [RESEARCH_DIR]), ...missing(6, [RESEARCH_BRIEF])],
 });
 
 defineCase({
@@ -509,9 +515,9 @@ defineCase({
   apply: (copy) => copy.remove(SKILLS_DIR),
   lines: [
     fail(3, SKILLS_GLOB, NO_FILES),
-    ...missing(5, [PLANNER_DIR, IMPLEMENTER_DIR, RESEARCHER_DIR]),
-    ...missing(6, [RESEARCHER_BRIEF]),
-    ...missing(8, [STORAGE_PLANNER, STORAGE_IMPLEMENTER]),
+    ...missing(5, [PLAN_DIR, IMPLEMENT_DIR, RESEARCH_DIR]),
+    ...missing(6, [RESEARCH_BRIEF]),
+    ...missing(8, [STORAGE_PLAN, STORAGE_IMPLEMENT]),
     ...missing(9, [...TEMPLATE_FILES, ...STORAGE_LINK_FILES]),
     ...missing(10, [EXEC_DOC]),
   ],
@@ -537,9 +543,9 @@ defineCase({
   apply: (copy) => copy.removeMarkdownUnder(SKILLS_DIR),
   lines: [
     fail(3, SKILLS_GLOB, NO_FILES),
-    ...missing(5, [PLANNER_SKILL, IMPLEMENTER_SKILL, RESEARCHER_SKILL]),
-    ...missing(6, [RESEARCHER_BRIEF]),
-    ...missing(8, [STORAGE_PLANNER, STORAGE_IMPLEMENTER]),
+    ...missing(5, [PLAN_SKILL, IMPLEMENT_SKILL, RESEARCH_SKILL]),
+    ...missing(6, [RESEARCH_BRIEF]),
+    ...missing(8, [STORAGE_PLAN, STORAGE_IMPLEMENT]),
     ...missing(9, [...TEMPLATE_FILES, ...STORAGE_LINK_FILES]),
     ...missing(10, [EXEC_DOC]),
   ],
@@ -547,9 +553,9 @@ defineCase({
 
 defineCase({
   id: 28,
-  fault: "append x to the implementer document-storage.md",
-  apply: (copy) => copy.append(STORAGE_IMPLEMENTER, "x"),
-  lines: [fail(8, STORAGE_IMPLEMENTER, `${DIFFERS} ${STORAGE_PLANNER}`)],
+  fault: "append x to the implement document-storage.md",
+  apply: (copy) => copy.append(STORAGE_IMPLEMENT, "x"),
+  lines: [fail(8, STORAGE_IMPLEMENT, `${DIFFERS} ${STORAGE_PLAN}`)],
 });
 
 defineCase({
@@ -561,33 +567,33 @@ defineCase({
 
 defineCase({
   id: 40,
-  fault: "delete the ## Answer heading in the researcher brief",
-  apply: (copy) => copy.dropLines(RESEARCHER_BRIEF, (line) => line === ANSWER_HEADING),
-  lines: [fail(6, RESEARCHER_BRIEF, NOT_FIRST_ANSWER)],
+  fault: "delete the ## Answer heading in the research brief",
+  apply: (copy) => copy.dropLines(RESEARCH_BRIEF, (line) => line === ANSWER_HEADING),
+  lines: [fail(6, RESEARCH_BRIEF, NOT_FIRST_ANSWER)],
 });
 
 defineCase({
   id: 48,
-  fault: "researcher brief ## Answer -> ## Summary",
-  apply: (copy) => copy.replace(RESEARCHER_BRIEF, /^## Answer$/m, "## Summary"),
-  lines: [fail(6, RESEARCHER_BRIEF, NOT_FIRST_ANSWER)],
+  fault: "research brief ## Answer -> ## Summary",
+  apply: (copy) => copy.replace(RESEARCH_BRIEF, /^## Answer$/m, "## Summary"),
+  lines: [fail(6, RESEARCH_BRIEF, NOT_FIRST_ANSWER)],
 });
 
 defineCase({
   id: 49,
-  fault: "move ## Answer to the end of the researcher brief",
+  fault: "move ## Answer to the end of the research brief",
   apply: (copy) => {
-    copy.dropLines(RESEARCHER_BRIEF, (line) => line === ANSWER_HEADING);
-    copy.append(RESEARCHER_BRIEF, ANSWER_HEADING);
+    copy.dropLines(RESEARCH_BRIEF, (line) => line === ANSWER_HEADING);
+    copy.append(RESEARCH_BRIEF, ANSWER_HEADING);
   },
-  lines: [fail(6, RESEARCHER_BRIEF, NOT_FIRST_ANSWER)],
+  lines: [fail(6, RESEARCH_BRIEF, NOT_FIRST_ANSWER)],
 });
 
 defineCase({
   id: 70,
-  fault: "delete the name: line from planner SKILL.md",
-  apply: (copy) => copy.dropLines(PLANNER_SKILL, (line) => line.startsWith("name:")),
-  lines: [fail(5, PLANNER_SKILL, MISSING_NAME)],
+  fault: "delete the name: line from plan SKILL.md",
+  apply: (copy) => copy.dropLines(PLAN_SKILL, (line) => line.startsWith("name:")),
+  lines: [fail(5, PLAN_SKILL, MISSING_NAME)],
 });
 
 defineCase({

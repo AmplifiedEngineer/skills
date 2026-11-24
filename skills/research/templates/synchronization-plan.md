@@ -1,4 +1,4 @@
-# Researcher Synchronization Plan
+# Research Synchronization Plan
 
 ## Answer
 -

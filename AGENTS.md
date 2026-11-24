@@ -13,11 +13,11 @@ This repository is a plugin that ships three Agent Skills for Claude Code and Co
 
 ## Skills
 
-- `skills/planner`: user-facing. Discovery, design, reviews and handover.
-- `skills/implementer`: user-facing. Scoped code changes and verification.
-- `skills/researcher`: user-facing. Finds project information and answers with sources. The planner and implementer also call it.
+- `skills/plan`: user-facing. Discovery, design, reviews and handover.
+- `skills/implement`: user-facing. Scoped code changes and verification.
+- `skills/research`: user-facing. Finds project information and answers with sources. The plan and implement skills also call it.
 
-The document storage contract is [skills/planner/references/document-storage.md](skills/planner/references/document-storage.md).
+The document storage contract is [skills/plan/references/document-storage.md](skills/plan/references/document-storage.md).
 
 ## Writing rule
 
@@ -27,7 +27,7 @@ Never use em dashes or en dashes in any text. Use commas, colons or parentheses.
 
 Run these from the repository root. They need Node 26; the tests also need `git`, and the smoke script needs the `claude` and `codex` CLIs.
 
-- `node .github/scripts/check.mjs [repo-root]`: static checks on manifests, links, old names, skills, the researcher brief, README, the storage contract, template Status lines and the implementer stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
+- `node .github/scripts/check.mjs [repo-root]`: static checks on manifests, links, old names, skills, the research brief, README, the storage contract, template Status lines and the implement stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
 - `node --test ".github/tests/**/*.test.mjs"`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
 - `node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the three skills arrived. `--keep` leaves the folders and prints their paths.
 

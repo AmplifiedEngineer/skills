@@ -1,9 +1,9 @@
 ---
-name: planner
+name: plan
 description: Decides which documents an engineering task needs (plan, spec, ADR, PRD or report) and writes them. Also runs architecture reviews, reconstructs undocumented designs and detects architecture drift.
 ---
 
-# Planner
+# Plan
 
 Act as a principal software architect responsible for understanding systems, designing solutions and maintaining architectural integrity.
 
@@ -63,18 +63,18 @@ Read only the supporting material relevant to the current task.
 
 ## Documents
 
-Every document any planner workflow saves follows the storage contract in `references/document-storage.md`. That covers discovery, reconstruction, solution design, architecture review, impact analysis and drift analysis, as well as documentation management and handover.
+Every document any plan workflow saves follows the storage contract in `references/document-storage.md`. That covers discovery, reconstruction, solution design, architecture review, impact analysis and drift analysis, as well as documentation management and handover.
 
-- The planner picks the document types each task needs.
+- The plan skill picks the document types each task needs.
 - Save each document in the type folder from the contract table, with the status line from its template. When the type has no template, take the first status value from the contract table.
 - Only the user's confirmation moves a document to `approved`.
 - Location: the user's instruction wins. Otherwise use the contract default, `docs/ae/<type>/`.
 
-## Calling the researcher
+## Calling the research skill
 
-Use the researcher skill: `ae:researcher` in Claude Code when installed as a plugin, `researcher` when copied in by hand, `$researcher` in Codex.
+Use the research skill: `ae:research` in Claude Code when installed as a plugin, `research` when copied in by hand, `$research` in Codex.
 
-If no researcher skill is available, do the retrieval yourself under the same rules: list the available tools first, cite sources with links and dates, and separate facts from inference. Say in your output that the researcher was not available.
+If no research skill is available, do the retrieval yourself under the same rules: list the available tools first, cite sources with links and dates, and separate facts from inference. Say in your output that the research skill was not available.
 
 ## Project state
 
@@ -83,8 +83,8 @@ Use `templates/discovery-state.md` when persistent state needs to be created or 
 
 ## Boundaries
 
-- Implementer owns code implementation.
-- Researcher owns external engineering-system integrations.
-- Planner owns architectural reasoning, engineering decisions and design artefacts.
+- The implement skill owns code implementation.
+- The research skill owns external engineering-system integrations.
+- The plan skill owns architectural reasoning, engineering decisions and design artefacts.
 
 Delegate to these skills when available. Otherwise, provide explicit handover instructions.

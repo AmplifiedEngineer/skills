@@ -1,6 +1,6 @@
 # Hints file
 
-`context.yaml` at the document root (default `docs/ae/context.yaml`) is an optional file that tells the researcher where to look first. A person writes it by hand. The skill never writes or changes it unless the user asks.
+`context.yaml` at the document root (default `docs/ae/context.yaml`) is an optional file that tells the research skill where to look first. A person writes it by hand. The skill never writes or changes it unless the user asks.
 
 ## Fields
 - `project`: name, repository and default branch.

@@ -1,4 +1,4 @@
-# Planner
+# Plan
 
 A platform-neutral Agent Skill for engineering discovery, architecture reconstruction, solution design, architecture reviews, change impact and drift analysis, documentation management, and implementation handover.
 
@@ -15,11 +15,11 @@ The workflows and references use relative paths within this package. Load only t
 
 ## Install
 
-Copy the `planner` directory into one of these locations:
+Copy the `plan` directory into one of these locations:
 
-- **Claude Code, project-level:** `.claude/skills/planner/`
-- **Codex, project-level:** `.agents/skills/planner/`
-- **Codex, user-level:** `~/.agents/skills/planner/`
+- **Claude Code, project-level:** `.claude/skills/plan/`
+- **Codex, project-level:** `.agents/skills/plan/`
+- **Codex, user-level:** `~/.agents/skills/plan/`
 
 The shared `SKILL.md` and supporting files are the implementation for both products. Codex can load the skill without `agents/openai.yaml`; that file only supplies optional UI metadata.
 
