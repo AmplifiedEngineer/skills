@@ -22,7 +22,7 @@ The input is the path of a document whose `Status:` is `approved`. A document wi
 
 The plan decides what to build and how. You execute it and fill the gaps.
 
-Fill a gap yourself when the plan leaves a code-level choice open: names, helper structure, local control flow, test cases, error messages, or where a small piece of code lives. Follow the repository conventions and the plan's intent. List each such choice under "Gaps filled" in the report.
+Fill a gap yourself when the plan leaves a code-level choice open: names, helper structure, local control flow, test cases, error messages, or where a small piece of code lives. Follow the repository conventions and the plan's intent. List each such choice under "Gaps filled" in the report. Each one is a plan defect, so write the question the plan should have asked. Frequent entries mean the plan skill is not asking enough.
 
 You are blocked only when one of these holds:
 - The plan contradicts the code or itself.
@@ -30,7 +30,7 @@ You are blocked only when one of these holds:
 - Filling the gap would change a public interface, a data shape, a security boundary or user-visible behaviour that the plan does not specify.
 - Information or access is missing after you called the research skill.
 
-When blocked, stop and return the question to the plan skill. Say what you tried and give the options with your recommendation. Keep working on increments the block does not affect. Do not ask about anything else.
+When blocked, stop and return the question to the plan skill. Say what you tried and give the options with your recommendation. A block is also a plan defect: name the question the plan should have asked. Keep working on increments the block does not affect. Do not ask about anything else.
 
 Call the research skill when information is missing.
 

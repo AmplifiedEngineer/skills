@@ -34,6 +34,8 @@ A traceable implementation plan, saved in the plans folder of the document root 
 
 Design the how, not only the what. The implement skill executes the plan and fills only small code-level gaps. For each increment name the files, the interfaces and data shapes, the order of steps, the edge cases and the tests.
 
+Ask the right questions early. Before you write the increments, list every decision that evidence cannot settle. Walk these areas: interfaces, data shapes and migration, error and failure behaviour, security and privacy, performance limits, compatibility, rollout and rollback, and tests. Ask the user one question at a time, with your recommended answer. Skip a question the repository or the research skill already answers.
+
 A good plan has no open decisions and no gap that could block the implement skill. Before you ask for approval, read each increment as the implement skill would and ask: can I do this with no question? Check these:
 - Every file, interface and data shape the step touches is named, and you confirmed it exists or is to be created.
 - The order of steps and the dependencies between them are explicit.
