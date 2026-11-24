@@ -70,6 +70,10 @@ Every document any plan workflow saves follows the storage contract in `referenc
 - Only the user's confirmation moves a document to `approved`.
 - Location: the user's instruction wins. Otherwise use the contract default, `docs/ae/<type>/`.
 
+## Writing
+
+Before you write prose a person will read (documents, PR text, commit messages, comments, chat replies), load the writing-style skill: `ae:writing-style` in Claude Code when installed as a plugin, `writing-style` when copied in by hand, `$writing-style` in Codex.
+
 ## Calling the research skill
 
 Use the research skill: `ae:research` in Claude Code when installed as a plugin, `research` when copied in by hand, `$research` in Codex.

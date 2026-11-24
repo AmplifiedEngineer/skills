@@ -1,0 +1,7 @@
+interface:
+  display_name: "Writing Style"
+  short_description: "Plain, simple-English rules for prose a person will read"
+  default_prompt: "Load $writing-style before you write any prose a person will read, such as PR text, commit messages, review comments, tickets, docs or chat replies."
+
+policy:
+  allow_implicit_invocation: true

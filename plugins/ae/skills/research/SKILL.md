@@ -31,6 +31,8 @@ Write for the person or skill that asked. Use [templates/context-brief.md](templ
 - Leave out any template section with nothing to report. Do not pad with background the requester already has.
 - When the plan or implement skill called you, also follow workflows/context-handover.md.
 
+Before you write prose a person will read (briefs, answers, update plans), load the writing-style skill: `ae:writing-style` in Claude Code when installed as a plugin, `writing-style` when copied in by hand, `$writing-style` in Codex.
+
 ## Workflows
 | Mode | Guide |
 |---|---|

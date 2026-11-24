@@ -44,6 +44,10 @@ Confirm objective, scope and acceptance criteria; inspect project guidance and i
 - templates/execution-plan.md (save the filled plan in `.ae/`)
 - templates/implementation-report.md
 
+## Writing and code standards
+
+Before you write prose a person will read (documents, PR text, commit messages, comments, chat replies), load the writing-style skill: `ae:writing-style` in Claude Code when installed as a plugin, `writing-style` when copied in by hand, `$writing-style` in Codex. For code, follow the engineering-standards skill: `ae:engineering-standards` in Claude Code when installed as a plugin, `engineering-standards` when copied in by hand, `$engineering-standards` in Codex.
+
 ## Calling the research skill
 
 Use the research skill: `ae:research` in Claude Code when installed as a plugin, `research` when copied in by hand, `$research` in Codex.
