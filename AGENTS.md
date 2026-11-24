@@ -33,7 +33,7 @@ Run these from the repository root. They need Node 26; the tests also need `git`
 
 ## Releases
 
-A shared action from [AmplifiedEngineer/workflows](https://github.com/AmplifiedEngineer/workflows#version-rules) releases every PR merged to main, docs and ci changes included. So every PR sets the next version in both `plugin.json` and `.claude-plugin/plugin.json`. The PR title decides which version that is.
+A shared action from [AmplifiedEngineer/workflows](https://github.com/AmplifiedEngineer/workflows#version-rules) releases a PR merged to main only when it changes a file under `skills/`. Such a PR sets the next version in both `plugin.json` and `.claude-plugin/plugin.json`, and the PR title decides which version that is. A PR that touches nothing under `skills/` (ci, docs, manifests, tooling) needs no version change and releases nothing.
 
 The rule before 1.0.0: a `feat` or `!` title bumps the minor, anything else the patch. From 1.0.0: `!` bumps the major, `feat` the minor, anything else the patch. The first release (no tag yet) is the version both manifests hold. The workflows README has the full rules.
 
