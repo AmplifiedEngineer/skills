@@ -1,6 +1,6 @@
 // @ts-check
 /**
- * Static checks for the plugin tree: manifests, links, old names, skills, the researcher
+ * Static checks for the plugin tree: manifests, links, old names, skills, the research
  * brief, README, the shared storage contract, template Status lines and the execution
  * stop rules.
  *
@@ -16,24 +16,25 @@ const CODEX_MARKET = ".agents/plugins/marketplace.json";
 const README = "README.md";
 const SKILLS_DIR = "skills";
 const SKILLS_GLOB = "skills/**/*.md";
-const SKILL_NAMES = ["planner", "implementer", "researcher"];
+const SKILL_NAMES = ["plan", "implement", "research"];
 const SKILL_FILE = "SKILL.md";
-const OLD_NAME_PATTERN = /engineering[ -](architect|implementation|context)/gi;
+const OLD_NAME_PATTERN =
+  /engineering[ -](architect|implementation|context)|\b(planner|implementer|researcher)\b/gi;
 const LINK_PREFIXES = ["../", "references/", "workflows/", "templates/", "examples/", "agents/"];
 const SKIP_PREFIXES = ["docs/", ".ae/", "#"];
-const STORAGE_PLANNER = "skills/planner/references/document-storage.md";
-const STORAGE_IMPLEMENTER = "skills/implementer/references/document-storage.md";
-const TEMPLATES_DIR = "skills/planner/templates";
+const STORAGE_PLAN = "skills/plan/references/document-storage.md";
+const STORAGE_IMPLEMENT = "skills/implement/references/document-storage.md";
+const TEMPLATES_DIR = "skills/plan/templates";
 const STORAGE_LINK = "references/document-storage.md";
 const STORAGE_LINK_FILES = [
-  "skills/planner/workflows/documentation.md",
-  "skills/planner/workflows/implementation-handover.md",
-  "skills/implementer/workflows/implementation-execution.md",
+  "skills/plan/workflows/documentation.md",
+  "skills/plan/workflows/implementation-handover.md",
+  "skills/implement/workflows/implementation-execution.md",
 ];
-const EXECUTION_WORKFLOW = "skills/implementer/workflows/implementation-execution.md";
-const STOP_RULE_PHRASE = "stop and return the question to the planner";
+const EXECUTION_WORKFLOW = "skills/implement/workflows/implementation-execution.md";
+const STOP_RULE_PHRASE = "stop and return the question to the plan skill";
 const STATUS_GATE_PHRASE = "run only documents whose Status is approved";
-const RESEARCHER_BRIEF = "skills/researcher/templates/context-brief.md";
+const RESEARCH_BRIEF = "skills/research/templates/context-brief.md";
 const ANSWER_HEADING = "## Answer";
 // One row per template: file name, then the exact Status line it must carry.
 const TEMPLATE_STATUS_TABLE = [
@@ -51,7 +52,7 @@ const CHECK_MANIFESTS = 2;
 const CHECK_LINKS = 3;
 const CHECK_OLD_NAMES = 4;
 const CHECK_SKILLS = 5;
-const CHECK_RESEARCHER = 6;
+const CHECK_RESEARCH = 6;
 const CHECK_README = 7;
 const CHECK_STORAGE_COPIES = 8;
 const CHECK_TEMPLATES = 9;
@@ -352,13 +353,13 @@ function visibleEntries(dir) {
   }
 }
 
-function checkResearcherBrief() {
-  const file = RESEARCHER_BRIEF;
-  if (!isFile(file)) return [fail(CHECK_RESEARCHER, file, REASON_MISSING_FILE)];
+function checkResearchBrief() {
+  const file = RESEARCH_BRIEF;
+  if (!isFile(file)) return [fail(CHECK_RESEARCH, file, REASON_MISSING_FILE)];
   const firstSection = (readText(file) ?? "").split("\n").find((l) => l.startsWith(SECTION_PREFIX));
   return firstSection === ANSWER_HEADING
     ? []
-    : [fail(CHECK_RESEARCHER, file, REASON_ANSWER_NOT_FIRST)];
+    : [fail(CHECK_RESEARCH, file, REASON_ANSWER_NOT_FIRST)];
 }
 
 function checkReadme() {
@@ -375,14 +376,14 @@ function checkReadme() {
 }
 
 function checkStorageCopies() {
-  const missing = [STORAGE_PLANNER, STORAGE_IMPLEMENTER].filter((file) => !isFile(file));
+  const missing = [STORAGE_PLAN, STORAGE_IMPLEMENT].filter((file) => !isFile(file));
   if (missing.length > 0) {
     return missing.map((file) => fail(CHECK_STORAGE_COPIES, file, REASON_MISSING_FILE));
   }
-  const same = readFileSync(STORAGE_PLANNER).equals(readFileSync(STORAGE_IMPLEMENTER));
+  const same = readFileSync(STORAGE_PLAN).equals(readFileSync(STORAGE_IMPLEMENT));
   return same
     ? []
-    : [fail(CHECK_STORAGE_COPIES, STORAGE_IMPLEMENTER, `${REASON_DIFFERS} ${STORAGE_PLANNER}`)];
+    : [fail(CHECK_STORAGE_COPIES, STORAGE_IMPLEMENT, `${REASON_DIFFERS} ${STORAGE_PLAN}`)];
 }
 
 // The first non-blank line after the first H1, or "" when there is none.
@@ -454,7 +455,7 @@ const CHECKS = [
   checkLinks,
   checkOldNames,
   checkSkills,
-  checkResearcherBrief,
+  checkResearchBrief,
   checkReadme,
   checkStorageCopies,
   checkTemplateStatuses,

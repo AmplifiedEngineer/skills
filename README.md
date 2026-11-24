@@ -2,9 +2,9 @@
 
 Three Agent Skills for Claude Code and Codex. Install them together as the `ae` plugin, or copy one skill on its own.
 
-- `planner`: user-facing. Requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
-- `implementer`: user-facing. Scoped code changes, focused verification, architecture compliance and implementation reporting.
-- `researcher`: finds project information and answers with sources. You can call it, and the planner and implementer call it too. Project information retrieval and explicitly requested synchronization across configured repositories and engineering systems.
+- `plan`: user-facing. Requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
+- `implement`: user-facing. Scoped code changes, focused verification, architecture compliance and implementation reporting.
+- `research`: finds project information and answers with sources. You can call it, and the plan and implement skills call it too. Project information retrieval and explicitly requested synchronization across configured repositories and engineering systems.
 
 ## Install
 

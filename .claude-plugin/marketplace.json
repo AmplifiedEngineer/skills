@@ -5,13 +5,13 @@
     "email": "2278164+igorjs@users.noreply.github.com"
   },
   "metadata": {
-    "description": "Planner, implementer and researcher skills for Codex and Claude Code."
+    "description": "Plan, implement and research skills for Codex and Claude Code."
   },
   "plugins": [
     {
       "name": "ae",
       "source": "./",
-      "description": "Planner, implementer and researcher skills for Codex and Claude Code."
+      "description": "Plan, implement and research skills for Codex and Claude Code."
     }
   ]
 }

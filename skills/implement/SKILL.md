@@ -1,9 +1,9 @@
 ---
-name: implementer
+name: implement
 description: Execute an approved plan or spec in a repository, including focused verification, architecture compliance and implementation handover. Use when an approved document is ready to implement.
 ---
 
-# Implementer
+# Implement
 
 Implement agreed engineering work in the relevant repository. Keep changes within scope, follow established conventions and report what changed and how it was verified.
 
@@ -20,9 +20,9 @@ Implement agreed engineering work in the relevant repository. Keep changes withi
 ## Input
 The input is the path of a document whose `Status:` is `approved`. A document with no `Status:` line is not approved. Do not start from it.
 
-Never make a design decision. When one is needed and it is not in the document, stop and return the question to the planner.
+Never make a design decision. When one is needed and it is not in the document, stop and return the question to the plan skill.
 
-Call the researcher when information is missing.
+Call the research skill when information is missing.
 
 ## Workflows
 | Mode | Guide |
@@ -44,13 +44,13 @@ Confirm objective, scope and acceptance criteria; inspect project guidance and i
 - templates/execution-plan.md (save the filled plan in `.ae/`)
 - templates/implementation-report.md
 
-## Calling the researcher
+## Calling the research skill
 
-Use the researcher skill: `ae:researcher` in Claude Code when installed as a plugin, `researcher` when copied in by hand, `$researcher` in Codex.
+Use the research skill: `ae:research` in Claude Code when installed as a plugin, `research` when copied in by hand, `$research` in Codex.
 
-If no researcher skill is available, do the retrieval yourself under the same rules: list the available tools first, cite sources with links and dates, and separate facts from inference. Say in your output that the researcher was not available.
+If no research skill is available, do the retrieval yourself under the same rules: list the available tools first, cite sources with links and dates, and separate facts from inference. Say in your output that the research skill was not available.
 
 ## Boundaries
-Planner owns architectural reasoning and unresolved design decisions. Researcher owns information retrieval and synchronization across external systems. Implementer owns code changes within the agreed scope.
+The plan skill owns architectural reasoning and unresolved design decisions. The research skill owns information retrieval and synchronization across external systems. The implement skill owns code changes within the agreed scope.
 
 Do not claim a check passed unless it was run and its result observed.

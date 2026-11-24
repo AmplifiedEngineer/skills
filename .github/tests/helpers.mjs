@@ -274,8 +274,8 @@ const STUB_BIG_OUTPUT_BYTES = 80_000;
 const STUB_BLOCK_LIMIT_MS = 30_000;
 const STUB_MARKETPLACE = "amplifiedengineer";
 const STUB_PLUGIN = "ae";
-const STUB_PARTIAL_SKILLS = ["planner", "implementer"];
-const STUB_FULL_SKILLS = ["planner", "implementer", "researcher"];
+const STUB_PARTIAL_SKILLS = ["plan", "implement"];
+const STUB_FULL_SKILLS = ["plan", "implement", "research"];
 const STUB_HOSTS = {
   claude: { configVar: "CLAUDE_CONFIG_DIR", installWords: "plugin install" },
   codex: { configVar: "CODEX_HOME", installWords: "plugin add" },
