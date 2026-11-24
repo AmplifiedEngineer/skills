@@ -5,9 +5,12 @@
   "expected": [
     {
       "id": "who-can-open",
-      "text": "Who may open the link: anyone who has it, or only signed-in users. The store has no users or sign-in at all.",
+      "text": "The plan states who may open the link. A public link that anyone holding it can open is a valid answer when the plan says so. Leaving it unstated is the failure.",
       "want": [
-        "asked"
+        "asked",
+        "decided_with_evidence",
+        "assumed",
+        "filled_not_reported"
       ]
     },
     {
