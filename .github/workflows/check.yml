@@ -25,10 +25,10 @@ jobs:
           node-version: 26
 
       - name: Repo self-check
-        run: node scripts/check.mjs
+        run: node .github/scripts/check.mjs
 
       - name: Tests
-        run: node --test "test/**/*.test.mjs"
+        run: node --test ".github/tests/**/*.test.mjs"
 
       - name: Version check
         if: github.event_name == 'pull_request'
@@ -43,4 +43,4 @@ jobs:
         run: claude plugin validate .
 
       - name: Install smoke test (Claude Code)
-        run: node scripts/smoke-install.mjs claude
+        run: node .github/scripts/smoke-install.mjs claude

@@ -3,7 +3,7 @@
  * End-to-end install test: adds this repo as a local marketplace in a throwaway config
  * folder per host, installs the plugin and checks all skills arrived.
  *
- * Usage: node scripts/smoke-install.mjs [claude] [codex] [--keep]. Silent on success.
+ * Usage: node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]. Silent on success.
  * Requires the CLI of each requested host.
  */
 import { spawn } from "node:child_process";
@@ -39,7 +39,7 @@ const LOG_NAME = "smoke.log";
 const TMP_PREFIX = "ae-smoke.";
 const CACHE_DIR = "plugins/cache";
 const SKILLS_DIR = "skills";
-const PARENT_DIR = "..";
+const PARENT_DIR = "../..";
 const TEXT_ENCODING = "utf8";
 const LOG_APPEND_FLAG = "a";
 const PATH_ENV = "PATH";

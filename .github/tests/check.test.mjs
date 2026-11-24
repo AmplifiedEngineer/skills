@@ -35,7 +35,7 @@ const EXTRA_TEMPLATE = "skills/planner/templates/extra.md";
 const RESEARCHER_BRIEF = "skills/researcher/templates/context-brief.md";
 const EXTRA_JSON = "skills/planner/extra.json";
 const IGNORED_JSON = "node_modules/x.json";
-const TEST_NOTE = "test/x.md";
+const TEST_NOTE = ".github/tests/x.md";
 const AE_JSON = ".ae/x.json";
 const AE_NOTE = ".ae/x.md";
 
@@ -609,7 +609,7 @@ defineCase({
 
 defineCase({
   id: 94,
-  fault: "test/ holding an old skill name is skipped",
+  fault: ".github/tests/ holding an old skill name is skipped",
   apply: (copy) => {
     copy.write(TEST_NOTE, `${OLD_NAME_TEXT}\n`);
     assert.ok(copy.exists(TEST_NOTE));

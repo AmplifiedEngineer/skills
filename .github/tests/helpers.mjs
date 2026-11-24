@@ -16,9 +16,11 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-export const REPO_ROOT = path.resolve(import.meta.dirname, "..");
+const PARENT_DIR = "../..";
 
-const CHECK_SCRIPT = "scripts/check.mjs";
+export const REPO_ROOT = path.resolve(import.meta.dirname, PARENT_DIR);
+
+const CHECK_SCRIPT = ".github/scripts/check.mjs";
 const COPY_PREFIX = "ae-test-";
 const GIT_LIST_ARGS = ["ls-files", "--cached", "--others", "--exclude-standard"];
 const TEXT_ENCODING = "utf8";

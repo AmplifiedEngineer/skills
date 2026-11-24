@@ -4,7 +4,7 @@
  * brief, README, the shared storage contract, template Status lines and the execution
  * stop rules.
  *
- * Usage: node scripts/check.mjs [repo-root]. Prints one FAIL line per problem, exit 1 if any.
+ * Usage: node .github/scripts/check.mjs [repo-root]. Prints one FAIL line per problem, exit 1 if any.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
@@ -76,8 +76,9 @@ const REASON_MISSING_STOP_RULE = "missing stop rule";
 const REASON_MISSING_STATUS_GATE = "missing status gate";
 const REASON_ANSWER_NOT_FIRST = `first section is not ${ANSWER_HEADING}`;
 
+const PARENT_DIR = "../..";
 const WALK_SKIP_COMMON = [".git", ".ae"];
-const WALK_SKIP_OLD_NAMES = [...WALK_SKIP_COMMON, "scripts", "test"];
+const WALK_SKIP_OLD_NAMES = [...WALK_SKIP_COMMON, ".github"];
 const JSON_SUFFIX = ".json";
 const MARKDOWN_SUFFIX = ".md";
 const ENCODING = "utf8";
@@ -462,7 +463,7 @@ const CHECKS = [
 ];
 
 function main() {
-  const root = process.argv[2] || path.resolve(import.meta.dirname, "..");
+  const root = process.argv[2] || path.resolve(import.meta.dirname, PARENT_DIR);
   try {
     process.chdir(root);
   } catch {

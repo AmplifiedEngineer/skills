@@ -25,7 +25,7 @@ import {
   writeStubCli,
 } from "./helpers.mjs";
 
-const SMOKE_SCRIPT = "scripts/smoke-install.mjs";
+const SMOKE_SCRIPT = ".github/scripts/smoke-install.mjs";
 const SANDBOX_PREFIX = "ae-smoke-test-";
 const NODE_LINK = "node";
 const BIN_DIR = "bin";
