@@ -1,6 +1,8 @@
 ---
 name: review
 description: Reviews a pull request, a branch or a diff and reports findings that hold up, each with the exact code, the failure it causes and one fix. Use whenever you are asked to review code, check a PR before merge, self-review your own change, or write review comments, even when the request only says "take a look at this PR".
+model: sonnet
+effort: high
 ---
 
 # Review
