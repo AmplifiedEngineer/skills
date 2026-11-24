@@ -32,4 +32,6 @@ A traceable implementation plan, saved in the plans folder of the document root 
 - Risks and dependencies
 - Documentation updates
 
-Do not silently make unresolved architectural decisions.
+Design the how, not only the what. The implement skill executes the plan and fills only small code-level gaps. For each increment name the files, the interfaces and data shapes, the order of steps, the edge cases and the tests.
+
+Resolve every open decision with the user before you ask for approval. An approved plan has no open decisions. If one is left, say so and do not mark the plan approved.

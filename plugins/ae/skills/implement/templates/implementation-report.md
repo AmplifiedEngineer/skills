@@ -8,6 +8,9 @@
 |---|---|---|
 | | | |
 
+## Gaps filled
+<!-- Each code-level choice the plan left open, and why. Write None when there were none. -->
+
 ## Verification
 | Check | Result | Notes |
 |---|---|---|

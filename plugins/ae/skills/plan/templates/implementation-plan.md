@@ -20,7 +20,7 @@ Status: draft
 
 ## Implementation increments
 1. **<Increment>**
-   - Work:
+   - Work (files, interfaces, data shapes, steps, edge cases):
    - Dependencies:
    - Acceptance checks:
 
@@ -38,6 +38,9 @@ Status: draft
 | Item | Impact | Mitigation or owner |
 |---|---|---|
 | | | |
+
+## Open decisions
+None at approval. List any that remain and keep Status `draft`.
 
 ## Handover notes
 <!-- Record investigation areas and constraints for implementation. -->

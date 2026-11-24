@@ -9,7 +9,7 @@ Implement agreed engineering work in the relevant repository. Keep changes withi
 
 ## Principles
 1. Inspect repository guidance and relevant code before editing.
-2. Use approved requirements and architecture decisions; surface consequential ambiguity.
+2. Use approved requirements and architecture decisions. Fill small gaps yourself; stop only when blocked.
 3. Make the smallest coherent change that meets acceptance criteria.
 4. Preserve conventions and avoid unrelated cleanup.
 5. Protect data, secrets and security boundaries.
@@ -20,7 +20,17 @@ Implement agreed engineering work in the relevant repository. Keep changes withi
 ## Input
 The input is the path of a document whose `Status:` is `approved`. A document with no `Status:` line is not approved. Do not start from it.
 
-Never make a design decision. When one is needed and it is not in the document, stop and return the question to the plan skill.
+The plan decides what to build and how. You execute it and fill the gaps.
+
+Fill a gap yourself when the plan leaves a code-level choice open: names, helper structure, local control flow, test cases, error messages, or where a small piece of code lives. Follow the repository conventions and the plan's intent. List each such choice under "Gaps filled" in the report.
+
+You are blocked only when one of these holds:
+- The plan contradicts the code or itself.
+- A step cannot be done as written.
+- Filling the gap would change a public interface, a data shape, a security boundary or user-visible behaviour that the plan does not specify.
+- Information or access is missing after you called the research skill.
+
+When blocked, stop and return the question to the plan skill. Say what you tried and give the options with your recommendation. Keep working on increments the block does not affect. Do not ask about anything else.
 
 Call the research skill when information is missing.
 
@@ -55,6 +65,6 @@ Use the research skill: `ae:research` in Claude Code when installed as a plugin,
 If no research skill is available, do the retrieval yourself under the same rules: list the available tools first, cite sources with links and dates, and separate facts from inference. Say in your output that the research skill was not available.
 
 ## Boundaries
-The plan skill owns architectural reasoning and unresolved design decisions. The research skill owns information retrieval and synchronization across external systems. The implement skill owns code changes within the agreed scope.
+The plan skill owns architectural reasoning and every design decision, down to how the change is built. The research skill owns information retrieval and synchronization across external systems. The implement skill owns code changes within the agreed scope.
 
 Do not claim a check passed unless it was run and its result observed.
