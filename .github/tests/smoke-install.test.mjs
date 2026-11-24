@@ -54,7 +54,7 @@ const INSTALL_ARGS = {
 
 const CLAUDE_MISSING = "FAIL host=claude: claude CLI not found on PATH";
 const CODEX_MISSING = "FAIL host=codex: codex CLI not found on PATH";
-const SKILL_MISSING = "skill research missing after install";
+const SKILL_MISSING = "skill review missing after install";
 
 const EXPECTED_CASE_IDS = [20, 21, 58, 59, 74, 77, 78, 80, 81, 82, 83, 84, 85, 93, 95, 96];
 
@@ -216,7 +216,7 @@ defineCase({
 
 defineCase({
   id: 77,
-  fault: "claude stub installs only plan and implement",
+  fault: "claude stub installs everything except review",
   host: "claude",
   mode: "partial",
   args: ["claude"],
@@ -260,7 +260,7 @@ defineCase({
 
 defineCase({
   id: 82,
-  fault: "codex stub installs only plan and implement",
+  fault: "codex stub installs everything except review",
   host: "codex",
   mode: "partial",
   args: ["codex"],

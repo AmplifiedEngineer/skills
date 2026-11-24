@@ -1,0 +1,44 @@
+{
+  "id": "playbook-1881",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1881/head",
+  "commit": "946f30324a28854718ac3f896f57443969d565b9",
+  "prompt": "Review this change before it merges. The change is the single commit at HEAD of this checkout, a Rust workspace. Get the diff with `git diff HEAD~1 HEAD`. Its title is \"feat(commit): draft the commit message with haiku\". It makes the commit command ask a model to draft the commit message from the staged diff. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tests-call-real-model",
+      "severity": "blocking",
+      "text": "The existing integration tests for the commit command (crates/cli/tests/commit_cli.rs) run the command with no message and do not stub the claude binary or switch the new setting off, so they now call the real claude program."
+    },
+    {
+      "id": "trailer-check-bypass",
+      "severity": "blocking",
+      "text": "The trailer check on the model's body (the TRAILER pattern in crates/cli/src/commit/model.rs) needs whitespace after the colon, so a line such as `Signed-off-by:Name` with no space passes validation and a model-written trailer reaches the commit."
+    },
+    {
+      "id": "secrets-sent-to-model",
+      "severity": "blocking",
+      "text": "The staged diff is sent to the model with no filter for secret files such as .env or key files, and -A stages everything first."
+    },
+    {
+      "id": "stale-guide",
+      "severity": "blocking",
+      "text": "docs/guides/02-review-and-pr-flow.md still says the commit message is drafted from the staged files with no model, which is now false."
+    },
+    {
+      "id": "prose-check-skipped",
+      "severity": "minor",
+      "text": "Model-written text skips the prose or writing-rules check inside validation, so a reply that passes validation can be rejected later and the commit fails with no fallback."
+    },
+    {
+      "id": "bare-word-rejected",
+      "severity": "minor",
+      "text": "The forbidden-word check rejects any message that contains the bare word claude or anthropic, which legitimate commits in this repository need."
+    },
+    {
+      "id": "body-line-read-as-trailer",
+      "severity": "minor",
+      "text": "The trailer pattern treats any body line shaped like `Word: text` as a trailer, so ordinary body lines are rejected."
+    }
+  ]
+}

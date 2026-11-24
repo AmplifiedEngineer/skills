@@ -1,0 +1,7 @@
+interface:
+  display_name: "Review"
+  short_description: "Evidence-based code review with checked findings"
+  default_prompt: "Use $review to review this change and report findings with the exact code, the failure and one fix."
+
+policy:
+  allow_implicit_invocation: true

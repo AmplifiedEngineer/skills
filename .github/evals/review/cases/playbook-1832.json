@@ -1,0 +1,34 @@
+{
+  "id": "playbook-1832",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1832/head",
+  "commit": "b8b8627f70daa852127457445f08bb344dd38299",
+  "prompt": "Review this change before it merges. The change is the last two commits of this checkout, a Rust workspace. Get the diff with `git diff 780448921219e4443455406e98bb2dd2d6c6517c HEAD`. It makes the session hooks record each session start, prompt, stop and exit in a SQLite database named sessions.db. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "live-session-marked-crashed",
+      "severity": "blocking",
+      "text": "A session that is still alive gets marked crashed by a newer session in the same directory. Any of these causes counts: the crashed-candidates filter in crates/cli/src/sessions/store.rs ignores a waiting or long-running session's latest activity, or a resumed session keeps its old event times in the start upsert."
+    },
+    {
+      "id": "resume-keeps-waiting-flag",
+      "severity": "blocking",
+      "text": "The start upsert in crates/cli/src/sessions/store.rs does not reset the waiting-after-prompt state on resume, so a resumed session still shows as waiting."
+    },
+    {
+      "id": "agent-not-written",
+      "severity": "minor",
+      "text": "The row a session start writes does not set the agent column, so those rows have a NULL or mismatched agent."
+    },
+    {
+      "id": "stop-written-twice",
+      "severity": "minor",
+      "text": "Two hooks both record the Stop event, so the database is opened and written twice on every stop."
+    },
+    {
+      "id": "stale-docs",
+      "severity": "minor",
+      "text": "Documentation still describes the old runtime files or omits the new sessions.db write, for example docs/reference/hooks.md or the launcher and hooks internals page."
+    }
+  ]
+}

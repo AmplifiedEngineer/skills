@@ -1,10 +1,11 @@
 # Amplified Engineer Skills
 
-Three Agent Skills for Claude Code and Codex. Install them together as the `ae` plugin, or copy one skill on its own.
+Four Agent Skills for Claude Code and Codex. Install them together as the `ae` plugin, or copy one skill on its own.
 
 - `plan`: user-facing. Requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
 - `implement`: user-facing. Scoped code changes, focused verification, architecture compliance and implementation reporting.
 - `research`: finds project information and answers with sources. You can call it, and the plan and implement skills call it too. Project information retrieval and explicitly requested synchronization across configured repositories and engineering systems.
+- `review`: user-facing. Reviews a pull request, a branch or a diff and reports findings that are checked against the source. Call it with `/ae:review` in Claude Code or `$review` in Codex.
 
 ## Install
 
