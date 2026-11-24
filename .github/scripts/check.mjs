@@ -9,32 +9,36 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
-const ROOT_PLUGIN = "plugin.json";
-const CLAUDE_PLUGIN = ".claude-plugin/plugin.json";
+const ROOT_PLUGIN = "plugins/ae/plugin.json";
+const CLAUDE_PLUGIN = "plugins/ae/.claude-plugin/plugin.json";
 const CLAUDE_MARKET = ".claude-plugin/marketplace.json";
 const CODEX_MARKET = ".agents/plugins/marketplace.json";
 const README = "README.md";
-const SKILLS_DIR = "skills";
-const SKILLS_GLOB = "skills/**/*.md";
+const PLUGIN_DIR = "plugins/ae";
+const PLUGIN_SOURCE = "./plugins/ae";
+const ROOT_LICENSE = "LICENSE";
+const PLUGIN_LICENSE = "plugins/ae/LICENSE";
+const SKILLS_DIR = "plugins/ae/skills";
+const SKILLS_GLOB = "plugins/ae/skills/**/*.md";
 const SKILL_NAMES = ["plan", "implement", "research", "review"];
 const SKILL_FILE = "SKILL.md";
 const OLD_NAME_PATTERN =
   /engineering[ -](architect|implementation|context)|\b(planner|implementer|researcher)\b/gi;
 const LINK_PREFIXES = ["../", "references/", "workflows/", "templates/", "examples/", "agents/"];
 const SKIP_PREFIXES = ["docs/", ".ae/", "#"];
-const STORAGE_PLAN = "skills/plan/references/document-storage.md";
-const STORAGE_IMPLEMENT = "skills/implement/references/document-storage.md";
-const TEMPLATES_DIR = "skills/plan/templates";
+const STORAGE_PLAN = "plugins/ae/skills/plan/references/document-storage.md";
+const STORAGE_IMPLEMENT = "plugins/ae/skills/implement/references/document-storage.md";
+const TEMPLATES_DIR = "plugins/ae/skills/plan/templates";
 const STORAGE_LINK = "references/document-storage.md";
 const STORAGE_LINK_FILES = [
-  "skills/plan/workflows/documentation.md",
-  "skills/plan/workflows/implementation-handover.md",
-  "skills/implement/workflows/implementation-execution.md",
+  "plugins/ae/skills/plan/workflows/documentation.md",
+  "plugins/ae/skills/plan/workflows/implementation-handover.md",
+  "plugins/ae/skills/implement/workflows/implementation-execution.md",
 ];
-const EXECUTION_WORKFLOW = "skills/implement/workflows/implementation-execution.md";
+const EXECUTION_WORKFLOW = "plugins/ae/skills/implement/workflows/implementation-execution.md";
 const STOP_RULE_PHRASE = "stop and return the question to the plan skill";
 const STATUS_GATE_PHRASE = "run only documents whose Status is approved";
-const RESEARCH_BRIEF = "skills/research/templates/context-brief.md";
+const RESEARCH_BRIEF = "plugins/ae/skills/research/templates/context-brief.md";
 const ANSWER_HEADING = "## Answer";
 // One row per template: file name, then the exact Status line it must carry.
 const TEMPLATE_STATUS_TABLE = [
@@ -57,6 +61,7 @@ const CHECK_README = 7;
 const CHECK_STORAGE_COPIES = 8;
 const CHECK_TEMPLATES = 9;
 const CHECK_EXECUTION = 10;
+const CHECK_PLUGIN_FOLDER = 11;
 
 const REASON_INVALID_JSON = "invalid JSON";
 const REASON_MISSING_FILE = "missing file";
@@ -71,6 +76,7 @@ const REASON_NO_ROOT = "cannot change into repo root";
 const REASON_NO_FILES = "no files match";
 const REASON_MISSING_NAME = "missing name";
 const REASON_DIFFERS = "differs from";
+const REASON_WRONG_SOURCE = `plugin source is not ${PLUGIN_SOURCE}`;
 const REASON_UNEXPECTED_STATUS = "unexpected Status line";
 const REASON_MISSING_STORAGE_LINK = "missing link to references/document-storage.md";
 const REASON_MISSING_STOP_RULE = "missing stop rule";
@@ -449,6 +455,38 @@ function checkExecutionPhrases() {
   return out;
 }
 
+// The marketplaces must point at the plugin folder, and that folder must carry its own
+// byte-identical copy of the licence, because only that folder reaches an installed user.
+function sourcesOf(file) {
+  const parsed = parseJson(file);
+  if (!parsed.ok || !isObject(parsed.value) || !Array.isArray(parsed.value.plugins)) return undefined;
+  return parsed.value.plugins
+    .filter(isObject)
+    .map((entry) => (isObject(entry.source) ? entry.source.path : entry.source));
+}
+
+function checkPluginFolder() {
+  const out = [];
+  for (const file of [CLAUDE_MARKET, CODEX_MARKET]) {
+    if (!isFile(file)) continue;
+    const sources = sourcesOf(file);
+    // An unreadable marketplace is already reported by the JSON and manifest checks.
+    if (sources !== undefined && !sources.includes(PLUGIN_SOURCE)) {
+      out.push(fail(CHECK_PLUGIN_FOLDER, file, REASON_WRONG_SOURCE));
+    }
+  }
+  if (!isDir(PLUGIN_DIR)) return out;
+  if (!isFile(PLUGIN_LICENSE)) {
+    out.push(fail(CHECK_PLUGIN_FOLDER, PLUGIN_LICENSE, REASON_MISSING_FILE));
+  } else if (
+    !isFile(ROOT_LICENSE) ||
+    !readFileSync(PLUGIN_LICENSE).equals(readFileSync(ROOT_LICENSE))
+  ) {
+    out.push(fail(CHECK_PLUGIN_FOLDER, PLUGIN_LICENSE, `${REASON_DIFFERS} ${ROOT_LICENSE}`));
+  }
+  return out;
+}
+
 const CHECKS = [
   checkJsonParses,
   checkManifests,
@@ -461,6 +499,7 @@ const CHECKS = [
   checkTemplateStatuses,
   checkStorageLinks,
   checkExecutionPhrases,
+  checkPluginFolder,
 ];
 
 function main() {

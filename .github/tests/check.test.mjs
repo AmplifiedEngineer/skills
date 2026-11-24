@@ -3,39 +3,39 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createCopy, runCheck } from "./helpers.mjs";
 
-const ROOT_PLUGIN = "plugin.json";
+const ROOT_PLUGIN = "plugins/ae/plugin.json";
 const PACKAGE_JSON = "package.json";
 const CHANGELOG = "CHANGELOG.md";
 const README = "README.md";
 const AGENTS = "AGENTS.md";
-const CLAUDE_PLUGIN = ".claude-plugin/plugin.json";
+const CLAUDE_PLUGIN = "plugins/ae/.claude-plugin/plugin.json";
 const CLAUDE_MARKET = ".claude-plugin/marketplace.json";
 const CODEX_MARKET = ".agents/plugins/marketplace.json";
-const SKILLS_DIR = "skills";
-const SKILLS_GLOB = "skills/**/*.md";
-const PLAN_DIR = "skills/plan";
-const IMPLEMENT_DIR = "skills/implement";
-const RESEARCH_DIR = "skills/research";
-const REVIEW_DIR = "skills/review";
-const SCRATCH_DIR = "skills/scratch";
-const PLAN_SKILL = "skills/plan/SKILL.md";
-const IMPLEMENT_SKILL = "skills/implement/SKILL.md";
-const RESEARCH_SKILL = "skills/research/SKILL.md";
-const REVIEW_SKILL = "skills/review/SKILL.md";
-const SCRATCH_SKILL = "skills/scratch/SKILL.md";
-const PLAN_README = "skills/plan/README.md";
-const IMPLEMENT_README = "skills/implement/README.md";
-const PLAN_DOC = "skills/plan/workflows/documentation.md";
-const HANDOVER_DOC = "skills/plan/workflows/implementation-handover.md";
-const EXEC_DOC = "skills/implement/workflows/implementation-execution.md";
-const STORAGE_PLAN = "skills/plan/references/document-storage.md";
-const STORAGE_IMPLEMENT = "skills/implement/references/document-storage.md";
-const TEMPLATES_DIR = "skills/plan/templates";
-const PLAN_TEMPLATE = "skills/plan/templates/implementation-plan.md";
-const ADR_TEMPLATE = "skills/plan/templates/adr.md";
-const EXTRA_TEMPLATE = "skills/plan/templates/extra.md";
-const RESEARCH_BRIEF = "skills/research/templates/context-brief.md";
-const EXTRA_JSON = "skills/plan/extra.json";
+const SKILLS_DIR = "plugins/ae/skills";
+const SKILLS_GLOB = "plugins/ae/skills/**/*.md";
+const PLAN_DIR = "plugins/ae/skills/plan";
+const IMPLEMENT_DIR = "plugins/ae/skills/implement";
+const RESEARCH_DIR = "plugins/ae/skills/research";
+const REVIEW_DIR = "plugins/ae/skills/review";
+const SCRATCH_DIR = "plugins/ae/skills/scratch";
+const PLAN_SKILL = "plugins/ae/skills/plan/SKILL.md";
+const IMPLEMENT_SKILL = "plugins/ae/skills/implement/SKILL.md";
+const RESEARCH_SKILL = "plugins/ae/skills/research/SKILL.md";
+const REVIEW_SKILL = "plugins/ae/skills/review/SKILL.md";
+const SCRATCH_SKILL = "plugins/ae/skills/scratch/SKILL.md";
+const PLAN_README = "plugins/ae/skills/plan/README.md";
+const IMPLEMENT_README = "plugins/ae/skills/implement/README.md";
+const PLAN_DOC = "plugins/ae/skills/plan/workflows/documentation.md";
+const HANDOVER_DOC = "plugins/ae/skills/plan/workflows/implementation-handover.md";
+const EXEC_DOC = "plugins/ae/skills/implement/workflows/implementation-execution.md";
+const STORAGE_PLAN = "plugins/ae/skills/plan/references/document-storage.md";
+const STORAGE_IMPLEMENT = "plugins/ae/skills/implement/references/document-storage.md";
+const TEMPLATES_DIR = "plugins/ae/skills/plan/templates";
+const PLAN_TEMPLATE = "plugins/ae/skills/plan/templates/implementation-plan.md";
+const ADR_TEMPLATE = "plugins/ae/skills/plan/templates/adr.md";
+const EXTRA_TEMPLATE = "plugins/ae/skills/plan/templates/extra.md";
+const RESEARCH_BRIEF = "plugins/ae/skills/research/templates/context-brief.md";
+const EXTRA_JSON = "plugins/ae/skills/plan/extra.json";
 const IGNORED_JSON = "node_modules/x.json";
 const TEST_NOTE = ".github/tests/x.md";
 const AE_JSON = ".ae/x.json";
@@ -101,7 +101,7 @@ const EXPECTED_CASE_IDS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26,
   28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
   50, 51, 52, 53, 54, 55, 56, 57, 60, 61, 62, 63, 64, 65, 66, 67, 69, 70, 71, 73, 75, 76,
-  86, 87, 94, 97, 98, 99, 100, 101, 102, 103, 104, 105,
+  86, 87, 94, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
 ];
 
 const registeredIds = [];
@@ -666,6 +666,44 @@ defineCase({
   apply: (copy) =>
     copy.write(PACKAGE_JSON, `${JSON.stringify({ name: WRONG_NAME, version: WRONG_VERSION })}\n`),
   lines: [],
+});
+
+const CODEX_MARKET_FILE = ".agents/plugins/marketplace.json";
+const PLUGIN_LICENSE = "plugins/ae/LICENSE";
+const ROOT_LICENSE = "LICENSE";
+
+defineCase({
+  id: 106,
+  fault: "claude marketplace source -> ./",
+  apply: (copy) =>
+    copy.editJson(CLAUDE_MARKET, (json) => {
+      json.plugins[0].source = "./";
+    }),
+  lines: [fail(11, CLAUDE_MARKET, "plugin source is not ./plugins/ae")],
+});
+
+defineCase({
+  id: 107,
+  fault: "codex marketplace path -> ./",
+  apply: (copy) =>
+    copy.editJson(CODEX_MARKET_FILE, (json) => {
+      json.plugins[0].source.path = "./";
+    }),
+  lines: [fail(11, CODEX_MARKET_FILE, "plugin source is not ./plugins/ae")],
+});
+
+defineCase({
+  id: 108,
+  fault: "delete the plugin LICENSE copy",
+  apply: (copy) => copy.remove(PLUGIN_LICENSE),
+  lines: [fail(11, PLUGIN_LICENSE, MISSING_FILE)],
+});
+
+defineCase({
+  id: 109,
+  fault: "plugin LICENSE copy differs from the root LICENSE",
+  apply: (copy) => copy.append(PLUGIN_LICENSE, "extra line"),
+  lines: [fail(11, PLUGIN_LICENSE, `differs from ${ROOT_LICENSE}`)],
 });
 
 test("every expected check case is defined exactly once", () => {

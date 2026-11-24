@@ -25,7 +25,7 @@ codex plugin add ae@amplifiedengineer
 
 ## Manual install
 
-Copy `skills/<name>/` into one of these locations:
+Copy `plugins/ae/skills/<name>/` into one of these locations:
 
 - Claude Code, project-level: `.claude/skills/<name>/`
 - Codex, project-level: `.agents/skills/<name>/`
