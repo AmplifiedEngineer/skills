@@ -16,10 +16,12 @@ const SKILLS_GLOB = "skills/**/*.md";
 const PLAN_DIR = "skills/plan";
 const IMPLEMENT_DIR = "skills/implement";
 const RESEARCH_DIR = "skills/research";
+const REVIEW_DIR = "skills/review";
 const SCRATCH_DIR = "skills/scratch";
 const PLAN_SKILL = "skills/plan/SKILL.md";
 const IMPLEMENT_SKILL = "skills/implement/SKILL.md";
 const RESEARCH_SKILL = "skills/research/SKILL.md";
+const REVIEW_SKILL = "skills/review/SKILL.md";
 const SCRATCH_SKILL = "skills/scratch/SKILL.md";
 const PLAN_README = "skills/plan/README.md";
 const IMPLEMENT_README = "skills/implement/README.md";
@@ -99,7 +101,7 @@ const EXPECTED_CASE_IDS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26,
   28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
   50, 51, 52, 53, 54, 55, 56, 57, 60, 61, 62, 63, 64, 65, 66, 67, 69, 70, 71, 73, 75, 76,
-  86, 87, 94, 97, 98, 99, 100, 101, 102,
+  86, 87, 94, 97, 98, 99, 100, 101, 102, 103, 104, 105,
 ];
 
 const registeredIds = [];
@@ -510,12 +512,33 @@ defineCase({
 });
 
 defineCase({
+  id: 103,
+  fault: "remove skills/review",
+  apply: (copy) => copy.remove(REVIEW_DIR),
+  lines: missing(5, [REVIEW_DIR]),
+});
+
+defineCase({
+  id: 104,
+  fault: "delete the name: line from review SKILL.md",
+  apply: (copy) => copy.dropLines(REVIEW_SKILL, (line) => line.startsWith("name:")),
+  lines: [fail(5, REVIEW_SKILL, MISSING_NAME)],
+});
+
+defineCase({
+  id: 105,
+  fault: "review SKILL.md name review -> reviewer",
+  apply: (copy) => copy.replace(REVIEW_SKILL, /^name: review$/m, "name: reviewer"),
+  lines: [fail(5, REVIEW_SKILL, "name reviewer does not match folder")],
+});
+
+defineCase({
   id: 17,
   fault: "remove the whole skills dir",
   apply: (copy) => copy.remove(SKILLS_DIR),
   lines: [
     fail(3, SKILLS_GLOB, NO_FILES),
-    ...missing(5, [PLAN_DIR, IMPLEMENT_DIR, RESEARCH_DIR]),
+    ...missing(5, [PLAN_DIR, IMPLEMENT_DIR, RESEARCH_DIR, REVIEW_DIR]),
     ...missing(6, [RESEARCH_BRIEF]),
     ...missing(8, [STORAGE_PLAN, STORAGE_IMPLEMENT]),
     ...missing(9, [...TEMPLATE_FILES, ...STORAGE_LINK_FILES]),
@@ -543,7 +566,7 @@ defineCase({
   apply: (copy) => copy.removeMarkdownUnder(SKILLS_DIR),
   lines: [
     fail(3, SKILLS_GLOB, NO_FILES),
-    ...missing(5, [PLAN_SKILL, IMPLEMENT_SKILL, RESEARCH_SKILL]),
+    ...missing(5, [PLAN_SKILL, IMPLEMENT_SKILL, RESEARCH_SKILL, REVIEW_SKILL]),
     ...missing(6, [RESEARCH_BRIEF]),
     ...missing(8, [STORAGE_PLAN, STORAGE_IMPLEMENT]),
     ...missing(9, [...TEMPLATE_FILES, ...STORAGE_LINK_FILES]),

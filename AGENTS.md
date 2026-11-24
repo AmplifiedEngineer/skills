@@ -1,6 +1,6 @@
 # Agent instructions
 
-This repository is a plugin that ships three Agent Skills for Claude Code and Codex.
+This repository is a plugin that ships four Agent Skills for Claude Code and Codex.
 
 ## Layout
 
@@ -16,6 +16,7 @@ This repository is a plugin that ships three Agent Skills for Claude Code and Co
 - `skills/plan`: user-facing. Discovery, design, reviews and handover.
 - `skills/implement`: user-facing. Scoped code changes and verification.
 - `skills/research`: user-facing. Finds project information and answers with sources. The plan and implement skills also call it.
+- `skills/review`: user-facing. Reviews a pull request, a branch or a diff and reports checked findings.
 
 The document storage contract is [skills/plan/references/document-storage.md](skills/plan/references/document-storage.md).
 
@@ -29,7 +30,15 @@ Run these from the repository root. They need Node 26; the tests also need `git`
 
 - `node .github/scripts/check.mjs [repo-root]`: static checks on manifests, links, old names, skills, the research brief, README, the storage contract, template Status lines and the implement stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
 - `node --test ".github/tests/**/*.test.mjs"`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
-- `node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the three skills arrived. `--keep` leaves the folders and prints their paths.
+- `node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the four skills arrived. `--keep` leaves the folders and prints their paths.
+
+## Evals
+
+Evals live in `.github/evals/`. Run one with `node .github/evals/run.mjs <skill> [--case <id>] [--runs <n>] [--model <name>] [--configs with_skill,baseline]`. It runs each case with and without the skill through the `claude` CLI, grades each report against the findings the case expects, and prints a table. Results go to `.ae/evals/`, which is gitignored.
+
+Every run calls a model and costs money, so evals run by hand and not in CI.
+
+A case is a JSON file under `.github/evals/<skill>/cases/` with `id`, `repo`, `ref`, `commit`, `prompt` and `expected` findings. Each expected finding has an `id`, a `severity` (`blocking` or `minor`) and a `text`.
 
 ## Releases
 

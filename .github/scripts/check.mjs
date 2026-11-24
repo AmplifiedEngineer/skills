@@ -16,7 +16,7 @@ const CODEX_MARKET = ".agents/plugins/marketplace.json";
 const README = "README.md";
 const SKILLS_DIR = "skills";
 const SKILLS_GLOB = "skills/**/*.md";
-const SKILL_NAMES = ["plan", "implement", "research"];
+const SKILL_NAMES = ["plan", "implement", "research", "review"];
 const SKILL_FILE = "SKILL.md";
 const OLD_NAME_PATTERN =
   /engineering[ -](architect|implementation|context)|\b(planner|implementer|researcher)\b/gi;
