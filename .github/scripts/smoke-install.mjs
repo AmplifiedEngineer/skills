@@ -1,12 +1,12 @@
+// @ts-check
 /**
  * End-to-end install test: adds this repo as a local marketplace in a throwaway config
  * folder per host, installs the plugin and checks all skills arrived.
  *
- * Usage: node scripts/smoke-install.ts [claude] [codex] [--keep]. Silent on success.
+ * Usage: node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]. Silent on success.
  * Requires the CLI of each requested host.
  */
 import { spawn } from "node:child_process";
-import type { ChildProcess } from "node:child_process";
 import {
   accessSync,
   closeSync,
@@ -23,18 +23,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-type Host = "claude" | "codex";
-
-interface HostSpec {
-  configVar: string;
-  installWords: string;
-}
-
-const HOST_SPECS: Record<Host, HostSpec> = {
+const HOST_SPECS = {
   claude: { configVar: "CLAUDE_CONFIG_DIR", installWords: "plugin install" },
   codex: { configVar: "CODEX_HOME", installWords: "plugin add" },
 };
-const HOSTS_ALL: Host[] = ["claude", "codex"];
+const HOSTS_ALL = ["claude", "codex"];
 const KEEP_FLAG = "--keep";
 const MARKETPLACE = "amplifiedengineer";
 const PLUGIN = "ae";
@@ -46,7 +39,7 @@ const LOG_NAME = "smoke.log";
 const TMP_PREFIX = "ae-smoke.";
 const CACHE_DIR = "plugins/cache";
 const SKILLS_DIR = "skills";
-const PARENT_DIR = "..";
+const PARENT_DIR = "../..";
 const TEXT_ENCODING = "utf8";
 const LOG_APPEND_FLAG = "a";
 const PATH_ENV = "PATH";
@@ -63,39 +56,39 @@ const EXIT_SIGNALLED = 130;
 const KILL_GRACE_MS = 2_000;
 const STDOUT_FD = 1;
 const WRITE_RETRY_ERROR = "EAGAIN";
-const STOP_SIGNALS: NodeJS.Signals[] = ["SIGINT", "SIGTERM", "SIGHUP"];
+const STOP_SIGNALS = ["SIGINT", "SIGTERM", "SIGHUP"];
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), PARENT_DIR);
-const hostDirs = new Map<Host, string>();
+const hostDirs = new Map();
 let keep = false;
-let running: ChildProcess | undefined;
+let running;
 let cleanedUp = false;
 let cleanupFailed = false;
 let stopping = false;
 
 // process.exit can drop buffered stdout on a pipe, so every stdout write is synchronous.
-function writeOut(text: string): void {
+function writeOut(text) {
   const bytes = Buffer.from(text, TEXT_ENCODING);
   let offset = 0;
   while (offset < bytes.length) {
     try {
       offset += writeSync(STDOUT_FD, bytes, offset);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== WRITE_RETRY_ERROR) throw error;
+      if (error.code !== WRITE_RETRY_ERROR) throw error;
     }
   }
 }
 
-function fail(host: string, message: string): void {
+function fail(host, message) {
   writeOut(`FAIL host=${host}: ${message}\n`);
 }
 
-function isHost(arg: string): arg is Host {
-  return (HOSTS_ALL as string[]).includes(arg);
+function isHost(arg) {
+  return HOSTS_ALL.includes(arg);
 }
 
-function parseArgs(args: string[]): Host[] {
-  const requested: Host[] = [];
+function parseArgs(args) {
+  const requested = [];
   let bad = false;
   for (const arg of args) {
     if (isHost(arg)) {
@@ -111,7 +104,7 @@ function parseArgs(args: string[]): Host[] {
   return requested.length > 0 ? requested : HOSTS_ALL;
 }
 
-function isFile(file: string): boolean {
+function isFile(file) {
   try {
     return statSync(file).isFile();
   } catch {
@@ -119,7 +112,7 @@ function isFile(file: string): boolean {
   }
 }
 
-function isExecutable(file: string): boolean {
+function isExecutable(file) {
   try {
     accessSync(file, constants.X_OK);
     return isFile(file);
@@ -128,12 +121,12 @@ function isExecutable(file: string): boolean {
   }
 }
 
-function onPath(command: string): boolean {
+function onPath(command) {
   const dirs = (process.env[PATH_ENV] ?? "").split(PATH_SEPARATOR);
   return dirs.some((dir) => dir !== "" && isExecutable(path.join(dir, command)));
 }
 
-function requireClis(requested: Host[]): void {
+function requireClis(requested) {
   let missing = false;
   for (const host of requested) {
     if (onPath(host)) continue;
@@ -144,7 +137,7 @@ function requireClis(requested: Host[]): void {
 }
 
 // Idempotent: runs from the exit path and every signal handler, and process.exit skips finally.
-function cleanup(): void {
+function cleanup() {
   if (cleanedUp) return;
   cleanedUp = true;
   for (const [host, dir] of hostDirs) {
@@ -160,13 +153,13 @@ function cleanup(): void {
   }
 }
 
-function finish(status: number): never {
+function finish(status) {
   cleanup();
   process.exit(cleanupFailed ? EXIT_FAILED : status);
 }
 
 // Resolves once the child has closed, so cleanup never removes a folder it is still writing to.
-function stopChild(child: ChildProcess): Promise<void> {
+function stopChild(child) {
   return new Promise((resolve) => {
     const killTimer = setTimeout(() => child.kill("SIGKILL"), KILL_GRACE_MS);
     child.once("close", () => {
@@ -177,7 +170,7 @@ function stopChild(child: ChildProcess): Promise<void> {
   });
 }
 
-async function onSignal(): Promise<void> {
+async function onSignal() {
   if (stopping) return;
   stopping = true;
   if (running) await stopChild(running);
@@ -185,12 +178,12 @@ async function onSignal(): Promise<void> {
 }
 
 function runChild(
-  host: Host,
-  configDir: string,
-  log: string,
-  words: string,
-  argument: string,
-): Promise<boolean> {
+  host,
+  configDir,
+  log,
+  words,
+  argument,
+) {
   const logFd = openSync(log, LOG_APPEND_FLAG);
   const env = { ...process.env, [HOST_SPECS[host].configVar]: configDir };
   return new Promise((resolve) => {
@@ -200,7 +193,7 @@ function runChild(
     });
     running = child;
     let settled = false;
-    const settle = (ok: boolean): void => {
+    const settle = (ok) => {
       // A failed spawn emits both error and close.
       if (settled) return;
       settled = true;
@@ -214,24 +207,24 @@ function runChild(
   });
 }
 
-function dumpLog(log: string): void {
+function dumpLog(log) {
   writeOut(readFileSync(log, TEXT_ENCODING));
 }
 
 async function runCli(
-  host: Host,
-  configDir: string,
-  log: string,
-  words: string,
-  argument: string,
-): Promise<boolean> {
+  host,
+  configDir,
+  log,
+  words,
+  argument,
+) {
   if (await runChild(host, configDir, log, words, argument)) return true;
   fail(host, `${host} ${words} failed`);
   dumpLog(log);
   return false;
 }
 
-async function smokeHost(host: Host, version: string): Promise<boolean> {
+async function smokeHost(host, version) {
   const configDir = mkdtempSync(path.join(tmpdir(), TMP_PREFIX));
   hostDirs.set(host, configDir);
   const log = path.join(configDir, LOG_NAME);
@@ -252,9 +245,9 @@ async function smokeHost(host: Host, version: string): Promise<boolean> {
   return false;
 }
 
-function readVersion(): string {
+function readVersion() {
   const file = path.join(repo, MANIFEST);
-  let version: unknown;
+  let version;
   try {
     version = JSON.parse(readFileSync(file, TEXT_ENCODING)).version;
   } catch (error) {
@@ -266,7 +259,7 @@ function readVersion(): string {
   return version;
 }
 
-async function main(): Promise<void> {
+async function main() {
   for (const signal of STOP_SIGNALS) process.on(signal, onSignal);
   const hosts = parseArgs(process.argv.slice(2));
   requireClis(hosts);
@@ -278,7 +271,7 @@ async function main(): Promise<void> {
   finish(status);
 }
 
-main().catch((error: unknown) => {
+main().catch((error) => {
   console.error(error instanceof Error ? error.message : String(error));
   finish(EXIT_FAILED);
 });

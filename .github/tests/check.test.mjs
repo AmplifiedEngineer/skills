@@ -1,7 +1,7 @@
+// @ts-check
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createCopy, runCheck } from "./helpers.ts";
-import type { TreeCopy } from "./helpers.ts";
+import { createCopy, runCheck } from "./helpers.mjs";
 
 const ROOT_PLUGIN = "plugin.json";
 const PACKAGE_JSON = "package.json";
@@ -35,7 +35,7 @@ const EXTRA_TEMPLATE = "skills/planner/templates/extra.md";
 const RESEARCHER_BRIEF = "skills/researcher/templates/context-brief.md";
 const EXTRA_JSON = "skills/planner/extra.json";
 const IGNORED_JSON = "node_modules/x.json";
-const TEST_NOTE = "test/x.md";
+const TEST_NOTE = ".github/tests/x.md";
 const AE_JSON = ".ae/x.json";
 const AE_NOTE = ".ae/x.md";
 
@@ -55,7 +55,7 @@ const WRONG_STATUS_TEMPLATES = [
   [64, "drift-report.md"],
   [65, "impact-report.md"],
   [66, "discovery-state.md"],
-] as const;
+];
 
 const BAD_JSON = "{\n";
 const WRONG_VERSION = "9.9.9";
@@ -99,27 +99,20 @@ const EXPECTED_CASE_IDS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26,
   28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
   50, 51, 52, 53, 54, 55, 56, 57, 60, 61, 62, 63, 64, 65, 66, 67, 69, 70, 71, 73, 75, 76,
-  86, 87, 88, 89, 90, 91, 92, 94,
+  86, 87, 94, 97, 98, 99,
 ];
 
-interface CheckCase {
-  id: number;
-  fault: string;
-  apply: (copy: TreeCopy) => void;
-  lines: string[];
-}
+const registeredIds = [];
 
-const registeredIds: number[] = [];
-
-function fail(check: number, file: string, reason: string): string {
+function fail(check, file, reason) {
   return `FAIL check=${check} file=${file}: ${reason}`;
 }
 
-function missing(check: number, files: string[]): string[] {
+function missing(check, files) {
   return files.map((file) => fail(check, file, MISSING_FILE));
 }
 
-function defineCase(spec: CheckCase): void {
+function defineCase(spec) {
   registeredIds.push(spec.id);
   test(`case ${spec.id}: ${spec.fault}`, (t) => {
     // Arrange
@@ -135,13 +128,7 @@ function defineCase(spec: CheckCase): void {
   });
 }
 
-interface InvalidJsonRow {
-  id: number;
-  file: string;
-  lines: string[];
-}
-
-const invalidJsonRows: InvalidJsonRow[] = [
+const invalidJsonRows = [
   {
     id: 2,
     file: ROOT_PLUGIN,
@@ -191,7 +178,7 @@ for (const row of invalidJsonRows) {
   });
 }
 
-const nameMismatchCases: CheckCase[] = [
+const nameMismatchCases = [
   {
     id: 5,
     fault: "claude plugin.json name -> other",
@@ -231,17 +218,10 @@ const nameMismatchCases: CheckCase[] = [
 
 for (const spec of nameMismatchCases) defineCase(spec);
 
-interface StatusRow {
-  id: number;
-  fault: string;
-  file: string;
-  apply: (copy: TreeCopy) => void;
-}
-
-const dropStatusLines = (copy: TreeCopy, file: string) =>
+const dropStatusLines = (copy, file) =>
   copy.dropLines(file, (line) => line.startsWith("Status: "));
 
-const statusRows: StatusRow[] = [
+const statusRows = [
   {
     id: 32,
     fault: "implementation-plan.md Status: draft -> approved",
@@ -264,7 +244,7 @@ const statusRows: StatusRow[] = [
     id,
     fault: `${name} Status line -> ${STATUS_WRONG}`,
     file: `${TEMPLATES_DIR}/${name}`,
-    apply: (copy: TreeCopy) =>
+    apply: (copy) =>
       copy.replace(`${TEMPLATES_DIR}/${name}`, /^Status: .*$/m, STATUS_WRONG),
   })),
   {
@@ -293,14 +273,7 @@ for (const row of statusRows) {
   });
 }
 
-interface AppendRow {
-  id: number;
-  file: string;
-  text: string;
-  reportedAs: string;
-}
-
-const brokenLinkRows: AppendRow[] = [
+const brokenLinkRows = [
   {
     id: 9,
     file: PLANNER_DOC,
@@ -352,7 +325,7 @@ for (const row of brokenLinkRows) {
   });
 }
 
-const oldNameRows: AppendRow[] = [
+const oldNameRows = [
   { id: 13, file: IMPLEMENTER_README, text: OLD_NAME_TEXT, reportedAs: OLD_NAME_TEXT },
   {
     id: 42,
@@ -379,13 +352,7 @@ for (const row of oldNameRows) {
   });
 }
 
-interface RemoveRow {
-  id: number;
-  path: string;
-  lines: string[];
-}
-
-const removeRows: RemoveRow[] = [
+const removeRows = [
   { id: 4, path: CODEX_MARKET, lines: missing(2, [CODEX_MARKET]) },
   {
     id: 22,
@@ -641,50 +608,34 @@ defineCase({
 });
 
 defineCase({
-  id: 88,
-  fault: "package.json version -> 9.9.9",
-  apply: (copy) => copy.editJson(PACKAGE_JSON, (json) => (json.version = WRONG_VERSION)),
-  lines: [fail(2, PACKAGE_JSON, VERSION_MISMATCH_ROOT)],
-});
-
-defineCase({
-  id: 89,
-  fault: "CHANGELOG.md quoting an old skill name is skipped",
-  apply: (copy) => copy.write(CHANGELOG, `${OLD_NAME_TEXT}\n`),
-  lines: [],
-});
-
-defineCase({
-  id: 90,
-  fault: "remove package.json",
-  apply: (copy) => copy.remove(PACKAGE_JSON),
-  lines: missing(2, [PACKAGE_JSON]),
-});
-
-defineCase({
-  id: 91,
-  fault: "node_modules with invalid JSON and an old skill name is skipped",
-  apply: (copy) => {
-    copy.write(IGNORED_JSON, `{ ${OLD_NAME_TEXT}\n`);
-    assert.ok(copy.exists(IGNORED_JSON));
-  },
-  lines: [],
-});
-
-defineCase({
-  id: 92,
-  fault: "remove the version key from package.json",
-  apply: (copy) => copy.editJson(PACKAGE_JSON, (json) => delete json.version),
-  lines: [fail(2, PACKAGE_JSON, VERSION_MISMATCH_ROOT)],
-});
-
-defineCase({
   id: 94,
-  fault: "test/ holding an old skill name is skipped",
+  fault: ".github/tests/ holding an old skill name is skipped",
   apply: (copy) => {
     copy.write(TEST_NOTE, `${OLD_NAME_TEXT}\n`);
     assert.ok(copy.exists(TEST_NOTE));
   },
+  lines: [],
+});
+
+defineCase({
+  id: 97,
+  fault: "CHANGELOG.md quoting an old skill name fails",
+  apply: (copy) => copy.write(CHANGELOG, `${OLD_NAME_TEXT}\n`),
+  lines: [fail(4, CHANGELOG, `${OLD_NAME} ${OLD_NAME_TEXT}`)],
+});
+
+defineCase({
+  id: 98,
+  fault: "node_modules with invalid JSON fails the JSON check",
+  apply: (copy) => copy.write(IGNORED_JSON, BAD_JSON),
+  lines: [fail(1, IGNORED_JSON, INVALID_JSON)],
+});
+
+defineCase({
+  id: 99,
+  fault: "a package.json with version 9.9.9 gives no failure",
+  apply: (copy) =>
+    copy.write(PACKAGE_JSON, `${JSON.stringify({ name: WRONG_NAME, version: WRONG_VERSION })}\n`),
   lines: [],
 });
 

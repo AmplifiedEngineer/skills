@@ -1,3 +1,4 @@
+// @ts-check
 import { spawnSync } from "node:child_process";
 import {
   appendFileSync,
@@ -14,35 +15,38 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { TestContext } from "node:test";
 
-export const REPO_ROOT = path.resolve(import.meta.dirname, "..");
+const PARENT_DIR = "../..";
 
-const CHECK_SCRIPT = "scripts/check.ts";
+export const REPO_ROOT = path.resolve(import.meta.dirname, PARENT_DIR);
+
+const CHECK_SCRIPT = ".github/scripts/check.mjs";
 const COPY_PREFIX = "ae-test-";
 const GIT_LIST_ARGS = ["ls-files", "--cached", "--others", "--exclude-standard"];
 const TEXT_ENCODING = "utf8";
 
-export type JsonObject = Record<string, any>;
+/** @typedef {Record<string, any>} JsonObject */
 
-export interface RunResult {
-  code: number;
-  lines: string[];
-}
+/**
+ * @typedef {object} RunResult
+ * @property {number} code
+ * @property {string[]} lines
+ */
 
-export interface TreeCopy {
-  root: string;
-  exists(rel: string): boolean;
-  write(rel: string, content: string): void;
-  append(rel: string, text: string): void;
-  remove(rel: string): void;
-  replace(rel: string, pattern: string | RegExp, replacement: string): void;
-  dropLines(rel: string, drop: (line: string) => boolean): void;
-  editJson(rel: string, mutate: (json: JsonObject) => void): void;
-  removeMarkdownUnder(rel: string): void;
-}
+/**
+ * @typedef {object} TreeCopy
+ * @property {string} root
+ * @property {(rel: string) => boolean} exists
+ * @property {(rel: string, content: string) => void} write
+ * @property {(rel: string, text: string) => void} append
+ * @property {(rel: string) => void} remove
+ * @property {(rel: string, pattern: string | RegExp, replacement: string) => void} replace
+ * @property {(rel: string, drop: (line: string) => boolean) => void} dropLines
+ * @property {(rel: string, mutate: (json: JsonObject) => void) => void} editJson
+ * @property {(rel: string) => void} removeMarkdownUnder
+ */
 
-function listedFiles(): string[] {
+function listedFiles() {
   const listed = spawnSync("git", GIT_LIST_ARGS, { cwd: REPO_ROOT, encoding: TEXT_ENCODING });
   if (listed.status !== 0) {
     throw new Error(`git ls-files failed with status ${listed.status}`);
@@ -50,7 +54,7 @@ function listedFiles(): string[] {
   return listed.stdout.split("\n").filter((file) => file !== "");
 }
 
-function copyListedFiles(destination: string): void {
+function copyListedFiles(destination) {
   for (const file of listedFiles()) {
     const source = path.join(REPO_ROOT, file);
     if (!existsSync(source)) continue;
@@ -60,7 +64,7 @@ function copyListedFiles(destination: string): void {
   }
 }
 
-function markdownFiles(dir: string): string[] {
+function markdownFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) return markdownFiles(full);
@@ -68,10 +72,11 @@ function markdownFiles(dir: string): string[] {
   });
 }
 
-function toCopy(root: string): TreeCopy {
-  const abs = (rel: string) => path.join(root, rel);
-  const read = (rel: string) => readFileSync(abs(rel), TEXT_ENCODING);
-  const write = (rel: string, content: string) => {
+/** @returns {TreeCopy} */
+function toCopy(root) {
+  const abs = (rel) => path.join(root, rel);
+  const read = (rel) => readFileSync(abs(rel), TEXT_ENCODING);
+  const write = (rel, content) => {
     mkdirSync(path.dirname(abs(rel)), { recursive: true });
     writeFileSync(abs(rel), content);
   };
@@ -102,7 +107,7 @@ function toCopy(root: string): TreeCopy {
       write(rel, kept.join("\n"));
     },
     editJson(rel, mutate) {
-      const json: JsonObject = JSON.parse(read(rel));
+      const json = JSON.parse(read(rel));
       mutate(json);
       write(rel, `${JSON.stringify(json, null, 2)}\n`);
     },
@@ -112,24 +117,35 @@ function toCopy(root: string): TreeCopy {
   };
 }
 
-/** Copies the git-listed tree into a fresh temp dir that `t.after` removes. */
-export function createCopy(t: TestContext): TreeCopy {
+/**
+ * Copies the git-listed tree into a fresh temp dir that `t.after` removes.
+ * @param {import("node:test").TestContext} t
+ * @returns {TreeCopy}
+ */
+export function createCopy(t) {
   const root = mkdtempSync(path.join(tmpdir(), COPY_PREFIX));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   copyListedFiles(root);
   return toCopy(root);
 }
 
-export function splitLines(stdout: string): string[] {
+export function splitLines(stdout) {
   return stdout === "" ? [] : stdout.replace(/\n$/, "").split("\n");
 }
 
+/**
+ * @param {string} file
+ * @param {string[]} args
+ * @param {string} cwd
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {RunResult}
+ */
 export function runCommand(
-  file: string,
-  args: string[],
-  cwd: string,
-  env: NodeJS.ProcessEnv = process.env,
-): RunResult {
+  file,
+  args,
+  cwd,
+  env = process.env,
+) {
   const run = spawnSync(file, args, { cwd, env, encoding: TEXT_ENCODING });
   if (run.status === null) {
     throw new Error(`${file} did not exit normally: ${run.signal ?? run.error?.message}`);
@@ -137,8 +153,12 @@ export function runCommand(
   return { code: run.status, lines: splitLines(run.stdout) };
 }
 
-/** Runs the check script with cwd at the copy. */
-export function runCheck(cwd: string): RunResult {
+/**
+ * Runs the check script with cwd at the copy.
+ * @param {string} cwd
+ * @returns {RunResult}
+ */
+export function runCheck(cwd) {
   return runCommand(process.execPath, [CHECK_SCRIPT], cwd);
 }
 
@@ -146,26 +166,27 @@ const STUB_FILE_MODE = 0o755;
 const STUB_SHEBANG = "#!/usr/bin/env node";
 const PATH_SEPARATOR = path.delimiter;
 
-export type StubMode =
-  | "allfail"
-  | "install-fails"
-  | "partial"
-  | "full"
-  | "block"
-  | "stubborn"
-  | "bigfail";
+/**
+ * @typedef {"allfail" | "install-fails" | "partial" | "full" | "block" | "stubborn" | "bigfail"} StubMode
+ */
 
-export interface StubOptions {
-  host: "claude" | "codex";
-  mode: StubMode;
-  repoRoot: string;
-  recordFile: string;
-  /** Directory for the ready file the `block` and `stubborn` modes write their pid to. */
-  signalDir?: string;
-}
+/**
+ * @typedef {object} StubOptions
+ * @property {"claude" | "codex"} host
+ * @property {StubMode} mode
+ * @property {string} repoRoot
+ * @property {string} recordFile
+ * @property {string} [signalDir] Directory for the ready file the `block` and `stubborn` modes
+ *   write their pid to.
+ */
 
-/** Returns the first executable file called `name` in the `PATH`-style list, if any. */
-export function resolveOnPath(name: string, pathList: string | undefined): string | undefined {
+/**
+ * Returns the first executable file called `name` in the `PATH`-style list, if any.
+ * @param {string} name
+ * @param {string | undefined} pathList
+ * @returns {string | undefined}
+ */
+export function resolveOnPath(name, pathList) {
   for (const dir of (pathList ?? "").split(PATH_SEPARATOR)) {
     if (dir === "") continue;
     const candidate = path.join(dir, name);
@@ -258,14 +279,16 @@ const STUB_FULL_SKILLS = ["planner", "implementer", "researcher"];
 const STUB_HOSTS = {
   claude: { configVar: "CLAUDE_CONFIG_DIR", installWords: "plugin install" },
   codex: { configVar: "CODEX_HOME", installWords: "plugin add" },
-} as const;
+};
 
 /**
  * Writes a Node stub CLI named after the host into `binDir`. It appends its argv and config
  * dir to `recordFile`, prints the log marker (after filler in `bigfail`) in the failing modes,
  * and otherwise behaves according to `mode`.
+ * @param {string} binDir
+ * @param {StubOptions} stub
  */
-export function writeStubCli(binDir: string, stub: StubOptions): void {
+export function writeStubCli(binDir, stub) {
   const options = {
     ...STUB_HOSTS[stub.host],
     mode: stub.mode,
