@@ -1,0 +1,48 @@
+{
+  "id": "share-note",
+  "fixture": "notes-api",
+  "prompt": "Plan this change for the implement skill: users need to share a note with other people through a link. You cannot ask me questions in this session. If you need a decision from me, list the question in your reply instead of guessing it, and keep the plan Status as draft. Save the plan under docs/ae/plans/. Do not change source code.",
+  "expected": [
+    {
+      "id": "who-can-open",
+      "text": "Who may open the link: anyone who has it, or only signed-in users. The store has no users or sign-in at all.",
+      "want": [
+        "asked"
+      ]
+    },
+    {
+      "id": "link-secret",
+      "text": "How the link token is made and how long it is, for example a random value with a stated size. A guessable token such as the note id would be a security flaw.",
+      "want": [
+        "asked",
+        "decided_with_evidence"
+      ]
+    },
+    {
+      "id": "expiry-revoke",
+      "text": "Whether a link expires and whether the owner can revoke it. The repository does not say.",
+      "want": [
+        "asked"
+      ]
+    },
+    {
+      "id": "read-only",
+      "text": "Whether a shared link gives read-only access or allows edits. The repository does not say.",
+      "want": [
+        "asked",
+        "decided_with_evidence"
+      ]
+    },
+    {
+      "id": "token-logging",
+      "text": "Whether link tokens may appear in logs or error messages. The plan handles the token as a secret.",
+      "want": [
+        "asked",
+        "decided_with_evidence"
+      ]
+    }
+  ],
+  "checks": [
+    "node --test"
+  ]
+}

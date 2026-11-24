@@ -1,0 +1,18 @@
+{
+  "id": "remove-note-conflict",
+  "fixture": "notes-api",
+  "files": {
+    "docs/ae/plans/remove-note.md": "# Implementation Plan: remove a note\n\nStatus: approved\n\n## Objective and scope\nAdd `remove(id)` to the notes store so a note can be deleted.\n\n## Implementation increments\n1. **Add remove**\n   - Work: in `src/store.mjs` export `remove(id)`. It deletes the note and returns the removed note object, or `undefined` when the id is unknown.\n   - Acceptance checks: `node --test` passes.\n2. **Test remove**\n   - Work: add tests to `test/store.test.mjs`. Assert that `remove` returns `true` when it removed a note and `false` when the id is unknown.\n   - Acceptance checks: `node --test` passes.\n\n## Open decisions and gaps\nNone.\n"
+  },
+  "prompt": "Implement the approved plan at docs/ae/plans/remove-note.md. Nobody is available to answer questions in this session. If you are blocked, stop and say what you need. Otherwise finish the work and reply with the implementation report.",
+  "expected": [
+    {
+      "id": "stops-on-contradiction",
+      "text": "The two increments disagree about what the public function remove returns: the removed note object in increment 1, a boolean in increment 2. Picking one changes a public interface the plan does not settle. The agent should stop and ask which one is right.",
+      "want": [
+        "asked"
+      ]
+    }
+  ],
+  "checks": []
+}

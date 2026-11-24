@@ -1,0 +1,48 @@
+{
+  "id": "note-title",
+  "fixture": "notes-api",
+  "prompt": "Plan this change for the implement skill: every note needs a title next to its text. You cannot ask me questions in this session. If you need a decision from me, list the question in your reply instead of guessing it, and keep the plan Status as draft. Save the plan under docs/ae/plans/. Do not change source code.",
+  "expected": [
+    {
+      "id": "add-signature",
+      "text": "How add changes. The current add(text) is called by existing code and tests. Changing it to add(title, text) or add({title, text}) breaks callers. The plan picks a compatible shape or asks.",
+      "want": [
+        "asked",
+        "decided_with_evidence"
+      ]
+    },
+    {
+      "id": "title-required",
+      "text": "Whether the title is required or optional, and what an existing call without a title gets.",
+      "want": [
+        "asked",
+        "decided_with_evidence"
+      ]
+    },
+    {
+      "id": "title-validation",
+      "text": "Limits on the title: empty string, maximum length, surrounding spaces. The repository does not say.",
+      "want": [
+        "asked"
+      ]
+    },
+    {
+      "id": "list-shape",
+      "text": "The list function now returns a title on every note, which changes the returned shape. The plan names this interface change and the tests that pin the old shape.",
+      "want": [
+        "decided_with_evidence",
+        "asked"
+      ]
+    },
+    {
+      "id": "file-and-tests",
+      "text": "The plan names src/store.mjs and test/store.test.mjs as the files to change.",
+      "want": [
+        "decided_with_evidence"
+      ]
+    }
+  ],
+  "checks": [
+    "node --test"
+  ]
+}

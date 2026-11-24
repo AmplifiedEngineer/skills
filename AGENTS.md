@@ -49,6 +49,8 @@ Every run calls a model and costs money, so evals run by hand and not in CI.
 
 A case is a JSON file under `.github/evals/<skill>/cases/` with `id`, `repo`, `ref`, `commit`, `prompt` and `expected` findings. Each expected finding has an `id`, a `severity` (`blocking` or `minor`) and a `text`.
 
+The `plan` and `implement` evals work on a small fixture project in `.github/evals/fixtures/`. A case names the `fixture`, may seed `files` (for example an approved plan), gives the `prompt`, and lists `expected` situations. Each situation has an `id`, a `text` and a `want` list of acceptable handlings: `asked`, `decided_with_evidence`, `assumed`, `missing`, `filled_and_reported`, `filled_not_reported`, `not_done` or `proceeded`. A grader model picks one handling per situation. `checks` are shell commands run in the fixture copy after the run, such as `node --test`. The plan cases measure whether the plan skill asks about decisions the repository cannot settle. The implement cases measure whether it fills small gaps and reports them, and stops on a real block.
+
 ## Releases
 
 A shared action from [AmplifiedEngineer/workflows](https://github.com/AmplifiedEngineer/workflows#version-rules) releases a PR merged to main only when it changes a file under `plugins/ae/skills/`. Such a PR sets the next version in both `plugins/ae/plugin.json` and `plugins/ae/.claude-plugin/plugin.json`, and the PR title decides which version that is. A PR that touches nothing under `plugins/ae/skills/` (ci, docs, manifests, tooling) needs no version change and releases nothing.
