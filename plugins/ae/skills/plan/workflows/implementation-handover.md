@@ -36,6 +36,11 @@ Design the how, not only the what. The implement skill executes the plan and fil
 
 Ask the right questions early. Before you write the increments, list every decision that evidence cannot settle. Walk these areas: interfaces, data shapes and migration, error and failure behaviour, security and privacy, performance limits, compatibility, rollout and rollback, and tests. Ask the user one question at a time, with your recommended answer. Skip a question the repository or the research skill already answers.
 
+For security, settle these in every plan that adds an entry point, a link, a token or a credential:
+- Who can reach the new behaviour and how the code checks it. If the repository has no sign-in or roles, that is still a decision: ask whether anyone may use it or whether access needs a new check.
+- Where each secret, token or credential is created, stored, rotated and expired.
+- Whether it may appear in logs, error messages, URLs or test output.
+
 A good plan has no open decisions and no gap that could block the implement skill. Before you ask for approval, read each increment as the implement skill would and ask: can I do this with no question? Check these:
 - Every file, interface and data shape the step touches is named, and you confirmed it exists or is to be created.
 - The order of steps and the dependencies between them are explicit.

@@ -38,7 +38,8 @@
       "text": "Whether link tokens may appear in logs or error messages. The plan handles the token as a secret.",
       "want": [
         "asked",
-        "decided_with_evidence"
+        "decided_with_evidence",
+        "filled_not_reported"
       ]
     }
   ],
