@@ -9,6 +9,7 @@ This repository is a plugin that ships three Agent Skills for Claude Code and Co
 - `.claude-plugin/marketplace.json`: the Claude Code marketplace, name `amplifiedengineer`.
 - `.agents/plugins/marketplace.json`: the Codex marketplace, same name.
 - `skills/`: one directory per skill, each with a `SKILL.md`.
+- `.github/`: workflows, checks and their tests.
 
 ## Skills
 
@@ -26,15 +27,20 @@ Never use em dashes or en dashes in any text. Use commas, colons or parentheses.
 
 Run these from the repository root. They need Node 26; the tests also need `git`, and the smoke script needs the `claude` and `codex` CLIs.
 
-- `node scripts/check.mjs [repo-root]`: static checks on manifests, links, old names, skills, the researcher brief, README, the storage contract, template Status lines and the implementer stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
-- `node --test "test/**/*.test.mjs"`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
-- `node scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the three skills arrived. `--keep` leaves the folders and prints their paths.
+- `node .github/scripts/check.mjs [repo-root]`: static checks on manifests, links, old names, skills, the researcher brief, README, the storage contract, template Status lines and the implementer stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
+- `node --test ".github/tests/**/*.test.mjs"`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
+- `node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host and checks the three skills arrived. `--keep` leaves the folders and prints their paths.
 
 ## Releases
 
-Every PR merged to main is released, docs and ci changes included. So every PR sets the next version in both `plugin.json` and `.claude-plugin/plugin.json`. Get it with `node scripts/version.mjs next "<PR title>"`. The check job verifies it.
+A shared action from [AmplifiedEngineer/workflows](https://github.com/AmplifiedEngineer/workflows#version-rules) releases every PR merged to main, docs and ci changes included. So every PR sets the next version in both `plugin.json` and `.claude-plugin/plugin.json`. The PR title decides which version that is.
 
-- Before 1.0.0: a `feat` or `!` title bumps the minor, anything else the patch.
-- From 1.0.0: `!` bumps the major, `feat` the minor, anything else the patch.
+The rule before 1.0.0: a `feat` or `!` title bumps the minor, anything else the patch. From 1.0.0: `!` bumps the major, `feat` the minor, anything else the patch. The first release (no tag yet) is the version both manifests hold. The workflows README has the full rules.
 
-Open PRs conflict on the two manifests. After another PR merges, update your branch and set the version CI prints again. Do not edit a PR title after CI passes without waiting for the re-run. If a release run on main goes red, re-run it before any other PR merges. Only if the re-run reports the tag at another commit, open a PR that sets the next version.
+The `release / verify` check fails when a manifest holds the wrong version. Its message names the file and the version, like `<file> has X, set it to Y`. To fix it:
+
+1. Push the PR and read the failing line.
+2. Set that version in both manifests.
+3. Push again.
+
+Open PRs conflict on the two manifests. After another PR merges, update your branch and set the version again. Do not edit a PR title after the check passes without waiting for the re-run. If a release run on main goes red, re-run it. The `release` mode repairs a missing release itself.
