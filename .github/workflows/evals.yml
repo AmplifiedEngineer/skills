@@ -1,0 +1,124 @@
+name: skill evals
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "plugins/ae/skills/**"
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: Agent runner to evaluate
+        type: choice
+        options: [claude, codex, both]
+        default: both
+        required: true
+      suite:
+        description: Eval suite to run
+        type: choice
+        options: [plan, implement, review, all]
+        default: all
+        required: true
+      runs:
+        description: Runs per case and configuration
+        type: number
+        default: 3
+        required: true
+      model:
+        description: Optional model override supported by the selected CLI
+        type: string
+        required: false
+
+permissions: {}
+
+concurrency:
+  group: evals-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evals:
+    # The secrets sit in the `evals` environment. Its required reviewer must approve each run,
+    # because a pull request can change this file and the runner code.
+    environment: evals
+    permissions:
+      contents: read
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            api.anthropic.com:443
+            chatgpt.com:443
+            auth.openai.com:443
+            api.openai.com:443
+            registry.npmjs.org:443
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+            objects.githubusercontent.com:443
+            raw.githubusercontent.com:443
+            nodejs.org:443
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+
+      - name: Install agent CLIs
+        run: |
+          npm install --global "@anthropic-ai/claude-code@2.1.312" "@openai/codex@0.172.0"
+
+      - name: Run selected evals
+        env:
+          EVAL_PROVIDER: ${{ inputs.provider || 'both' }}
+          EVAL_SUITE: ${{ inputs.suite || 'all' }}
+          EVAL_RUNS: ${{ inputs.runs || 3 }}
+          EVAL_MODEL: ${{ inputs.model }}
+          CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: "1"
+          CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          CODEX_AUTH_JSON_B64: ${{ secrets.CODEX_AUTH_JSON_B64 }}
+        run: |
+          set -euo pipefail
+
+          providers=("$EVAL_PROVIDER")
+          if [[ "$EVAL_PROVIDER" == "both" ]]; then providers=(claude codex); fi
+          suites=("$EVAL_SUITE")
+          if [[ "$EVAL_SUITE" == "all" ]]; then suites=(plan implement review); fi
+
+          if [[ " ${providers[*]} " == *" codex "* ]]; then
+            if [[ -z "$CODEX_AUTH_JSON_B64" ]]; then
+              echo "Set the CODEX_AUTH_JSON_B64 Actions secret to run Codex evals with ChatGPT sign-in." >&2
+              exit 1
+            fi
+            mkdir -p "$HOME/.codex"
+            printf '%s' "$CODEX_AUTH_JSON_B64" | base64 --decode > "$HOME/.codex/auth.json"
+            chmod 600 "$HOME/.codex/auth.json"
+            jq -e . "$HOME/.codex/auth.json" >/dev/null
+            # The decoded tokens are new strings that GitHub does not mask by itself.
+            jq -r '.. | strings' "$HOME/.codex/auth.json" | while IFS= read -r value; do
+              if [[ -n "$value" ]]; then echo "::add-mask::$value"; fi
+            done
+          fi
+
+          for provider in "${providers[@]}"; do
+            if [[ "$provider" == "claude" && -z "$CLAUDE_CODE_OAUTH_TOKEN" ]]; then
+              echo "Set the CLAUDE_CODE_OAUTH_TOKEN Actions secret to run Claude Code evals." >&2
+              exit 1
+            fi
+            for suite in "${suites[@]}"; do
+              args=("$suite" --provider "$provider" --runs "$EVAL_RUNS" --configs "with_skill,baseline")
+              if [[ -n "$EVAL_MODEL" ]]; then args+=(--model "$EVAL_MODEL"); fi
+              node .github/evals/run.mjs "${args[@]}"
+            done
+          done
+
+      - name: Remove stored credentials
+        if: always()
+        run: rm -rf "$HOME/.codex"
