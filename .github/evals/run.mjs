@@ -239,7 +239,7 @@ function parseCodexStream(stdout) {
 
 function codex({ cwd, prompt, timeoutMs, model, sandbox = "read-only", outputSchema }) {
   return new Promise((resolvePromise, reject) => {
-    const args = ["exec", "--ignore-user-config", "--cd", cwd, "--sandbox", sandbox, "--json"];
+    const args = ["exec", "--ignore-user-config", "--skip-git-repo-check", "--cd", cwd, "--sandbox", sandbox, "--json"];
     if (model) args.push("--model", model);
     if (outputSchema) args.push("--output-schema", outputSchema);
     args.push(prompt);
@@ -252,7 +252,15 @@ function codex({ cwd, prompt, timeoutMs, model, sandbox = "read-only", outputSch
     child.on("error", reject);
     child.on("close", (code) => {
       clearTimeout(timer);
-      if (code !== 0) return reject(new Error(`codex exited with ${code}: ${stderr.slice(-400)}`));
+      if (code !== 0) {
+        const failure = stdout
+          .split("\n")
+          .filter((line) => line.trim().startsWith("{"))
+          .map((line) => JSON.parse(line))
+          .findLast((event) => event.type === "turn.failed" || event.type === "error");
+        const detail = failure?.error?.message ?? failure?.message ?? stderr.slice(-400);
+        return reject(new Error(`codex exited with ${code}: ${detail}`));
+      }
       try {
         resolvePromise(parseCodexStream(stdout));
       } catch (error) {
