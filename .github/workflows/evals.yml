@@ -29,15 +29,39 @@ on:
         type: string
         required: false
 
-permissions:
-  contents: read
+permissions: {}
+
+concurrency:
+  group: evals-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   evals:
+    # The secrets sit in the `evals` environment. Its required reviewer must approve each run,
+    # because a pull request can change this file and the runner code.
+    environment: evals
+    permissions:
+      contents: read
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 120
     steps:
+      - uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            api.anthropic.com:443
+            chatgpt.com:443
+            auth.openai.com:443
+            api.openai.com:443
+            registry.npmjs.org:443
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+            objects.githubusercontent.com:443
+            raw.githubusercontent.com:443
+            nodejs.org:443
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -56,6 +80,8 @@ jobs:
           EVAL_SUITE: ${{ inputs.suite || 'all' }}
           EVAL_RUNS: ${{ inputs.runs || 3 }}
           EVAL_MODEL: ${{ inputs.model }}
+          CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: "1"
+          CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           CODEX_AUTH_JSON_B64: ${{ secrets.CODEX_AUTH_JSON_B64 }}
         run: |
@@ -73,8 +99,12 @@ jobs:
             fi
             mkdir -p "$HOME/.codex"
             printf '%s' "$CODEX_AUTH_JSON_B64" | base64 --decode > "$HOME/.codex/auth.json"
-            jq -e . "$HOME/.codex/auth.json" >/dev/null
             chmod 600 "$HOME/.codex/auth.json"
+            jq -e . "$HOME/.codex/auth.json" >/dev/null
+            # The decoded tokens are new strings that GitHub does not mask by itself.
+            jq -r '.. | strings' "$HOME/.codex/auth.json" | while IFS= read -r value; do
+              if [[ -n "$value" ]]; then echo "::add-mask::$value"; fi
+            done
           fi
 
           for provider in "${providers[@]}"; do
@@ -88,3 +118,7 @@ jobs:
               node .github/evals/run.mjs "${args[@]}"
             done
           done
+
+      - name: Remove stored credentials
+        if: always()
+        run: rm -rf "$HOME/.codex"
