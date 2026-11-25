@@ -3,10 +3,10 @@
  * Runs a skill's eval cases with and without the skill, grades each report against the
  * findings the case expects, and prints a summary table.
  *
- * Usage: node .github/evals/run.mjs <skill> [--case <id>] [--runs <n>] [--model <name>]
- *        [--configs with_skill,baseline] [--out <dir>]
+ * Usage: node .github/evals/run.mjs <skill> [--provider claude|codex] [--case <id>]
+ *        [--runs <n>] [--model <name>] [--configs with_skill,baseline] [--out <dir>]
  *
- * Every run calls a model through the `claude` CLI and costs money.
+ * Every run calls a model through Claude Code or Codex and costs money.
  */
 
 import { execFile, spawn } from "node:child_process";
@@ -38,6 +38,7 @@ const DEFAULT_OUT = join(REPO_ROOT, ".ae/evals");
 const DEFAULT_RUNS = 3;
 const DEFAULT_MODEL = "sonnet";
 const GRADER_MODEL = "sonnet";
+const PROVIDERS = new Set(["claude", "codex"]);
 const MAX_PARALLEL = 3;
 const RUN_TIMEOUT_MS = 20 * 60 * 1000;
 const GRADE_TIMEOUT_MS = 3 * 60 * 1000;
@@ -160,9 +161,9 @@ function loadCases(skill, only) {
 }
 
 /** Clones the case repo once and checks out the case commit in a detached worktree. */
-async function checkout(testCase, out) {
+async function checkout(testCase, out, suffix = "shared") {
   const cache = join(out, "cache", testCase.repo.replace("/", "-"));
-  const work = join(out, "work", testCase.id);
+  const work = join(out, "work", `${testCase.id}-${suffix}`);
   if (existsSync(work)) return work;
   if (!existsSync(cache)) {
     mkdirSync(dirname(cache), { recursive: true });
@@ -217,6 +218,64 @@ function claude(args, { cwd, input, timeoutMs, parse = JSON.parse }) {
   });
 }
 
+function parseCodexStream(stdout) {
+  const events = stdout
+    .split("\n")
+    .filter((line) => line.trim().startsWith("{"))
+    .map((line) => JSON.parse(line));
+  const messages = events
+    .filter((event) => event.type === "item.completed" && event.item?.type === "agent_message")
+    .map((event) => event.item.text)
+    .filter(Boolean);
+  if (messages.length === 0) throw new Error("codex printed no agent message");
+  const completed = events.findLast((event) => event.type === "turn.completed");
+  return {
+    result: messages.at(-1),
+    usage: completed?.usage ?? null,
+    num_turns: events.filter((event) => event.type === "turn.completed").length,
+    total_cost_usd: null,
+  };
+}
+
+function codex({ cwd, prompt, timeoutMs, model, sandbox = "read-only", outputSchema }) {
+  return new Promise((resolvePromise, reject) => {
+    const args = ["exec", "--ignore-user-config", "--cd", cwd, "--sandbox", sandbox, "--json"];
+    if (model) args.push("--model", model);
+    if (outputSchema) args.push("--output-schema", outputSchema);
+    args.push(prompt);
+    const child = spawn("codex", args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => child.kill("SIGKILL"), timeoutMs);
+    child.stdout.on("data", (chunk) => (stdout += chunk));
+    child.stderr.on("data", (chunk) => (stderr += chunk));
+    child.on("error", reject);
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      if (code !== 0) return reject(new Error(`codex exited with ${code}: ${stderr.slice(-400)}`));
+      try {
+        resolvePromise(parseCodexStream(stdout));
+      } catch (error) {
+        reject(new Error(`${error.message}: ${stdout.slice(0, 200)}`));
+      }
+    });
+  });
+}
+
+function schemaFile(out, name, schema) {
+  const dir = join(out, "schemas");
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, `${name}.json`);
+  writeFileSync(path, schema);
+  return path;
+}
+
+function installCodexSkills(cwd) {
+  const destination = join(cwd, ".agents", "skills");
+  mkdirSync(destination, { recursive: true });
+  cpSync(join(PLUGIN_DIR, "skills"), destination, { recursive: true });
+}
+
 function toolsFor(skill) {
   if (skill === "plan") return PLAN_TOOLS;
   if (skill === "implement") return IMPLEMENT_TOOLS;
@@ -268,9 +327,10 @@ async function runChecks(testCase, work) {
   return results;
 }
 
-async function gradeHandling(testCase, report) {
+async function gradeHandling(testCase, report, provider, model, out) {
   const items = testCase.expected.map(({ id, text }) => ({ id, text }));
   const prompt = [
+    ...(provider === "codex" ? [HANDLING_SYSTEM, ""] : []),
     "Situations (JSON):",
     JSON.stringify(items, null, 2),
     "",
@@ -278,11 +338,21 @@ async function gradeHandling(testCase, report) {
     report.replaceAll("</output>", "<\\/output>"),
     "</output>",
   ].join("\n");
+  const schema = handlingSchema(items.length);
   const args = ["-p", "--model", GRADER_MODEL, "--output-format", "json", ...ISOLATION_FLAGS];
   args.push("--tools", "", "--system-prompt", HANDLING_SYSTEM);
-  args.push("--json-schema", handlingSchema(items.length));
+  args.push("--json-schema", schema);
   for (let attempt = 1; attempt <= GRADE_ATTEMPTS; attempt += 1) {
-    const reply = await claude(args, { cwd: REPO_ROOT, input: prompt, timeoutMs: GRADE_TIMEOUT_MS });
+    const reply = provider === "claude"
+      ? await claude(args, { cwd: REPO_ROOT, input: prompt, timeoutMs: GRADE_TIMEOUT_MS })
+      : await codex({
+          cwd: REPO_ROOT,
+          prompt: `${prompt}\n\nReturn only the JSON object required by the supplied schema.`,
+          timeoutMs: GRADE_TIMEOUT_MS,
+          model,
+          sandbox: "read-only",
+          outputSchema: schemaFile(out, `handling-${items.length}`, schema),
+        });
     const grading = reply.structured_output ?? JSON.parse(reply.result);
     const ids = new Set(grading.items.map((item) => item.id));
     if (items.every((item) => ids.has(item.id))) return grading;
@@ -290,28 +360,36 @@ async function gradeHandling(testCase, report) {
   throw new Error(`the grader skipped a situation in ${GRADE_ATTEMPTS} attempts`);
 }
 
-async function review(testCase, skill, config, model, cwd) {
+async function review(testCase, skill, config, model, cwd, provider) {
   const withSkill = config === CONFIG_WITH_SKILL;
-  const prompt = withSkill
-    ? `Use the ${PLUGIN_NAME}:${skill} skill for this task.\n\n${testCase.prompt}`
-    : testCase.prompt;
-  const args = ["-p", "--model", model, "--output-format", "stream-json", "--verbose"];
-  args.push(...ISOLATION_FLAGS);
-  args.push(...(withSkill ? ["--plugin-dir", PLUGIN_DIR] : ["--disable-slash-commands"]));
-  args.push("--allowedTools", ...toolsFor(skill));
+  const prompt = provider === "claude"
+    ? (withSkill ? `Use the ${PLUGIN_NAME}:${skill} skill for this task.\n\n${testCase.prompt}` : testCase.prompt)
+    : (withSkill ? `$${skill}\n\n${testCase.prompt}` : testCase.prompt);
   const started = Date.now();
-  const reply = await claude(args, {
-    cwd,
-    input: prompt,
-    timeoutMs: RUN_TIMEOUT_MS,
-    parse: parseStream,
-  });
+  let reply;
+  if (provider === "claude") {
+    const args = ["-p", "--model", model ?? DEFAULT_MODEL, "--output-format", "stream-json", "--verbose"];
+    args.push(...ISOLATION_FLAGS);
+    args.push(...(withSkill ? ["--plugin-dir", PLUGIN_DIR] : ["--disable-slash-commands"]));
+    args.push("--allowedTools", ...toolsFor(skill));
+    reply = await claude(args, { cwd, input: prompt, timeoutMs: RUN_TIMEOUT_MS, parse: parseStream });
+  } else {
+    if (withSkill) installCodexSkills(cwd);
+    reply = await codex({
+      cwd,
+      prompt,
+      timeoutMs: RUN_TIMEOUT_MS,
+      model,
+      sandbox: skill === "review" ? "read-only" : "workspace-write",
+    });
+  }
   return { ...reply, wall_ms: Date.now() - started };
 }
 
-async function grade(testCase, report) {
+async function grade(testCase, report, provider, model, out) {
   const expected = testCase.expected.map(({ id, text }) => ({ id, text }));
   const prompt = [
+    ...(provider === "codex" ? [GRADER_SYSTEM, ""] : []),
     "Expected findings (JSON):",
     JSON.stringify(expected, null, 2),
     "",
@@ -319,25 +397,36 @@ async function grade(testCase, report) {
     report.replaceAll("</report>", "<\\/report>"),
     "</report>",
   ].join("\n");
-  const args = ["-p", "--model", GRADER_MODEL, "--output-format", "json", ...ISOLATION_FLAGS];
-  args.push("--tools", "", "--system-prompt", GRADER_SYSTEM, "--json-schema", GRADE_SCHEMA);
-  const reply = await claude(args, { cwd: REPO_ROOT, input: prompt, timeoutMs: GRADE_TIMEOUT_MS });
-  return reply.structured_output ?? JSON.parse(reply.result);
+  if (provider === "claude") {
+    const args = ["-p", "--model", GRADER_MODEL, "--output-format", "json", ...ISOLATION_FLAGS];
+    args.push("--tools", "", "--system-prompt", GRADER_SYSTEM, "--json-schema", GRADE_SCHEMA);
+    const reply = await claude(args, { cwd: REPO_ROOT, input: prompt, timeoutMs: GRADE_TIMEOUT_MS });
+    return reply.structured_output ?? JSON.parse(reply.result);
+  }
+  const reply = await codex({
+    cwd: REPO_ROOT,
+    prompt: `${prompt}\n\nReturn only the JSON object required by the supplied schema.`,
+    timeoutMs: GRADE_TIMEOUT_MS,
+    model,
+    sandbox: "read-only",
+    outputSchema: schemaFile(out, "review", GRADE_SCHEMA),
+  });
+  return JSON.parse(reply.result);
 }
 
-async function runOne(job, skill, model, out) {
+async function runOne(job, skill, model, out, provider) {
   const { testCase, config, index } = job;
   const cwd = job.cwd ?? prepareFixture(testCase, `${config}-${index}`, out);
   const dir = join(out, "results", testCase.id, config, `run-${index}`);
   mkdirSync(dir, { recursive: true });
-  const row = { case: testCase.id, config, run: index };
+  const row = { provider, case: testCase.id, config, run: index };
   try {
-    const reply = await review(testCase, skill, config, model, cwd);
+    const reply = await review(testCase, skill, config, model, cwd, provider);
     writeFileSync(join(dir, "report.md"), reply.result ?? "");
     if (HANDLING_SKILLS.has(skill)) {
       const documents = changedDocs(testCase, cwd);
       const output = [reply.result ?? "", documents].filter(Boolean).join("\n\n");
-      const grading = await gradeHandling(testCase, output);
+      const grading = await gradeHandling(testCase, output, provider, model, out);
       writeFileSync(join(dir, "grading.json"), JSON.stringify(grading, null, 2));
       const checks = await runChecks(testCase, cwd);
       const handled = new Map(grading.items.map((item) => [item.id, item.handling]));
@@ -357,7 +446,7 @@ async function runOne(job, skill, model, out) {
       console.error(`done ${row.case} ${row.config} run ${row.run}`);
       return row;
     }
-    const grading = await grade(testCase, reply.result ?? "");
+    const grading = await grade(testCase, reply.result ?? "", provider, model, out);
     writeFileSync(join(dir, "grading.json"), JSON.stringify(grading, null, 2));
     const found = new Set(grading.expected.filter((e) => e.found).map((e) => e.id));
     const blocking = testCase.expected.filter((e) => e.severity === SEVERITY_BLOCKING);
@@ -398,8 +487,8 @@ async function pool(jobs, worker) {
 
 function printHandlingSummary(rows) {
   const line = (cells) => `| ${cells.join(" | ")} |`;
-  console.log(line(["case", "config", "run", "situations ok", "checks ok", "seconds", "usd"]));
-  console.log(line(Array(7).fill("---")));
+  console.log(line(["provider", "case", "config", "run", "situations ok", "checks ok", "seconds", "usd"]));
+  console.log(line(Array(8).fill("---")));
   const order = (a, b) =>
     a.case.localeCompare(b.case) || a.config.localeCompare(b.config) || a.run - b.run;
   for (const row of rows.sort(order)) {
@@ -411,7 +500,7 @@ function printHandlingSummary(rows) {
           row.seconds,
           row.cost_usd?.toFixed(2) ?? "",
         ];
-    console.log(line([row.case, row.config, row.run, ...cells]));
+    console.log(line([row.provider, row.case, row.config, row.run, ...cells]));
   }
 }
 
@@ -419,9 +508,9 @@ function printSummary(rows) {
   if (rows.some((row) => row.kind === "handling")) return printHandlingSummary(rows);
   const line = (cells) => `| ${cells.join(" | ")} |`;
   console.log(
-    line(["case", "config", "run", "blocking found", "marked blocking", "findings", "seconds", "usd"]),
+    line(["provider", "case", "config", "run", "blocking found", "marked blocking", "findings", "seconds", "usd"]),
   );
-  console.log(line(Array(8).fill("---")));
+  console.log(line(Array(9).fill("---")));
   const order = (a, b) =>
     a.case.localeCompare(b.case) || a.config.localeCompare(b.config) || a.run - b.run;
   for (const row of rows.sort(order)) {
@@ -434,7 +523,7 @@ function printSummary(rows) {
           row.seconds,
           row.cost_usd?.toFixed(2) ?? "",
         ];
-    console.log(line([row.case, row.config, row.run, ...cells]));
+    console.log(line([row.provider, row.case, row.config, row.run, ...cells]));
   }
 }
 
@@ -442,26 +531,39 @@ async function main() {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
     options: {
+      provider: { type: "string", default: "claude" },
       case: { type: "string" },
       runs: { type: "string", default: String(DEFAULT_RUNS) },
-      model: { type: "string", default: DEFAULT_MODEL },
+      model: { type: "string" },
       configs: { type: "string", default: `${CONFIG_WITH_SKILL},${CONFIG_BASELINE}` },
       out: { type: "string", default: DEFAULT_OUT },
+      help: { type: "boolean", default: false },
     },
   });
+  if (values.help) {
+    console.log("Usage: node .github/evals/run.mjs <skill> [--provider claude|codex] [--case id] [--runs n] [--model name] [--configs with_skill,baseline] [--out dir]");
+    return;
+  }
   const skill = positionals[0];
-  if (!skill) throw new Error("usage: run.mjs <skill> [--case id] [--runs n] [--model name]");
-  const out = resolve(values.out);
-  const configs = values.configs.split(",");
+  if (!skill) throw new Error("usage: run.mjs <skill> [--provider claude|codex] [--case id] [--runs n] [--model name]");
+  if (!PROVIDERS.has(values.provider)) throw new Error(`unknown provider: ${values.provider}`);
   const runs = Number(values.runs);
+  if (!Number.isInteger(runs) || runs < 1) throw new Error(`runs must be a positive integer: ${values.runs}`);
+  const configs = values.configs.split(",");
+  if (configs.length === 0 || configs.some((config) => ![CONFIG_WITH_SKILL, CONFIG_BASELINE].includes(config))) {
+    throw new Error(`unknown config: ${values.configs}`);
+  }
+  const out = resolve(values.out, values.provider);
   const jobs = [];
   for (const testCase of loadCases(skill, values.case)) {
-    const cwd = testCase.fixture ? null : await checkout(testCase, out);
     for (const config of configs) {
+      const cwd = testCase.fixture
+        ? null
+        : await checkout(testCase, out, values.provider === "codex" ? config : "shared");
       for (let index = 1; index <= runs; index += 1) jobs.push({ testCase, config, index, cwd });
     }
   }
-  const rows = await pool(jobs, (job) => runOne(job, skill, values.model, out));
+  const rows = await pool(jobs, (job) => runOne(job, skill, values.model, out, values.provider));
   writeFileSync(join(out, "summary.json"), JSON.stringify(rows, null, 2));
   printSummary(rows);
 }
