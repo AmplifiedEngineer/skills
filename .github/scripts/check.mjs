@@ -240,16 +240,18 @@ function checkManifests() {
 // Link targets of a Markdown file, then backticked paths, each cut at the first fragment mark.
 function linkTargets(text) {
   const lines = text.split("\n");
-  const collect = (kind, pattern, strip) =>
-    lines.flatMap((line) =>
+  const collect = (kind, pattern, strip, source = lines) =>
+    source.flatMap((line) =>
       (line.match(pattern) ?? []).map((match) => {
         const target = strip(match).split(FRAGMENT_MARK)[0] ?? "";
         // Trailing blanks are not part of the target.
         return { kind, target: target.replace(TRAILING_BLANKS, "") };
       }),
     );
+  // A link pattern inside inline code is code, not a link.
+  const outsideCode = lines.map((line) => line.replace(BACKTICK_PATTERN, ""));
   return [
-    ...collect("link", MD_LINK_PATTERN, (m) => m.slice(MD_LINK_OPEN.length, -1)),
+    ...collect("link", MD_LINK_PATTERN, (m) => m.slice(MD_LINK_OPEN.length, -1), outsideCode),
     ...collect("backtick", BACKTICK_PATTERN, (m) => m.slice(BACKTICK.length, -BACKTICK.length)),
   ];
 }
