@@ -1,0 +1,25 @@
+{
+  "id": "playbook-777",
+  "split": "tune",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/777/head",
+  "commit": "9998fbb92dc4dd02f031dcef61a931b60bf41316",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff ed39fb7821606a7e445fb47213d866b2dc55e42e HEAD`. It adds an advisory context hygiene loop and a resume after clear. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "handoff-key-collides-across-paths",
+      "severity": "blocking",
+      "text": "The handoff key is the project slug alone, so two directories whose names differ only in punctuation (my_app and my-app) share one handoff."
+    },
+    {
+      "id": "handoff-name-parse-ambiguous",
+      "severity": "blocking",
+      "text": "parse_name splits on '-', which a slug can contain, so a handoff for repo-2 can parse as a tagged handoff of repo."
+    },
+    {
+      "id": "handoff-deleted-when-archive-fails",
+      "severity": "blocking",
+      "text": "When the move into used/ fails, the loaded handoff file is deleted, so the part past the injected cut is lost."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "playbook-1802",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1802/head",
+  "commit": "8e4af50b1edaae1f3872a0e6b4579e4987d1b9f3",
+  "prompt": "Review this change before it merges. The change is the last three commits of this checkout. Get the diff with `git diff 3baf3ff7b86bafbac5cca511215c2c38e6e77b45 HEAD`. It adds scripts/release-summary.sh, which sends the pull requests of a release to a model, checks the model's summary and writes it into the GitHub release notes. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "link-check-bypass",
+      "severity": "blocking",
+      "text": "The link check in scripts/release-summary.sh only finds links that start with lower-case http:// or https://. A link in another form passes and can point outside the repository: a protocol-relative //host link, a www. link, an upper-case scheme, or a repository link that uses /../ to leave the repository. Any one of these counts."
+    },
+    {
+      "id": "pr-text-closes-the-tag",
+      "severity": "blocking",
+      "text": "Pull request text is put inside a <release> tag in the prompt without escaping <, so a PR title or body that holds the closing tag ends the data block early and the rest is read as instructions."
+    },
+    {
+      "id": "heading-listed-twice",
+      "severity": "minor",
+      "text": "The first heading text is written twice: once as FIRST_HEADING and again as a literal in ALLOWED_HEADINGS."
+    },
+    {
+      "id": "tests-miss-cases",
+      "severity": "minor",
+      "text": "The tests do not cover some paths: a second pull request body, the curl arguments, the attested binary path, or a failed attestation of the notes."
+    }
+  ]
+}

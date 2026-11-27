@@ -1,0 +1,15 @@
+{
+  "id": "playbook-1838",
+  "split": "holdout",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1838/head",
+  "commit": "cde5b8035395822d7d41c0035e3fa90704b0cad6",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff fe60353d610c2f7a0fdde2aa87a6341f2ff89980 HEAD`. It adds `review lenses pick`, `pr checks --list` and `segment verify`. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "segment-verify-mistyped-path-reads-landed",
+      "severity": "blocking",
+      "text": "segment verify passes a file path that exists in neither ref to git diff --name-only, which shows nothing for it, so a mistyped path reports the Segment as landed."
+    }
+  ]
+}

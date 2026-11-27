@@ -1,0 +1,34 @@
+{
+  "id": "playbook-1879",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1879/head",
+  "commit": "a96bbfc52b5a793b5a54c0d913ab527db43005c2",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff 3a2900550788fa9ce343aec203203f5d3d5365fb HEAD`. It adds a setup question and a config key, usage.toolDetails. A yes sets OTEL_LOG_TOOL_DETAILS=1 in the user's Claude settings so the local usage dashboard can show real plugin skill names. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "flag-follows-redirected-telemetry",
+      "severity": "blocking",
+      "text": "The ownership test in crates/cli/src/init/telemetry.rs only checks that the endpoint key in the user's settings.json is local. Another source can send the telemetry elsewhere (a per-signal endpoint key such as OTEL_EXPORTER_OTLP_LOGS_ENDPOINT, another settings file, the process environment, or an endpoint that is local but not the one playbook recorded), so the tool details flag is written while the detail goes to a collector playbook does not own."
+    },
+    {
+      "id": "flag-left-after-ownership-ends",
+      "severity": "blocking",
+      "text": "sync_tool_details returns early when playbook no longer owns the telemetry keys, so a flag playbook wrote stays set after the telemetry was pointed elsewhere or the answer changed to no."
+    },
+    {
+      "id": "lookup-folder-disagrees",
+      "severity": "minor",
+      "text": "Doctor, doctor --fix, config set and the migration do not agree on which folder they read project settings from (current directory against repo root or home)."
+    },
+    {
+      "id": "flag-is-global-not-said",
+      "severity": "minor",
+      "text": "The setup question, the doctor row or the docs do not say that the flag is global and applies to every session and tool, not only to playbook's dashboard."
+    },
+    {
+      "id": "user-set-flag-not-counted",
+      "severity": "minor",
+      "text": "Doctor does not count a flag the user set by hand as on after a yes answer."
+    }
+  ]
+}

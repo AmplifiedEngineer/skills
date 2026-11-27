@@ -1,0 +1,52 @@
+{
+  "id": "rb-entebus-web-executive-120",
+  "split": "tune",
+  "source": "reviewbench",
+  "source_key": "Nixbug_entebus-web-executive_120-630b29d5",
+  "repo": "Nixbug/entebus-web-executive",
+  "ref": "630b29d5edbd4c8db61a14f6e33f8b70d57b3d5f",
+  "commit": "630b29d5edbd4c8db61a14f6e33f8b70d57b3d5f",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .svelte project. Get the diff with `git diff a204e1b2c070fda02e100de55c0bc34c4659f538 HEAD`. Title: Implement company get api. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-correctness",
+      "severity": "blocking",
+      "text": "companySchema still requires `ownerName` as a non-optional field, but the PR removed `ownerName` from the Company type and from `prepareForValidation` in company-detail.config.ts. When the user tries to save company details via the edit sidebar, Zod will always return a validation error ('Owner name is required') because the field is never provided to the schema. The schema was not updated to match the new data model."
+    },
+    {
+      "id": "tp-2-correctness",
+      "severity": "minor",
+      "text": "formattedCompanyData is only populated when `Array.isArray(apiData)` is true. The code also explicitly handles the case where `(apiData as any)?.total` exists (suggesting the API may return a paginated wrapper object like `{results: [...], total: N}`). If the API does return a non-array wrapper, `(Array.isArray(apiData) ? apiData : []).map(...)` yields `[]`, so formattedCompanyData will be empty while totalItems is correctly set. This results in a pagination bar showing N items with zero rows displayed — silent data loss."
+    },
+    {
+      "id": "tp-8-correctness",
+      "severity": "minor",
+      "text": "The `location` field is `editable: true` with `type: 'text'`, meaning users can type anything into it. The backend stores it as a WKT POINT string, but the schema (`cleanString` with min 2 chars) does not validate the WKT format. A user can enter a plain string like 'Mumbai', which passes validation and saves, but the map view falls back to showing raw text (`<p>` element) with no error feedback. The schema should validate WKT format, or the field should be made non-editable."
+    },
+    {
+      "id": "tp-10-correctness",
+      "severity": "blocking",
+      "text": "The Company type now omits `ownerName`, `email`, and `phone`, and `prepareForValidation` only returns `name`, `address`, `location`, and `type`. However, `companySchema` in `src/lib/schemas.ts` still defines `ownerName` as a required field (with `min(2)` validation) along with `email`/`phone`. As a result, validating a company edit through this detail config will always fail because `ownerName` is missing/empty. The `companySchema` needs to be updated to reflect the new Company shape (likely removing `ownerName`/`email`/`phone` and adding `description`), otherwise editing companies will be broken."
+    },
+    {
+      "id": "tp-15-correctness",
+      "severity": "blocking",
+      "text": "The add-company form no longer provides `ownerName`, `email`, or `phone`, but it still passes `companySchema`, which requires `ownerName`. CreationForm validates the whole schema against only the rendered fields, so submitting this modal will fail validation with an error for a field the user cannot fill."
+    },
+    {
+      "id": "tp-16-accessibility",
+      "severity": "minor",
+      "text": "The dialog-level `on:keydown|stopPropagation` prevents Escape key events from reaching the window handler whenever focus is inside the modal, so the advertised Escape-to-close behavior does not work for keyboard users after they interact with the dialog content."
+    },
+    {
+      "id": "tp-18-correctness",
+      "severity": "minor",
+      "text": "This new label is propagated in the dashboard link, but `src/routes/company/dashboard/+page.svelte` only renders messages for `Validating`, `Verified`, and `Suspended`. Companies with backend status 1 will therefore arrive as `Under Verification` and show no status message on the dashboard unless the dashboard is updated or the label stays compatible."
+    },
+    {
+      "id": "tp-19-correctness",
+      "severity": "blocking",
+      "text": "Changing the dashboard URL to pass the raw `apiId` breaks the existing company-scoped dashboard pages: they read `?id=` and compare it directly to dummy data `companyId` values such as `COMP-001` (for example `src/routes/company/operator-account/+page.svelte:33`). Passing `1` instead of `COMP-1`/`COMP-001` makes those pages filter to empty results."
+    }
+  ]
+}

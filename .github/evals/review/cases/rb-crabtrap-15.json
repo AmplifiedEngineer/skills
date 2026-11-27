@@ -1,0 +1,42 @@
+{
+  "id": "rb-crabtrap-15",
+  "split": "holdout",
+  "source": "reviewbench",
+  "source_key": "brexhq_CrabTrap_15-5ef0884c",
+  "repo": "brexhq/CrabTrap",
+  "ref": "5ef0884c59b3ee1d5a986dd02686a8232570c80f",
+  "commit": "5ef0884c59b3ee1d5a986dd02686a8232570c80f",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .go project. Get the diff with `git diff b29930e93765700608313c0f0d32c4818734e158 HEAD`. Title: fix: lighten audit log list responses. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-reliability",
+      "severity": "minor",
+      "text": "The `query` method (called by both `QuerySummaries` and `Query`) creates its own `context.Background()` and ignores the request context passed by callers. `Count` correctly accepts and uses a `context.Context` parameter, so HTTP request cancellation and deadlines apply to it. But `QuerySummaries` runs outside any deadline: if a client disconnects mid-flight, the database query continues until completion, holding a pgxpool connection. Under load, this can exhaust the connection pool."
+    },
+    {
+      "id": "tp-3-correctness",
+      "severity": "minor",
+      "text": "When `QuerySummaries` fails (i.e., the pgx `Query` call returns an error), `query` returns `nil`. The handler converts `nil` to `[]types.AuditEntry{}` and responds HTTP 200 with `{\"entries\":[], \"total\": N, \"has_more\": true}` — an empty entry list paired with a positive total and `has_more: true`. The UI will show zero rows but keep the \"Load more\" button active, looping forever. The nil return from `query` signals a DB error and should be converted to a 500 response, the same way a `Count` error already is."
+    },
+    {
+      "id": "tp-4-correctness",
+      "severity": "minor",
+      "text": "`toggleExpanded` calls `setExpandedId(rowId)` unconditionally, then checks `if (!entry.id || ...)` and returns early without setting `detailLoading[detailKey]`. When `entry.id` is absent (falsy), the row opens in expanded state, but no fetch is started and no loading/error UI is shown. `detailEntry` falls back to the summary `entry`, so all payload fields (headers, body) render as \"(empty)\". A user who expands such a row sees silently missing data with no indication of failure. The guard should be evaluated before `setExpandedId`, or an error state should be set when `entry.id` is missing."
+    },
+    {
+      "id": "tp-11-performance",
+      "severity": "minor",
+      "text": "count queries are very expensive, we shouldn't use this here, it probably will start to timeout over time. see [this](https://wiki.postgresql.org/wiki/Slow_Counting)"
+    },
+    {
+      "id": "tp-12-correctness",
+      "severity": "blocking",
+      "text": "This new lazy-load call makes expanded rows depend on GET /admin/audit/{id}, but that handler currently returns 503 before calling GetEntry when evalStore is nil (api.go:1046-1048), and startAdminAPI only wires evalStore when an LLM judge is configured (cmd/gateway/main.go:223-224). In deployments with the LLM judge disabled, list rows no longer include payloads and expanding a row cannot load them, so request/response details become inaccessible. The detail GET path should not require the eval store, or it should be wired independently of the eval runner."
+    },
+    {
+      "id": "tp-13-correctness",
+      "severity": "minor",
+      "text": "Caching a fetched detail forever can leave expanded rows with stale response data. Streaming responses are inserted first and then updated later via UpdateResponse after the body is consumed (internal/proxy/handler.go:1696-1715, pg_audit_reader.go:196-222); if an admin expands the row before that update finishes, the empty/partial detail is stored in entryDetails and subsequent expansions skip refetching because of this guard. Consider invalidating/refetching details for rows that may still be updated, or adding a refresh path after loading completes."
+    }
+  ]
+}

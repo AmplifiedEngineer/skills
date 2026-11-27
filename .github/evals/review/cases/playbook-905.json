@@ -1,0 +1,15 @@
+{
+  "id": "playbook-905",
+  "split": "tune",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/905/head",
+  "commit": "9e63dc7d6dcea73ac4aa443ffb89abea710b2bda",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff 4dfe80182062356360932e5c2c253a50a20d0e94 HEAD`. It makes the policy guard stop the model from changing the roots the rm guard allows. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "policy-guard-denies-store-reads",
+      "severity": "blocking",
+      "text": "The policy guard treats any command that names the config store and either has a redirect or runs sqlite3, jq, sed or a shell as a write, so plain reads of the store are denied."
+    }
+  ]
+}

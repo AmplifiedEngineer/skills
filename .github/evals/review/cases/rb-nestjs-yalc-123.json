@@ -1,0 +1,52 @@
+{
+  "id": "rb-nestjs-yalc-123",
+  "split": "holdout",
+  "source": "reviewbench",
+  "source_key": "NestDevLab_nestjs-yalc_123-3ce6ba57",
+  "repo": "NestDevLab/nestjs-yalc",
+  "ref": "3ce6ba5785304f07c0e5361347f8306404067d28",
+  "commit": "3ce6ba5785304f07c0e5361347f8306404067d28",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .ts project. Get the diff with `git diff 9b49dd800131e9746cdf9320011d23b544a2ea59 HEAD`. Title: feat(examples): add OmniKernel foundations module. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-correctness",
+      "severity": "blocking",
+      "text": "upsertExternalRef calls createEntity(input) without a guid when no existing record is found. OmniBaseEntity uses @PrimaryColumn('varchar') with no @Generated('uuid'), so the guid must be supplied by the caller. syncDocumentReference and syncCollectionReference never include a guid in their inputs, meaning every first-time upsert for a document or collection will fail at the DB level with a null primary key error."
+    },
+    {
+      "id": "tp-2-reliability",
+      "severity": "minor",
+      "text": "upsertExternalRef uses a non-atomic read-then-write (TOCTOU) pattern: findByExternalIdentity followed by createEntity or updateEntity. Concurrent calls with the same (provider, externalId, account, container) identity will both observe 'no existing record' and both reach createEntity, creating duplicate records. There is no unique constraint on OmniExternalRefEntity to prevent this at the DB level."
+    },
+    {
+      "id": "tp-3-correctness",
+      "severity": "minor",
+      "text": "OmniExternalRefEntity has no @Unique constraint on (provider, externalId, account, container). The upsert semantics in OmniExternalRefService depend on this combination being unique, but without a DB-level constraint, duplicate external refs can accumulate from concurrent requests, retry logic, or any code that calls createEntity directly bypassing the service."
+    },
+    {
+      "id": "tp-4-correctness",
+      "severity": "minor",
+      "text": "isAllowedOmniRelation is defined and tested but is never called from the relation write path. There is no OmniRelationService override and the omniRelationProvidersFactory uses the default GenericService. Any GraphQL client can create an OmniRelationEntity with any combination of source kind, target kind, and relation kind, completely bypassing the semantic constraints documented in the README and enforced by this function."
+    },
+    {
+      "id": "tp-5-correctness",
+      "severity": "minor",
+      "text": "OmniRelationEntity has no unique constraint on (sourceRecordId, targetRecordId, kind). Without this, the same directed edge with the same kind can be inserted multiple times. Queries like OmniKernelQueryService.getCollectionMembers use a single find with targetRecord loaded, so duplicate relations will return the same member record multiple times, silently inflating results."
+    },
+    {
+      "id": "tp-8-correctness",
+      "severity": "minor",
+      "text": "omniRecordProvidersFactory wires the generic GenericService directly to OmniRecordEntity with OmniRecordCreateInput, which accepts kind as a free-form string (no enum constraint). A caller can create a record with kind='document' via this resolver, but since the underlying entity is OmniRecordEntity (not OmniDocumentEntity), TypeORM will not set the recordType STI discriminator column to 'document'. This creates ghost document-like records that won't be returned from OmniDocumentEntity queries but pollute the omni-record table."
+    },
+    {
+      "id": "tp-17-correctness",
+      "severity": "minor",
+      "text": "The relation CRUD provider uses the generic service directly, so the exported `isAllowedOmniRelation` rules are never enforced on writes. A GraphQL caller can still create `contains` or `derived_from` edges that the semantics helper rejects, which makes the stored graph diverge from the documented relation invariants; add a relation service/write-path check before exposing these mutations."
+    },
+    {
+      "id": "tp-18-correctness",
+      "severity": "minor",
+      "text": "The generic record CRUD path accepts any `kind`, including reserved values such as `document` and `collection`, while the semantics helpers classify records solely by this field. That lets callers create plain `OmniRecordEntity` rows that masquerade as concrete documents/collections without the STI discriminator or subtype columns, which can break query helpers and relation rules; reserve those kinds or route them through the concrete services."
+    }
+  ]
+}

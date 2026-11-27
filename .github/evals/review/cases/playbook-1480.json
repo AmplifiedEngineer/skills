@@ -1,0 +1,15 @@
+{
+  "id": "playbook-1480",
+  "split": "holdout",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1480/head",
+  "commit": "478f676cac047c19b254b9a924ed195c7af56c65",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff e1bd870f9e93e9ceb778ddf0ebd0ab648f9bd46c HEAD`. It publishes a signed apt and dnf package repository from the release. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "attestation-failure-swallowed-in-subshell",
+      "severity": "blocking",
+      "text": "The attestation checks run in a subshell followed by `|| rc=$?`, where bash ignores set -e, so a failed gh attestation verify does not stop the job."
+    }
+  ]
+}

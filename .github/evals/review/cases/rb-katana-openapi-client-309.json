@@ -1,0 +1,62 @@
+{
+  "id": "rb-katana-openapi-client-309",
+  "split": "tune",
+  "source": "reviewbench",
+  "source_key": "dougborg_katana-openapi-client_309-dfc5d17b",
+  "repo": "dougborg/katana-openapi-client",
+  "ref": "dfc5d17b9e4f98357ffd4a36f1ca8bd9201e4884",
+  "commit": "dfc5d17b9e4f98357ffd4a36f1ca8bd9201e4884",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .py project. Get the diff with `git diff d524e5a233d972cd5fe59a224ed5a1a2f323d415 HEAD`. Title: feat(mcp): add Prefab UI for interactive tool responses. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-2-correctness",
+      "severity": "minor",
+      "text": "`unwrap_unset` now equates `None` with `UNSET`, silently replacing any legitimate `None` from the API with `default`. For API fields typed `T | None | Unset` where `None` is a meaningful value (e.g., 'explicitly cleared'), callers that supply a non-None default — such as `unwrap_unset(po.order_no, request.order_number)` — will now receive `request.order_number` when the API returns `null`, masking the API's intent. This is a behavioral breaking change to a shared utility."
+    },
+    {
+      "id": "tp-3-correctness",
+      "severity": "minor",
+      "text": "`create_stock_adjustment` with `confirm=True` directly executes the write without calling `require_confirmation()`, unlike every other write tool in the codebase (`receive_purchase_order`, `fulfill_order`, `create_manufacturing_order`). The field description says 'prompts for confirmation' but the tool will submit destructive stock changes immediately when `confirm=True`, bypassing the user-elicitation step."
+    },
+    {
+      "id": "tp-5-correctness",
+      "severity": "minor",
+      "text": "`_update_item_impl` performs no API call and returns a success `UpdateItemResponse` when neither item-level nor variant-level fields are set. There is no guard clause that rejects an empty update request. A caller that accidentally omits all fields gets a success response with `name='Unknown'` and a message claiming the item was updated, while nothing actually changed in the API."
+    },
+    {
+      "id": "tp-16-correctness",
+      "severity": "blocking",
+      "text": "This path now depends on the variant cache, but unlike the existing SKU-based item tools (`_search_items_impl` and `_get_variant_details_impl`), it is not wrapped with `@cache_read(EntityType.VARIANT)`. On a cold or stale cache, `check_inventory` will return zero stock for a valid SKU without ever querying the API."
+    },
+    {
+      "id": "tp-17-correctness",
+      "severity": "blocking",
+      "text": "This new SKU lookup has the same cold-cache failure mode: the function reads `services.cache.get_by_sku()` without first syncing the variant cache. A valid SKU can therefore return an empty movement history if variants have not already been cached."
+    },
+    {
+      "id": "tp-19-correctness",
+      "severity": "minor",
+      "text": "The variant selected by `sku` is not checked against `request.id`/`request.type` before being patched. A request can update item A's item-level fields while also updating the variant for item B if the SKU belongs to another product/material."
+    },
+    {
+      "id": "tp-20-correctness",
+      "severity": "blocking",
+      "text": "This stock adjustment path resolves SKUs from the cache without syncing it first. If the variant cache is empty or stale, preview/creation fails with `SKU not found` for valid items instead of resolving them reliably."
+    },
+    {
+      "id": "tp-22-api-architecture",
+      "severity": "minor",
+      "text": "For UI-enabled tools this replaces the previous top-level response dict with the Prefab envelope and nests the actual tool data under `data`, while the non-UI branch still returns model fields at top level. That inconsistent/breaking structured_content shape can break programmatic clients that read fields like `id`, `items`, or `order_number` from the existing top-level response."
+    },
+    {
+      "id": "tp-24-api-architecture",
+      "severity": "minor",
+      "text": "The receipt confirm action omits the `items` payload required by `receive_purchase_order` (purchase order row IDs and quantities), and the preview response only stores `items_received`. Clicking this button cannot reliably execute the same receipt with `confirm=true`."
+    },
+    {
+      "id": "tp-25-correctness",
+      "severity": "blocking",
+      "text": "Variant updates now depend on `services.cache.get_by_sku()`, but this implementation is not wrapped with `@cache_read(EntityType.VARIANT)` like the existing SKU-based read tools. On a cold/stale cache, updating valid variant-level fields can fail with `SKU not found`."
+    }
+  ]
+}

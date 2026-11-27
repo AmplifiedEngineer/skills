@@ -1,0 +1,20 @@
+{
+  "id": "playbook-1682",
+  "split": "tune",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1682/head",
+  "commit": "fb7eb855f6d08f85068b7df70adee0a5e9f913e7",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff 3902b0ca2ce8c8519e4f9ef9483f0eee813ef5c9 HEAD`. It adds the pbsync settings file and the enable and disable commands. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "settings-test-dir-never-emptied",
+      "severity": "blocking",
+      "text": "The settings tests name their data folder by pid and counter, never empty it and never remove it, so a leftover enabled sync.json from an earlier process with the same pid breaks tests that expect a fresh folder."
+    },
+    {
+      "id": "binary-test-home-shared-per-pid",
+      "severity": "minor",
+      "text": "Both tests in binary.rs use one home path keyed only by pid, and each deletes and recreates it, so they race under cargo test."
+    }
+  ]
+}

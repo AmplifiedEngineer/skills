@@ -1,0 +1,42 @@
+{
+  "id": "rb-mississippi-471",
+  "split": "tune",
+  "source": "reviewbench",
+  "source_key": "Gibbs-Morris_mississippi_471-fdc4ff8d",
+  "repo": "Gibbs-Morris/mississippi",
+  "ref": "fdc4ff8d1579a24e830cd636317d62d959eb0d40",
+  "commit": "fdc4ff8d1579a24e830cd636317d62d959eb0d40",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .cs project. Get the diff with `git diff 1e026c703d10ddd7abc724ff86ec75bea0aa23e6 HEAD`. Title: Add saga reminder recovery runtime and operator surfaces +semver: breaking. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-8-maintainability",
+      "severity": "minor",
+      "text": "**Severity:** MAJOR\r\n**Category:** Correctness\r\n**What's wrong:** The gateway now hard-codes saga recovery metadata that the runtime generator already owns, which creates a second workflow-hash and recovery-planning authority.\r\n**Evidence:** AddSpringSagaRecoverySupport() manually repeats AddSagaRecoveryInfo<MoneyTransferSagaState>(...) and AddSagaStepInfo<MoneyTransferSagaState>(...), while SagaSiloRegistrationGenerator already emits the same metadata from saga attributes and SagaStepHash.Compute(...) includes step.StepType.FullName. A future step rename or policy change can update the runtime registration but leave this gateway copy stale, which makes runtime-status/manual-resume compute against a different workflow definition than the runtime host.\r\n**Fix:** Generate or share a single recovery-metadata provider that both runtime and gateway consume instead of duplicating the metadata in SpringSagaGatewayRegistrations.\r\n**How to verify:** Change a step policy or rename a step type in Spring and confirm gateway runtime-status/manual-resume still agree with the runtime hash/planner without any manual gateway updates."
+    },
+    {
+      "id": "tp-9-correctness",
+      "severity": "blocking",
+      "text": "**Severity:** BLOCKER\r\n**Category:** Concurrency\r\n**What's wrong:** The resume command handler materializes a previously computed recovery plan without revalidating it against the current saga/checkpoint state.\r\n**Evidence:** SagaRecoveryService and SagaRecoveryCoordinator compute a plan from the checkpoint and then call ExecuteAsync(...), but HandleCore only rejects NotStarted and immediately turns the stale Disposition into SagaStepExecutionStarted, SagaCompleted, or SagaCompensated. If a reminder tick or another manual resume advances the saga between planning and command execution, this handler can emit a second recovery event against newer state.\r\n**Fix:** Carry an expected version, checkpoint hash, or pending-step token in ResumeSagaCommand and either call the versioned ExecuteAsync path or re-load plus validate Phase, PendingDirection, PendingStepIndex, and workflow hash before emitting recovery events.\r\n**How to verify:** Race a reminder tick and a manual resume against the same pending step; the loser should observe a no-op/conflict instead of a second SagaStepExecutionStarted."
+    },
+    {
+      "id": "tp-13-reliability",
+      "severity": "blocking",
+      "text": "Adding `ISagaRecoveryService<TSaga>` as a required constructor dependency makes every generated saga controller depend on per-saga recovery metadata/services, but there is no corresponding generated gateway registration for `AddSagaRecoveryServices<TSaga>`, `AddSagaRecoveryInfo<TSaga>`, or `AddSagaStepInfo<TSaga>` (the only usage in this PR is the Spring sample's manual `AddSpringSagaRecoverySupport`). Existing gateway hosts that previously only registered controllers and aggregate support will fail DI activation for generated saga controllers after regeneration unless they hand-write this metadata wiring. The generator should emit or reference a gateway-safe registration path along with the new dependency."
+    },
+    {
+      "id": "tp-14-correctness",
+      "severity": "minor",
+      "text": "Reminder execution planning does not enforce `MaxAutomaticAttempts`; only the reconciler uses that ceiling when deciding whether to register/update reminders. A stale reminder tick that is already registered (or races with reconciliation) will still be planned as `ExecuteStep` after the checkpoint's `AutomaticAttemptCount` has reached the configured limit, so the automatic-attempt ceiling is not actually enforced on the execution path. Include the attempt-count check in reminder planning/handling before materializing a resume command."
+    },
+    {
+      "id": "tp-15-reliability",
+      "severity": "blocking",
+      "text": "Generated MCP saga tools now require `ISagaRecoveryService<TSaga>`, but the generators do not emit the gateway-side `AddSagaRecoveryServices<TSaga>`/recovery-info/step-info registrations needed to satisfy this dependency. Hosts that add generated MCP tools without hand-written per-saga recovery wiring will fail DI activation for these tools after regeneration, just like the generated controllers."
+    },
+    {
+      "id": "tp-16-correctness",
+      "severity": "blocking",
+      "text": "This pending disposition only considers saga-level `RecoveryMode`, so a failed step with `SagaStepRecoveryPolicy.ManualOnly` is projected as `AutomaticPending`. The runtime planner/reconciler treats manual-only steps as requiring manual intervention and does not arm a reminder for them, so no later `SagaResumeBlocked` event is guaranteed to correct this projection. In the Spring sample both money-transfer steps are manual-only, which means the operator UI can keep showing automatic pending and hide the manual resume action after a step failure."
+    }
+  ]
+}

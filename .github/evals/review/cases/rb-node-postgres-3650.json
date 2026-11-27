@@ -1,0 +1,37 @@
+{
+  "id": "rb-node-postgres-3650",
+  "split": "tune",
+  "source": "reviewbench",
+  "source_key": "brianc_node-postgres_3650-b922f0dd",
+  "repo": "brianc/node-postgres",
+  "ref": "b922f0ddfa3914cc7b05387cd12fc606bc658dc4",
+  "commit": "b922f0ddfa3914cc7b05387cd12fc606bc658dc4",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .js project. Get the diff with `git diff c6028a875f953eff9e8e403622b0aac127d1b4a6 HEAD`. Title: Add diagnostics_channel TracingChannel support. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-correctness",
+      "severity": "minor",
+      "text": "The read-timeout path sets `query.callback = () => {}` (line 664), which overwrites the `tracedCb` that was installed by `traceCallback` at line 728. When a read timeout fires, `queryCallback` (the original user callback, captured at line 651 before tracing wraps it) is invoked directly, then `query.callback` is replaced with a no-op. `tracedCb` is never called, so `asyncEnd`/`error` tracing events for `pg:query` are never emitted. Every query that times out leaves the TracingChannel lifecycle permanently incomplete (start fires, neither asyncEnd nor error ever fires)."
+    },
+    {
+      "id": "tp-4-correctness",
+      "severity": "minor",
+      "text": "The `fn` passed to `traceCallback` for `pg:pool:connect` does nothing except assign `response.callback = tracedCb`. The `TracingChannel` API contract requires `fn` to actually initiate the async operation so the `start`→`end` synchronous span covers that work. Here the `end` event fires immediately after the assignment — before `newClient()`, before any queue push, before any pool logic runs. The real async initiation happens after `traceCallback` returns (lines 230-265). APM tools measuring the synchronous span will see a near-zero duration and no meaningful work. Compare with the `pg:query` and `pg:connection` channels where `fn` correctly calls `enqueue()` and `_connect()` respectively."
+    },
+    {
+      "id": "tp-5-correctness",
+      "severity": "minor",
+      "text": "The condition `shouldTrace(queryChannel) && query.callback` silently excludes event-driven queries (raw Query objects submitted without a callback, where consumers listen for 'row'/'end' events) from `pg:query` tracing with no fallback. These queries are valid uses of the pg API and may represent a significant fraction of queries in some codebases. There is no way for consumers or operators to know these queries are invisible to the tracing channel."
+    },
+    {
+      "id": "tp-9-reliability",
+      "severity": "blocking",
+      "text": "This new runtime dependency is not included in the pg-pool published package: packages/pg-pool/package.json still restricts `files` to `index.js` and `esm`, so `diagnostics.js` would be omitted from npm tarballs and `require('./diagnostics')` would fail for consumers. The package files list needs to include this module (or the code needs to live in an already included file)."
+    },
+    {
+      "id": "tp-11-correctness",
+      "severity": "minor",
+      "text": "The diagnostics hooks are only wired into the pure-JS Client. The package also exposes a native Client (`pg.native` / `NODE_PG_FORCE_NATIVE`), whose `connect` and `query` implementations remain uninstrumented, so `pg:query` and `pg:connection` subscribers get inconsistent behavior depending on which supported client implementation is selected."
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "id": "rb-indice-cryptography-18",
+  "split": "holdout",
+  "source": "reviewbench",
+  "source_key": "indice-co_Indice.Cryptography_18-5c0b52a3",
+  "repo": "indice-co/Indice.Cryptography",
+  "ref": "5c0b52a39593b9f7439e84d5f493eb60a0abc1ca",
+  "commit": "5c0b52a39593b9f7439e84d5f493eb60a0abc1ca",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .cs project. Get the diff with `git diff 315ff594f66bd3b716b4bb695e1d4cc9eb92de24 HEAD`. Title: [dotnet10] add support for Dotnet 10 and cleanup dependencies. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-correctness",
+      "severity": "blocking",
+      "text": "`GetHexVal` only handles uppercase A–F hex digits. For lowercase a–f (e.g., 'a'=97), the formula `97 - 55 = 42` is returned instead of the correct 10, producing wrong byte values. `CertificateRevocationList.EncodeTbsCertList` calls `crl.AuthorizationKeyId?.HexToBytes()`, and the roundtrip test uses a lowercase key ID `\"77c2b8509a677676b12dc286d083a07ea67eba4b\"`, so the Authority Key Identifier extension in every generated CRL will carry incorrect bytes. The `AuthorityKeyIdentifierExtension.GetHexVal` was fixed in this PR to handle lowercase, but `StringExtensions.GetHexVal` was not."
+    },
+    {
+      "id": "tp-2-correctness",
+      "severity": "minor",
+      "text": "`CertificateRevocationList.EffectiveDate`, `NextUpdate`, and `RevokedCertificate.RevocationDate` are typed as `DateTime`. When passed to `WriteTime(AsnWriter, DateTimeOffset)`, C# implicitly converts `DateTime` to `DateTimeOffset` using local timezone offset when `Kind=Unspecified`. This produces incorrect UTC times in the DER-encoded CRL. The fields should be `DateTimeOffset`, or the `WriteTime` signature should accept `DateTime` and explicitly use `DateTime.SpecifyKind(value, DateTimeKind.Utc)` before converting."
+    },
+    {
+      "id": "tp-3-correctness",
+      "severity": "minor",
+      "text": "`EncodeTbsCertList` always writes the extensions block (Authority Key Identifier and CRL Number) even when `crl.AuthorizationKeyId` is null. When null, `keyBytes` falls back to `Array.Empty<byte>()`, encoding an `AuthorityKeyIdentifier` extension with a zero-length `keyIdentifier` field. RFC 5280 §4.2.1.1 requires the key identifier to be non-empty; this will cause failures in conforming X.509 validators. The extensions block should be conditional on `AuthorizationKeyId` being non-null."
+    },
+    {
+      "id": "tp-11-testing",
+      "severity": "minor",
+      "text": "The `CertificateRevocationList_Roundtrip_CreateEncodeDecodeValidate` test acknowledges that `AuthorizationKeyId` does not roundtrip correctly (\"encoding has some complexities with context-specific tags\") and asserts only that it is non-empty rather than equal to the input. This indicates that the AKI extension encode/decode (Oid_AuthorityKey) is not actually being verified by the test. Given that this PR rewrites the entire ASN.1 layer, this property should roundtrip exactly; otherwise consumers of `CertificateRevocationList.AuthorizationKeyId` after load will receive a different value than was written. Please either fix the encode/decode so the assertion can be `Assert.Equal`, or document the known-incorrect behavior."
+    },
+    {
+      "id": "tp-16-correctness",
+      "severity": "minor",
+      "text": "The ASN.1 syntax makes `schemeIdentifier` optional, so encoding a missing value as an explicit NULL changes the sequence shape and produces non-conformant data. It also prevents decoding standard encodings where the optional field is omitted entirely (the first PrintableString would be the country, but this decoder treats it as the scheme). Omit the element when it is absent and make the decoder distinguish the 2-element and 3-element forms."
+    },
+    {
+      "id": "tp-19-correctness",
+      "severity": "minor",
+      "text": "`language` is a mandatory field of `PdsLocation` (the file's ASN.1 comment lists `url` and `language` without OPTIONAL), but the encoder now omits it when the property is null or empty. That produces a non-conformant QcPds statement and may fail in decoders that expect the two-element sequence. Validate that `Language` is present instead of silently omitting it."
+    },
+    {
+      "id": "tp-21-correctness",
+      "severity": "minor",
+      "text": "Parsing the hex serial number directly into `BigInteger` can produce a negative value when the high bit is set (for example serials starting with 8–F), because the hex parser uses two's-complement semantics. X.509 certificate serial numbers must be positive, so these CRLs can be encoded with invalid negative serial numbers. Parse the hex bytes as an unsigned big-endian integer or prepend a leading 00 before writing."
+    },
+    {
+      "id": "tp-22-testing",
+      "severity": "minor",
+      "text": "This new round-trip test no longer verifies that `AuthorizationKeyId` survives encode/decode unchanged; it only checks that some value is present. Since the PR changes the CRL authority-key encoding/decoding, this assertion would not catch truncation, byte-order, or wrong-key regressions in that behavior. The test should assert the expected key ID exactly once the encoder/decoder handles the field."
+    },
+    {
+      "id": "tp-23-correctness",
+      "severity": "minor",
+      "text": "This changed PSD2 decoding from tolerant parsing (`Parse(..., false)` in the previous implementation) to strict parsing. Certificates whose NCAId does not match the local regex will now fail to decode the entire QC statements extension instead of preserving the raw identifier, which can reject real-world certificates that the library previously handled. Keep the non-throwing parse path here unless the caller explicitly wants validation."
+    }
+  ]
+}

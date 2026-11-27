@@ -1,0 +1,42 @@
+{
+  "id": "rb-aafactory-prototype-17",
+  "split": "tune",
+  "source": "reviewbench",
+  "source_key": "AA-Factory_aafactory-prototype_17-a1978cb7",
+  "repo": "AA-Factory/aafactory-prototype",
+  "ref": "a1978cb75950a879df8805e4a5f373eb6678f6f9",
+  "commit": "a1978cb75950a879df8805e4a5f373eb6678f6f9",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .py project. Get the diff with `git diff e7f558c7360abac335af2df22f4ed376992b30ab HEAD`. Title: Mock test single avatar interaction with elevenlabs and zonos. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-reliability",
+      "severity": "blocking",
+      "text": "Both pytest-mock and pytest-asyncio are missing from pyproject.toml dependencies. The test uses the `mocker` fixture (provided by pytest-mock) and `@pytest.mark.asyncio` (provided by pytest-asyncio), but neither package is listed under [tool.poetry.group.dev.dependencies]. The test will fail to collect/run in any clean environment."
+    },
+    {
+      "id": "tp-2-testing",
+      "severity": "blocking",
+      "text": "The test never calls `send_request_to_llm` — the actual function under test. It directly invokes the mocked `chat_interface.send_request_to_open_ai` and then asserts against the return value the mock was configured to produce. No real application logic is exercised, so the test does not validate the behaviour it claims to test."
+    },
+    {
+      "id": "tp-3-testing",
+      "severity": "blocking",
+      "text": "`_load_avatar_infos_for_chat` is imported at the top of the file with `from aafactory.chat.interface import _load_avatar_infos_for_chat`, binding the name in the test module's own namespace before the patch is applied. The `mocker.patch('aafactory.chat.interface._load_avatar_infos_for_chat', ...)` only replaces the attribute on the module object, not the already-captured local reference. Calling `_load_avatar_infos_for_chat()` on line 32 therefore invokes the real function, which opens a TinyDB database and will fail in a test environment."
+    },
+    {
+      "id": "tp-4-testing",
+      "severity": "minor",
+      "text": "`send_request_to_open_ai` is called with 10 positional arguments, but its real signature (aafactory/src/aafactory/fetcher/fetching.py) is `send_request_to_open_ai(messages: list[dict[str, str]])` — a single parameter. The arguments passed don't match the actual API, so the mock is being exercised with a completely wrong call shape; if patching ever failed, this would raise a TypeError immediately."
+    },
+    {
+      "id": "tp-5-testing",
+      "severity": "minor",
+      "text": "`llm_side_effect` returns a 3-tuple `('', [['Hello', 'Hi there!']], 'video_path.mp4')`, but the real `send_request_to_open_ai` returns a plain string (the cleaned LLM text). If `send_request_to_llm` were actually called, `text_response` would be this tuple and the subsequent call `send_request_to_elevenlabs(text_response, voice_id)` would receive a tuple instead of a string, breaking the real code path the mock is supposed to stand in for."
+    },
+    {
+      "id": "tp-7-testing",
+      "severity": "minor",
+      "text": "The PR description states 'running two tests, one for elevenLabs and one for zonos', but only a single test function exists. The Zonos code path through `send_request_to_llm` (the `voice_model == 'zonos'` branch in interface.py) is never covered."
+    }
+  ]
+}

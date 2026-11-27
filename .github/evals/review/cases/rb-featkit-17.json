@@ -1,0 +1,52 @@
+{
+  "id": "rb-featkit-17",
+  "split": "tune",
+  "source": "reviewbench",
+  "source_key": "Mirkiux_featkit_17-de0187b0",
+  "repo": "Mirkiux/featkit",
+  "ref": "de0187b0e5e781ca08ef7d7923e33cba6531c200",
+  "commit": "de0187b0e5e781ca08ef7d7923e33cba6531c200",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .py project. Get the diff with `git diff 471774c774a89902228a0b74b696ff7304332437 HEAD`. Title: feat(plan-16): PySparkCodeGenerator. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-correctness",
+      "severity": "blocking",
+      "text": "ENTROPY formula has `.otherwise()` placed after `F.sum()` instead of after `F.when()`. `F.sum(...)` returns an aggregate Column; calling `.otherwise()` on it is only valid on a `when`-column and will raise a Spark AnalysisException at runtime. The correct structure is `F.sum(F.when(cv > 0, -p * F.log(p)).otherwise(F.lit(0.0))).alias(alias)` — the `.otherwise` belongs inside the `F.sum()`, not chained outside it. The `ast.parse` check in tests only verifies Python syntax, not Spark plan validity, so this bug passes all current tests."
+    },
+    {
+      "id": "tp-3-correctness",
+      "severity": "minor",
+      "text": "`TemporalOperator.FREQ` and `TemporalOperator.XM` emit byte-for-byte identical PySpark expressions: `F.sum(F.when(col_ref.isNotNull(), F.lit(1)).otherwise(F.lit(0))).over(frame_w)`. If XM represents a distinct concept (e.g. months-exclusive or cross-month occurrence, which differs from simple non-null frequency count), this is a semantic correctness bug that silently produces wrong features. If they are genuinely identical, one of the enum variants is dead and the if-branch is unreachable dead code."
+    },
+    {
+      "id": "tp-4-correctness",
+      "severity": "minor",
+      "text": "`TemporalOperator.CREC` (growth rate) always generates `F.lag(col_ref, 1).over(base_window)` regardless of `window_size`. Because CREC is not in `_POINT_IN_TIME_OPERATORS`, `TemporalSpaceBuilder` assigns it one entry per value in `time_windows` (e.g. 3, 6, 12), each creating a distinct `TemporalFeature` with a different `window_size`. The generator ignores `window_size` entirely for CREC — all those variants produce identical code, so only the column alias differs. The user-supplied window sizes have no effect on the generated CREC logic."
+    },
+    {
+      "id": "tp-7-correctness",
+      "severity": "minor",
+      "text": "`build_layer2a` generates `.agg(\\n,\\n)` (a trailing-comma-only argument list) when `pipeline.layer2a` is empty, which is a Python syntax error. `agg_list` is `\"\".join([])` when no pivot columns exist. While `PivotSpaceBuilder` always produces at least one column if a measurement field is present, the function has no guard against the empty case and will silently produce unparseable code (failing `ast.parse`) in edge cases such as pipelines with `aggregators_override` that filters out all valid aggregators."
+    },
+    {
+      "id": "tp-9-correctness",
+      "severity": "minor",
+      "text": "`TemporalOperator.PROM_U` and `TemporalOperator.PROM_P` produce identical PySpark expressions (`F.avg(col_ref).over(frame_w)`), as do `SUM_U` and `SUM_P`. If the U/P distinction (uniform vs. proportional) is meaningful at code-gen time, the generated code is wrong. If it is not, one branch in each pair is unreachable dead code. Either way, the duplicated branches should be collapsed or the difference implemented."
+    },
+    {
+      "id": "tp-11-correctness",
+      "severity": "minor",
+      "text": "The implementation for `TemporalOperator.RATIO` is incorrect. It is implemented as `F.sum({col_ref}).over({frame_w})`, which is identical to the implementation for `TemporalOperator.SUM_U` and `SUM_P`. A ratio typically involves division, which is missing here."
+    },
+    {
+      "id": "tp-13-correctness",
+      "severity": "blocking",
+      "text": "mob is periods with row_number cross joined against itself. Use this mob calculation in Snowflake as reference:\nCREATE OR REPLACE PROCEDURE SANDBOX_DS.SEGMENTACION.GENERAR_TABLA_MOB(\"DB_NAME\" VARCHAR, \"SCHEMA_NAME\" VARCHAR, \"TABLE_NAME\" VARCHAR, \"TIME_COLUMN\" VARCHAR, \"ID_COLUMNS\" ARRAY)\nRETURNS VARCHAR\nLANGUAGE SQL\nEXECUTE AS OWNER\nAS '\nDECLARE\n    fullY_qualified_table_name STRING;\n    fully_qualified_basic_table_name STRING;\n    mob_table STRING;\n    id_list_str STRING;\n    query_tabla_mob STRING;\nBEGIN\n    fullY_qualified_table_name := DB_NAME || ''.'' || SCHEMA_NAME || ''.'' || TABLE_NAME;\n    fully_qualified_basic_table_name := DB_NAME || ''.'' || SCHEMA_NAME || ''.'' || TABLE_NAME || ''_BASE_TABLE'';\n    mob_table := fullY_qualified_table_name || ''_TABLA_MOB'';\n\n    query_tabla_mob := ''CREATE OR REPLACE TEMPORARY TABLE '' || mob_table || '' AS \\\\n'' ||\n    ''WITH PERIODOS_UNICOS AS (\\\\n'' ||\n        ''\\\\tSELECT DISTINCT '' || TIME_COLUMN || ''\\\\n'' ||\n        ''\\\\tFROM '' || fullY_qualified_table_name || ''\\\\n'' ||\n        ''\\\\tORDER BY '' || TIME_COLUMN || ''\\\\n'' ||\n    ''),\\\\n'' ||\n    ''PERIODOS_ORDENADOS AS (\\\\n'' ||\n        ''\\\\tSELECT '' || TIME_COLUMN || '',\\\\n'' ||\n        ''\\\\tROW_NUMBER() OVER(ORDER BY '' || TIME_COLUMN || '') AS MOB\\\\n'' ||\n        ''\\\\tFROM PERIODOS_UNICOS\\\\n'' ||\n    '')\\\\n'' ||\n    ''SELECT\\\\n'' ||\n        ''\\\\tA.'' || TIME_COLUMN || '' AS '' || TIME_COLUMN || ''_ANALYSIS,\\\\n'' ||\n        ''\\\\tB.'' || TIME_COLUMN || '' AS '' || TIME_COLUMN || ''_RELATIVE,\\\\n'' ||\n        ''\\\\tB.MOB - A.MOB AS MOB\\\\n'' ||\n    ''FROM PERIODOS_ORDENADOS A\\\\n'' ||\n    ''LEFT JOIN PERIODOS_ORDENADOS B\\\\n'' ||\n    ''ON 1 = 1'';\n\n    EXECUTE IMMEDIATE query_tabla_mob;\n    RETURN query_tabla_mob;\nEND;\n';\n\nCALL SANDBOX_DS.SEGMENTACION.GENERAR_TABLA_MOB(\n    'SANDBOX_DS',                     -- DB_NAME\n    'SEGMENTACION',                   -- SCHEMA_NAME\n    'SILVER_VENTA_NETA_CORP',         -- TABLE_NAME\n    'PERIODO',                        -- TIME_COLUMN\n    ARRAY_CONSTRUCT('ID_PAIS', 'ID_CLIENTE_ORIGEN')  -- ID_COLUMNS\n);"
+    },
+    {
+      "id": "tp-17-correctness",
+      "severity": "minor",
+      "text": "Categorical values are interpolated directly into a generated Python string literal. The builder only rejects `__` in values, so an allowed value containing a quote or backslash will produce invalid or changed PySpark code; use a proper Python literal representation for the value."
+    }
+  ]
+}

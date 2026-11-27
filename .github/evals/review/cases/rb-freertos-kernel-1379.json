@@ -1,0 +1,22 @@
+{
+  "id": "rb-freertos-kernel-1379",
+  "split": "holdout",
+  "source": "reviewbench",
+  "source_key": "FreeRTOS_FreeRTOS-Kernel_1379-c926adcf",
+  "repo": "FreeRTOS/FreeRTOS-Kernel",
+  "ref": "c926adcf6e0be826e3313fc503a92b53a78f8ef8",
+  "commit": "c926adcf6e0be826e3313fc503a92b53a78f8ef8",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .c project. Get the diff with `git diff f1043c49d59944353291654c175852bd17b34f99 HEAD`. Title: Fix SMP scheduler evicting task when preemption is disabled. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-correctness",
+      "severity": "blocking",
+      "text": "The vTaskSwitchContext safety net fires on ALL context-switch requests for a core running a preemption-disabled task, including voluntary yields triggered by the task itself. When a preemption-disabled task calls a blocking API (vTaskDelay, xQueueReceive with timeout, xSemaphoreTake, etc.), it removes itself from the ready list and then calls portYIELD() -> vTaskSwitchContext. The safety net intercepts this, sets xYieldPendings[xCoreID] = pdTRUE, and returns without calling taskSELECT_HIGHEST_PRIORITY_TASK. pxCurrentTCBs[xCoreID] remains pointing to the blocking task; the port restores its context and the task continues past the blocking call without having blocked. This leaves the task simultaneously 'running' on its core and in the delayed/event list, corrupting scheduler state. vTaskExitCritical also calls portYIELD() when xYieldPendings is set, which again hits the safety net. The fix for preventing external preemption must not apply when the current task is no longer in the ready list (i.e., it voluntarily removed itself via a blocking call)."
+    },
+    {
+      "id": "tp-2-correctness",
+      "severity": "minor",
+      "text": "The xYieldPendingBefore defense-in-depth is NOT guarded by #if configUSE_TASK_PREEMPTION_DISABLE and therefore changes the behavior of xTaskRemoveFromEventList (and the three other patched functions at lines 3525-3535, 8211-8221, 8348-8358) for ALL SMP builds with configUSE_PREEMPTION == 1, regardless of whether configUSE_TASK_PREEMPTION_DISABLE is enabled. In a standard SMP build (no preemption disable), if xYieldPendings[portGET_CORE_ID()] happens to be pdTRUE when these functions run (e.g. from a time-slicing event that fired just before), the function now returns pdFALSE instead of pdTRUE. Callers (e.g. queue/semaphore ISR wrappers) that check *pxHigherPriorityTaskWoken will skip portYIELD_FROM_ISR, potentially delaying a high-priority task by up to one tick period. This behavioral change is broader than the stated fix scope (the PR says it targets configUSE_TASK_PREEMPTION_DISABLE == 1 builds)."
+    }
+  ]
+}

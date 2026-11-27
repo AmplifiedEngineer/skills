@@ -1,0 +1,37 @@
+{
+  "id": "rb-agent-orchestrator-1277",
+  "split": "tune",
+  "source": "reviewbench",
+  "source_key": "ComposioHQ_agent-orchestrator_1277-76652c7c",
+  "repo": "ComposioHQ/agent-orchestrator",
+  "ref": "76652c7ccefa3a371be74e8648c5204adc7f09a5",
+  "commit": "76652c7ccefa3a371be74e8648c5204adc7f09a5",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .ts project. Get the diff with `git diff ba77929c9345a0dc897d53115504d0ae32745ce5 HEAD`. Title: fix(cli): avoid missing repo scripts on global installs (#1252). Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-2-correctness",
+      "severity": "minor",
+      "text": "Same broken REPO_ROOT fallback as ao-update.sh: `$(dirname \"${BASH_SOURCE[0]\")/..` now resolves to `dist/assets` instead of the package root. This cascades into the SCRIPT_LAYOUT auto-detection at lines 34-38, which checks `$REPO_ROOT/package.json` and `$REPO_ROOT/dist/index.js` to identify package installs. With the wrong REPO_ROOT, neither file exists, so `SCRIPT_LAYOUT` defaults to `source-checkout` on a direct package-install invocation. The doctor then runs source-checkout checks (looking for `node_modules`, `packages/core/dist`, etc.) against the wrong root, producing spurious FAIL results on a healthy package install."
+    },
+    {
+      "id": "tp-3-correctness",
+      "severity": "minor",
+      "text": "`handleGitUpdate` hardcodes `\"npm-global\"` as the fallback when `hasRepoScript(\"ao-update.sh\")` returns false. `getUpdateCommand(\"npm-global\")` returns `npm install -g @aoagents/ao@latest`, which silently converts a git source-checkout user to a global npm package install rather than directing them to rebuild with `pnpm --filter @aoagents/ao-cli build`. The correct fix would be an error message with a rebuild hint, not a method-switching npm install command."
+    },
+    {
+      "id": "tp-5-correctness",
+      "severity": "blocking",
+      "text": "`run_smoke_tests` references `$REPO_ROOT/packages/agent-orchestrator/bin/ao.js`, but that directory no longer exists — the wrapper package is at `packages/ao/bin/ao.js`. The smoke tests will always fail with a missing file error even on a healthy source checkout. This was present before the rename but the PR had the opportunity to fix it while touching this file, and the broken path now receives wider exposure since the script is bundled and more likely to be audited."
+    },
+    {
+      "id": "tp-6-correctness",
+      "severity": "minor",
+      "text": "Removing the `scripts/ao-update.sh` check makes the `git` classification rely solely on a `.git` directory four levels up from `import.meta.url`. Any vendored copy of the built CLI dropped inside another git repo (sub-tree, build artifact checked into a parent monorepo, symlinked workspace) now gets classified as a `git` install. `ao update` will then try to run `git pull && pnpm install && pnpm build && npm link` against the *enclosing* repo.\n\n**Suggested fix:** combine the `.git` check with a stable AO marker, e.g.:\n\n```ts\nconst aoPkgPath = resolve(repoRoot, \"packages/ao/package.json\");\nif (existsSync(resolve(repoRoot, \".git\")) && existsSync(aoPkgPath)) {\n  try {\n    const pkg = JSON.parse(readFileSync(aoPkgPath, \"utf8\"));\n    if (pkg.name === \"@aoagents/ao\") return \"git\";\n  } catch { /* fall through */ }\n}\n```\n\nThis brings back the same protection the removed `scripts/ao-update.sh` check used to give, just anchored to a file the PR no longer moves."
+    },
+    {
+      "id": "tp-10-correctness",
+      "severity": "blocking",
+      "text": "spotted a stale path rh. this has to be `$REPO_ROOT/packages/ao/bin/ao.js`"
+    }
+  ]
+}

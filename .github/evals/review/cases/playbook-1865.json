@@ -1,0 +1,20 @@
+{
+  "id": "playbook-1865",
+  "split": "tune",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1865/head",
+  "commit": "f6e0484f6657ea5d77357e87179f12fe180a33ab",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff 0e1da4dc5b6571dc1fde8f51dedd7bac7bf34cbc HEAD`. It shortens the pbtop key hints and makes r cycle the time range. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "empty-range-hint-names-removed-keys",
+      "severity": "minor",
+      "text": "The empty-range notice tells users to press a, m and w, but those keys were removed in this change and do nothing."
+    },
+    {
+      "id": "dashboard-doc-describes-old-range-keys",
+      "severity": "minor",
+      "text": "The dashboard doc still describes the old range keys."
+    }
+  ]
+}

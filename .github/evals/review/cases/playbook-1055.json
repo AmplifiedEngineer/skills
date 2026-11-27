@@ -1,0 +1,20 @@
+{
+  "id": "playbook-1055",
+  "split": "holdout",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1055/head",
+  "commit": "54c496298ffb27e00455f70f588ac720a408720c",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff 9a56d0874649fdae8242a8e543253568f8f03467 HEAD`. It shows breaking-change notes once when a new binary heals the install. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "shown-flag-hides-entries-nobody-saw",
+      "severity": "blocking",
+      "text": "PLAYBOOK_BREAKING_SHOWN=1 hides every playbook entry in the heal step, including entries the installer's printed block never covered."
+    },
+    {
+      "id": "installer-exports-flag-into-login-shell",
+      "severity": "blocking",
+      "text": "install.sh exports the flag and then starts a login shell, so every later session from that shell records new breaking-change notes without showing them."
+    }
+  ]
+}
