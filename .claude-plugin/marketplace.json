@@ -5,13 +5,13 @@
     "email": "2278164+igorjs@users.noreply.github.com"
   },
   "metadata": {
-    "description": "Plan, implement, research and review skills, plus the writing-style and engineering-standards skills that other skills load, for Codex and Claude Code."
+    "description": "Plan, implement, research, review and commit-and-pr skills, plus the writing-style and engineering-standards skills that other skills load, for Codex and Claude Code."
   },
   "plugins": [
     {
       "name": "ae",
       "source": "./plugins/ae",
-      "description": "Plan, implement, research and review skills, plus the writing-style and engineering-standards skills that other skills load, for Codex and Claude Code."
+      "description": "Plan, implement, research, review and commit-and-pr skills, plus the writing-style and engineering-standards skills that other skills load, for Codex and Claude Code."
     }
   ]
 }

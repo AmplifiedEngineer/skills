@@ -17,6 +17,7 @@ const PLAN_DIR = "plugins/ae/skills/plan";
 const IMPLEMENT_DIR = "plugins/ae/skills/implement";
 const RESEARCH_DIR = "plugins/ae/skills/research";
 const REVIEW_DIR = "plugins/ae/skills/review";
+const COMMIT_DIR = "plugins/ae/skills/commit-and-pr";
 const STYLE_DIR = "plugins/ae/skills/writing-style";
 const STANDARDS_DIR = "plugins/ae/skills/engineering-standards";
 const SCRATCH_DIR = "plugins/ae/skills/scratch";
@@ -24,6 +25,7 @@ const PLAN_SKILL = "plugins/ae/skills/plan/SKILL.md";
 const IMPLEMENT_SKILL = "plugins/ae/skills/implement/SKILL.md";
 const RESEARCH_SKILL = "plugins/ae/skills/research/SKILL.md";
 const REVIEW_SKILL = "plugins/ae/skills/review/SKILL.md";
+const COMMIT_SKILL = "plugins/ae/skills/commit-and-pr/SKILL.md";
 const STYLE_SKILL = "plugins/ae/skills/writing-style/SKILL.md";
 const STANDARDS_SKILL = "plugins/ae/skills/engineering-standards/SKILL.md";
 const SCRATCH_SKILL = "plugins/ae/skills/scratch/SKILL.md";
@@ -570,7 +572,7 @@ defineCase({
   apply: (copy) => copy.remove(SKILLS_DIR),
   lines: [
     fail(3, SKILLS_GLOB, NO_FILES),
-    ...missing(5, [PLAN_DIR, IMPLEMENT_DIR, RESEARCH_DIR, REVIEW_DIR, STYLE_DIR, STANDARDS_DIR]),
+    ...missing(5, [PLAN_DIR, IMPLEMENT_DIR, RESEARCH_DIR, REVIEW_DIR, COMMIT_DIR, STYLE_DIR, STANDARDS_DIR]),
     ...missing(6, [RESEARCH_BRIEF]),
     ...missing(8, [STORAGE_PLAN, STORAGE_IMPLEMENT]),
     ...missing(9, [...TEMPLATE_FILES, ...STORAGE_LINK_FILES]),
@@ -598,7 +600,7 @@ defineCase({
   apply: (copy) => copy.removeMarkdownUnder(SKILLS_DIR),
   lines: [
     fail(3, SKILLS_GLOB, NO_FILES),
-    ...missing(5, [PLAN_SKILL, IMPLEMENT_SKILL, RESEARCH_SKILL, REVIEW_SKILL, STYLE_SKILL, STANDARDS_SKILL]),
+    ...missing(5, [PLAN_SKILL, IMPLEMENT_SKILL, RESEARCH_SKILL, REVIEW_SKILL, COMMIT_SKILL, STYLE_SKILL, STANDARDS_SKILL]),
     ...missing(6, [RESEARCH_BRIEF]),
     ...missing(8, [STORAGE_PLAN, STORAGE_IMPLEMENT]),
     ...missing(9, [...TEMPLATE_FILES, ...STORAGE_LINK_FILES]),

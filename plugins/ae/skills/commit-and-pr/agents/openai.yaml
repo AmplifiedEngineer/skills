@@ -1,0 +1,7 @@
+interface:
+  display_name: "Commit and PR"
+  short_description: "Commit changes and open a small, readable pull request"
+  default_prompt: "Use $commit-and-pr to commit these changes and open a pull request."
+
+policy:
+  allow_implicit_invocation: true
