@@ -1,0 +1,7 @@
+interface:
+  display_name: "Audit"
+  short_description: "Read-only health audit of a whole repo with file:line evidence"
+  default_prompt: "Use $audit to audit this repo and give me a graded report, a strategy and a task plan, with file:line evidence and no code changes."
+
+policy:
+  allow_implicit_invocation: true
