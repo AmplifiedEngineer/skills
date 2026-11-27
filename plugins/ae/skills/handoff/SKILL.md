@@ -1,6 +1,8 @@
 ---
 name: handoff
 description: Saves a session handoff so a fresh session can continue the work, or loads the saved one. Use at the end of a session, before clearing or compacting the context, or when the user says "wrap up", "hand off", "save a handoff" or "write a handoff". Use the load mode at the start of a session, or when the user says "load the handoff", "pick up where we stopped" or "continue from the handoff".
+model: haiku
+effort: high
 ---
 
 # Handoff
