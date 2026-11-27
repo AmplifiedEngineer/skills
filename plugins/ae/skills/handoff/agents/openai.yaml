@@ -1,0 +1,7 @@
+interface:
+  display_name: "Handoff"
+  short_description: "Save or load a session handoff"
+  default_prompt: "Use $handoff to save a handoff for the next session, or add load to read the saved one and check it against the repo."
+
+policy:
+  allow_implicit_invocation: true
