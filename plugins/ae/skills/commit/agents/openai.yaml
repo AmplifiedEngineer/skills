@@ -1,0 +1,7 @@
+interface:
+  display_name: "Commit"
+  short_description: "Commit finished work with a clean conventional message"
+  default_prompt: "Use $commit to commit these changes and push the branch."
+
+policy:
+  allow_implicit_invocation: true

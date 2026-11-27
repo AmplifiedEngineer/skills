@@ -1,12 +1,13 @@
 # Amplified Engineer Skills
 
-Seven Agent Skills for Claude Code and Codex. Install them together as the `ae` plugin, or copy one skill on its own.
+Eight Agent Skills for Claude Code and Codex. Install them together as the `ae` plugin, or copy one skill on its own.
 
 - `plan`: user-facing. Requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
 - `implement`: user-facing. Scoped code changes, focused verification, architecture compliance and implementation reporting.
 - `research`: finds project information and answers with sources. You can call it, and the plan and implement skills call it too. Project information retrieval and explicitly requested synchronization across configured repositories and engineering systems.
 - `review`: user-facing. Reviews a pull request, a branch or a diff and reports findings that are checked against the source. Call it with `/ae:review` in Claude Code or `$review` in Codex.
-- `commit-and-pr`: user-facing. Commits finished work and opens a draft pull request with a conventional-commit title and a short body, using plain git and gh. Call it with `/ae:commit-and-pr` in Claude Code or `$commit-and-pr` in Codex.
+- `commit`: user-facing. Commits finished work with a conventional message and pushes the branch, using plain git. Call it with `/ae:commit` in Claude Code or `$commit` in Codex.
+- `pull-request`: user-facing. Opens a draft pull request with a conventional-commit title and a short body, using plain git and gh. Call it with `/ae:pull-request` in Claude Code or `$pull-request` in Codex.
 - `writing-style`: loaded by other skills and by the agent, not called by users. The plain, simple-English rules for PR text, commit messages, review comments, tickets, docs and chat replies.
 - `engineering-standards`: loaded by other skills and by the agent, not called by users. Guard rails for code design, commits, PRs, testing and deployment. For language rules, it defers to the project's own conventions and linters.
 

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Pull request"
+  short_description: "Open a small, readable draft pull request"
+  default_prompt: "Use $pull-request to open a pull request for this branch."
+
+policy:
+  allow_implicit_invocation: true
