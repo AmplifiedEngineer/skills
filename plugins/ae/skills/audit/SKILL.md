@@ -11,7 +11,7 @@ Give a newcomer an honest picture of a whole repository and a plan they can act 
 
 ## Hard rules
 
-1. **Read-only.** Change no code, config or docs. Do not run formatters, installs, migrations, project scripts or test suites. Use read-only commands: listing files, searching, reading, and `git log`, `git show`, `git diff`, `git blame`. If a command could write, do not run it. The only file you may write is the report, and only when the user asks (see Output).
+1. **Read-only.** Change no code, config or docs. Do not run formatters, installs, migrations, project scripts or test suites. Use read-only commands: listing files, searching, reading, and `git log`, `git show`, `git diff`, `git blame`. If a command could write, do not run it. The only writes allowed are the report under `.ae/audit/` and the `.ae/` line in git's local exclude file (see Output).
 2. **Cite everything.** Every finding names a `file:line`. Copy the code or the fact you rely on. A claim you cannot place in a file is not a finding.
 3. **Say what you could not verify.** Mark it `[unverified]` and say why. Do not guess.
 4. **Separate fact from judgment.** A fact: "`src/api/client.ts:142` has no error handling." A judgment: "this module's responsibilities feel unclear." Label each finding `fact` or `judgment`.
@@ -77,7 +77,7 @@ List quick wins (high impact, size S) on their own so they can be done now. For 
 
 Write one document with the sections in [templates/audit-report.md](templates/audit-report.md): Executive Summary (at most 10 sentences, an overall grade A to F with the reason, the top 3 risks and the top 3 opportunities), Repo Map, Audit Report, Improvement Strategy, Task Plan and Open Questions. The Open Questions section lists what a human must decide: product intent, deprecation candidates, performance targets. It is part of the document. Do not stop and wait for answers.
 
-Show the document in chat. Save it only when the user asks. When saved, it goes to `docs/ae/reports/<repo-or-topic>-audit.md` and its first non-blank line after the H1 title is `Status: draft`. Create the folder if needed. If the user names another document root, use that one. Temporary working notes go under `.ae/` at the repo root and are deleted when the audit ends.
+Save the document to `.ae/audit/<YYYY-MM-DD>-<repo-or-topic>.md` at the repo root, creating the folder when it is missing, then show it in chat. Write to another path only when the user names one. The audit must stay out of git: when `git check-ignore -q .ae/audit/` fails, append the line `.ae/` to the file that `git rev-parse --git-path info/exclude` prints. Temporary working notes also go under `.ae/` and are deleted when the audit ends.
 
 The report carries no AI attribution: no generated-by line, footer or co-author trailer.
 

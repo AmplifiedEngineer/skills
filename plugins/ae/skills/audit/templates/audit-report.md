@@ -1,7 +1,5 @@
 # <Repo or topic> audit
 
-Status: draft
-
 ## Audit metadata
 - Repo:
 - Commit audited:
