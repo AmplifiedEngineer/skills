@@ -1,0 +1,7 @@
+interface:
+  display_name: "PR comments"
+  short_description: "Fix or reply to unresolved PR review comments"
+  default_prompt: "Use $pr-comments to go through the unresolved review comments on this PR, fix or reply to each, and post the replies."
+
+policy:
+  allow_implicit_invocation: true

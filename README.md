@@ -1,6 +1,6 @@
 # Amplified Engineer Skills
 
-Eight Agent Skills for Claude Code and Codex. Install them together as the `ae` plugin, or copy one skill on its own.
+Agent Skills for Claude Code and Codex. Install them together as the `ae` plugin, or copy one skill on its own.
 
 - `plan`: user-facing. Requirements discovery, architecture reconstruction and design, reviews, impact and drift analysis, documentation management, and implementation handover.
 - `implement`: user-facing. Scoped code changes, focused verification, architecture compliance and implementation reporting.
@@ -8,6 +8,7 @@ Eight Agent Skills for Claude Code and Codex. Install them together as the `ae` 
 - `review`: user-facing. Reviews a pull request, a branch or a diff and reports findings that are checked against the source. Call it with `/ae:review` in Claude Code or `$review` in Codex.
 - `commit`: user-facing. Commits finished work with a conventional message and pushes the branch, using plain git. Call it with `/ae:commit` in Claude Code or `$commit` in Codex.
 - `pull-request`: user-facing. Opens a draft pull request with a conventional-commit title and a short body, using plain git and gh. Call it with `/ae:pull-request` in Claude Code or `$pull-request` in Codex.
+- `pr-comments`: user-facing. Works through unresolved review comments on a pull request, fixes or replies to each, and posts replies after you approve them. Call it with `/ae:pr-comments` in Claude Code or `$pr-comments` in Codex.
 - `writing-style`: loaded by other skills and by the agent, not called by users. The plain, simple-English rules for PR text, commit messages, review comments, tickets, docs and chat replies.
 - `engineering-standards`: loaded by other skills and by the agent, not called by users. Guard rails for code design, commits, PRs, testing and deployment. For language rules, it defers to the project's own conventions and linters.
 
