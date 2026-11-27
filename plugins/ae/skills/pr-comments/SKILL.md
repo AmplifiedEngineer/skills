@@ -1,6 +1,8 @@
 ---
 name: pr-comments
 description: Works through the unresolved review comments on a pull request one at a time. Decides fix or reply for each, applies the fixes, drafts short replies and posts them with gh. Use whenever a PR has review comments to address, when the user says "address the review comments", "reply to the reviewers" or "go through the PR feedback", even when the request only says "deal with the comments on my PR".
+model: sonnet
+effort: medium
 ---
 
 # PR comments
