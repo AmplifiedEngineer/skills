@@ -1,6 +1,8 @@
 ---
 name: fix
 description: Fixes one small, well-understood bug with a failing test first, the smallest change, focused tests and project checks. Use when the user says "fix this", "fix #123", "this is broken, the cause is X" or reports a bug whose cause is known or easy to find. For an unknown cause use the debug skill first. For a bigger change use the plan skill.
+model: sonnet
+effort: medium
 ---
 
 # Fix
