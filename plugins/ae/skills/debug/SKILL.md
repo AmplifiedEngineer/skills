@@ -1,6 +1,8 @@
 ---
 name: debug
 description: Finds the root cause of a bug, failing test, flaky test, build failure, performance problem or unexpected behaviour before anyone changes code to fix it. Use whenever you are asked to "debug this", "why does this fail", "this test is flaky", "find the cause", or when something broke and you are about to guess at a fix, even when the bug looks trivial.
+model: sonnet
+effort: high
 ---
 
 # Debug
