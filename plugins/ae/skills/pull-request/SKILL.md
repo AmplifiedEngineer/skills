@@ -1,6 +1,8 @@
 ---
 name: pull-request
 description: Opens a draft pull request for the current branch with a conventional-commit title and a short body, using plain git and gh. Use whenever the user wants to open or create a pull request, or ship a branch for review, even when the request only says "send this for review". To commit first, use the commit skill.
+model: haiku
+effort: high
 ---
 
 # Pull request
