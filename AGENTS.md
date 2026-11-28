@@ -55,6 +55,24 @@ A case is a JSON file under `.github/evals/<skill>/cases/` with `id`, `repo`, `r
 
 The `plan` and `implement` evals work on a small fixture project in `.github/evals/fixtures/`. A case names the `fixture`, may seed `files` (for example an approved plan), gives the `prompt`, and lists `expected` situations. Each situation has an `id`, a `text` and a `want` list of acceptable handlings: `asked`, `decided_with_evidence`, `assumed`, `missing`, `filled_and_reported`, `filled_not_reported`, `not_done` or `proceeded`. A grader model picks one handling per situation. `checks` are shell commands run in the fixture copy after the run, such as `node --test`. The plan cases measure whether the plan skill asks about decisions the repository cannot settle. The implement cases measure whether it fills small gaps and reports them, and stops on a real block.
 
+## Models and effort
+
+A user-facing skill pins `model` and `effort` in its frontmatter, sized to its work. Claude Code applies `model` only when a user runs the skill by name, and applies `effort` until the end of the turn. Codex ignores both. Skills that other skills load (writing-style, engineering-standards, atlassian) pin nothing, because a pin would change the caller's turn.
+
+| Skill | Model | Effort | Why |
+|---|---|---|---|
+| plan | opus | high | Design with many trade-offs and no open decisions left. |
+| implement | sonnet | high | Writes and verifies code. |
+| review | sonnet | high | Checked findings on a diff. |
+| debug | sonnet | high | Causal reasoning from symptom to first bad value. |
+| audit | opus | high | Whole-repo judgment and a sequenced plan. |
+| fix | sonnet | medium | One small, understood change. |
+| pr-comments | sonnet | medium | Checks claims against code and drafts short replies. |
+| research | haiku | xhigh | Retrieval and cited summaries, where a small model at high effort is enough. |
+| commit, pull-request, handoff | haiku | high | Turns a diff or git facts into short text. |
+
+Change a pin only with evidence. For plan, implement and review, compare configurations with the eval runner's `--model` flag before and after.
+
 ## Releases
 
 A shared action from [AmplifiedEngineer/workflows](https://github.com/AmplifiedEngineer/workflows#version-rules) releases a PR merged to main only when it changes a file under `plugins/ae/skills/`. Such a PR sets the next version in both `plugins/ae/plugin.json` and `plugins/ae/.claude-plugin/plugin.json`, and the PR title decides which version that is. A PR that touches nothing under `plugins/ae/skills/` (ci, docs, manifests, tooling) needs no version change and releases nothing.

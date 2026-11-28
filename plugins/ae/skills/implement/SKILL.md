@@ -1,6 +1,8 @@
 ---
 name: implement
 description: Execute an approved plan or spec in a repository, including focused verification, architecture compliance and implementation handover. Use when an approved document is ready to implement.
+model: sonnet
+effort: high
 ---
 
 # Implement

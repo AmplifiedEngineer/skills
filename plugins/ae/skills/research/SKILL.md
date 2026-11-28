@@ -1,6 +1,8 @@
 ---
 name: research
 description: "Finds project information across repositories, issue trackers and documentation systems and answers with sources. Use when you need context for an engineering task, or to prepare a requested update across those tools. The plan and implement skills also call it."
+model: haiku
+effort: xhigh
 ---
 
 # Research

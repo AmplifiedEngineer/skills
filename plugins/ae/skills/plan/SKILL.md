@@ -1,6 +1,8 @@
 ---
 name: plan
 description: Decides which documents an engineering task needs (plan, spec, ADR, PRD or report) and writes them. Also runs architecture reviews, reconstructs undocumented designs and detects architecture drift.
+model: opus
+effort: high
 ---
 
 # Plan

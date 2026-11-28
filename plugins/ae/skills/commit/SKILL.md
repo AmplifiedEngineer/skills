@@ -1,6 +1,8 @@
 ---
 name: commit
 description: Commits finished work with a conventional-commit message and pushes the branch, using plain git. Use whenever the user wants to commit, save or push their changes, even when the request only says "send this up". To open a pull request afterwards, use the pull-request skill.
+model: haiku
+effort: high
 ---
 
 # Commit
