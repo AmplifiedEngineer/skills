@@ -1,6 +1,6 @@
 # Agent instructions
 
-This repository is a plugin that ships eight Agent Skills for Claude Code and Codex.
+This repository is a plugin that ships these Agent Skills for Claude Code and Codex.
 
 ## Layout
 
@@ -26,6 +26,7 @@ Do not put development files inside `plugins/ae/`. The smoke test fails if an in
 - `plugins/ae/skills/review`: user-facing. Reviews a pull request, a branch or a diff and reports checked findings.
 - `plugins/ae/skills/commit`: user-facing. Commits finished work with a conventional message and pushes the branch, with plain git.
 - `plugins/ae/skills/pull-request`: user-facing. Opens a draft pull request, with plain git and gh. Both load the writing-style and engineering-standards skills.
+- `plugins/ae/skills/fix`: user-facing. Fixes one small, well-understood bug with a failing test first. It stops and points to the plan skill when the fix grows.
 - `plugins/ae/skills/writing-style`: loaded by other skills and by the agent, not called by users. The plain, simple-English rules for any prose a person will read. The plan, implement, research and review skills load it.
 - `plugins/ae/skills/engineering-standards`: loaded by other skills and by the agent, not called by users. Guard rails for code design, commits, PRs, testing and deployment. The implement and review skills follow it.
 
@@ -41,7 +42,7 @@ Run these from the repository root. They need Node 26; the tests also need `git`
 
 - `node .github/scripts/check.mjs [repo-root]`: static checks on manifests, marketplace sources, the plugin licence copy, links, old names, skills, the research brief, README, the storage contract, template Status lines and the implement stop rules. Silent and exit 0 when clean, otherwise one `FAIL` line per problem and exit 1.
 - `node --test ".github/tests/**/*.test.mjs"`: plants one fault at a time in a copy of the working tree and checks that the scripts report it.
-- `node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host, checks the eight skills arrived and checks no `.github` or `evals` folder came with them. `--keep` leaves the folders and prints their paths.
+- `node .github/scripts/smoke-install.mjs [claude] [codex] [--keep]`: installs the plugin from this repository into a throwaway config folder per host, checks every skill arrived and checks no `.github` or `evals` folder came with them. `--keep` leaves the folders and prints their paths.
 
 ## Evals
 
@@ -49,7 +50,7 @@ Evals live in `.github/evals/`. Run one with `node .github/evals/run.mjs <skill>
 
 Before opening any pull request, run every available eval suite for both `claude` and `codex`, with the default three runs and both `with_skill` and `baseline` configurations. The available suites are `plan`, `implement` and `review`. Review the tables, confirm the `with_skill` runs meet the expected findings or handlings, and confirm every fixture check passes. Investigate and fix failures, then rerun the affected suite for both providers before opening the pull request. The `research`, `writing-style` and `engineering-standards` skills do not have eval suites yet.
 
-Every eval run calls a model and costs money. The `.github/workflows/evals.yml` workflow runs automatically on pull requests targeting `main` only when a file under `plugins/ae/skills/` changes. It does not run again on the merge push, avoiding duplicate model usage. It also supports manual `workflow_dispatch`, with selectable provider, suite and run count. The workflow uses the `CLAUDE_CODE_OAUTH_TOKEN` secret for Claude Code and `CODEX_AUTH_JSON_B64` for Codex ChatGPT sign-in. Both are organization secrets limited to the repositories that need them, so any workflow in those repositories can read them. Only people you trust with them may have write access, because a pull request can change the workflow and the runner. Runs from forks get no secrets. The job blocks all network traffic except a short allowlist, scrubs credentials from the agent's subprocesses and deletes the Codex login file when it ends. Claude Pro/Max users can create the OAuth token with `claude setup-token`. To use a Codex subscription, sign in with `codex login`, securely base64-encode the CLI auth cache at `~/.codex/auth.json`, and store it as `CODEX_AUTH_JSON_B64`. The auth cache contains access tokens and must be handled like a password. Run the required suites locally before opening a pull request, and include results for both providers in the pull request description. In Codex runs, the runner copies the repository's eight skills into the isolated case workspace for the `with_skill` configuration. The `baseline` configuration does not receive those copied skills.
+Every eval run calls a model and costs money. The `.github/workflows/evals.yml` workflow runs automatically on pull requests targeting `main` only when a file under `plugins/ae/skills/` changes. It does not run again on the merge push, avoiding duplicate model usage. It also supports manual `workflow_dispatch`, with selectable provider, suite and run count. The workflow uses the `CLAUDE_CODE_OAUTH_TOKEN` secret for Claude Code and `CODEX_AUTH_JSON_B64` for Codex ChatGPT sign-in. Both are organization secrets limited to the repositories that need them, so any workflow in those repositories can read them. Only people you trust with them may have write access, because a pull request can change the workflow and the runner. Runs from forks get no secrets. The job blocks all network traffic except a short allowlist, scrubs credentials from the agent's subprocesses and deletes the Codex login file when it ends. Claude Pro/Max users can create the OAuth token with `claude setup-token`. To use a Codex subscription, sign in with `codex login`, securely base64-encode the CLI auth cache at `~/.codex/auth.json`, and store it as `CODEX_AUTH_JSON_B64`. The auth cache contains access tokens and must be handled like a password. Run the required suites locally before opening a pull request, and include results for both providers in the pull request description. In Codex runs, the runner copies the repository's skills into the isolated case workspace for the `with_skill` configuration. The `baseline` configuration does not receive those copied skills.
 
 A case is a JSON file under `.github/evals/<skill>/cases/` with `id`, `repo`, `ref`, `commit`, `prompt` and `expected` findings. Each expected finding has an `id`, a `severity` (`blocking` or `minor`) and a `text`.
 

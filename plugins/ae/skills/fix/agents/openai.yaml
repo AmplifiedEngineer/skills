@@ -1,0 +1,7 @@
+interface:
+  display_name: "Fix"
+  short_description: "Fix a small bug with a failing test first"
+  default_prompt: "Use $fix to reproduce this bug with a failing test, make the smallest fix, run the checks and report."
+
+policy:
+  allow_implicit_invocation: true
