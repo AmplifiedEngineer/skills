@@ -8,6 +8,16 @@ user-invocable: false
 
 Team engineering standards for code design, commits, pull requests, testing, and deployment. RFC 2119 keywords (MUST, SHOULD, etc.) carry their standard meanings.
 
+## Language rules
+
+When the code or diff touches a file of one of these kinds, load the matching index reference, then only the topic files the change needs. Each index lists its topic files and says when to load each one.
+
+- `.js`, `.jsx`, `.ts`, `.tsx`, `.mjs`, `.cjs`: [references/javascript.md](references/javascript.md)
+- `.py`, `.pyi`: [references/python.md](references/python.md)
+- `.rs`: [references/rust.md](references/rust.md)
+
+The project's own conventions, config and linters win where they disagree with these references. Check `pyproject.toml`, `ruff.toml`, `Cargo.toml`, `clippy.toml`, the ESLint or Biome config, CI and the contributing guide first. When you review a diff, cite the rule and the lint or command that checks it.
+
 ## Code Design
 
 ### Principles
@@ -22,7 +32,7 @@ Team engineering standards for code design, commits, pull requests, testing, and
 ### Boundaries and interfaces
 
 - A module's dependencies MUST point one way. No import cycles between modules.
-- Untrusted or untyped input MUST be validated at the boundary where it enters, before any use. Boundaries include HTTP requests, environment variables and config, external API responses, queue and event payloads, and anything parsed off disk. Follow the project's own language conventions and linters for how to do this.
+- Untrusted or untyped input MUST be validated at the boundary where it enters, before any use. Boundaries include HTTP requests, environment variables and config, external API responses, queue and event payloads, and anything parsed off disk. Follow the project's own language conventions and linters for how to do this, and see the language references for tool-specific advice.
 - A change to a published interface (an API response, a database schema, an event payload, an exported function) MUST be additive first: add the new shape, migrate the readers, remove the old shape in a later change. Never break a consumer and its producer in the same deploy.
 - Model a multi-step process as a named sequence of steps, not implicit control flow spread across helpers.
 
