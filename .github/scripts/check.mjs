@@ -20,7 +20,7 @@ const ROOT_LICENSE = "LICENSE";
 const PLUGIN_LICENSE = "plugins/ae/LICENSE";
 const SKILLS_DIR = "plugins/ae/skills";
 const SKILLS_GLOB = "plugins/ae/skills/**/*.md";
-const SKILL_NAMES = ["plan", "implement", "research", "review", "commit", "pull-request", "writing-style", "engineering-standards"];
+const SKILL_NAMES = ["plan", "implement", "research", "review", "commit", "pull-request", "debug", "writing-style", "engineering-standards"];
 const SKILL_FILE = "SKILL.md";
 const OLD_NAME_PATTERN =
   /engineering[ -](architect|implementation|context)|\b(planner|implementer|researcher)\b/gi;

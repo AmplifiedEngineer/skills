@@ -1,0 +1,7 @@
+interface:
+  display_name: "Debug"
+  short_description: "Root-cause-first debugging before any fix"
+  default_prompt: "Use $debug to find the root cause of this failure before changing any code, then report the cause, the evidence and the next step."
+
+policy:
+  allow_implicit_invocation: true

@@ -280,8 +280,8 @@ const STUB_BIG_OUTPUT_BYTES = 80_000;
 const STUB_BLOCK_LIMIT_MS = 30_000;
 const STUB_MARKETPLACE = "amplifiedengineer";
 const STUB_PLUGIN = "ae";
-const STUB_PARTIAL_SKILLS = ["plan", "implement", "research", "commit", "pull-request", "writing-style", "engineering-standards"];
-const STUB_FULL_SKILLS = ["plan", "implement", "research", "review", "commit", "pull-request", "writing-style", "engineering-standards"];
+const STUB_PARTIAL_SKILLS = ["plan", "implement", "research", "commit", "pull-request", "debug", "writing-style", "engineering-standards"];
+const STUB_FULL_SKILLS = ["plan", "implement", "research", "review", "commit", "pull-request", "debug", "writing-style", "engineering-standards"];
 const STUB_HOSTS = {
   claude: { configVar: "CLAUDE_CONFIG_DIR", installWords: "plugin install" },
   codex: { configVar: "CODEX_HOME", installWords: "plugin add" },
