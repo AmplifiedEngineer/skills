@@ -1,0 +1,52 @@
+{
+  "id": "rb-keycloak-operator-696",
+  "split": "holdout",
+  "source": "reviewbench",
+  "source_key": "vriesdemichael_keycloak-operator_696-4db0ddea",
+  "repo": "vriesdemichael/keycloak-operator",
+  "ref": "4db0ddeaea75e5d1d1a312473465153ed8f60661",
+  "commit": "4db0ddeaea75e5d1d1a312473465153ed8f60661",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .go project. Get the diff with `git diff bd0524bce599ccc367a4481f9b792305a8b074a1 HEAD`. Title: feat(migration-toolkit): add import-users command with chunked Partial Import. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-correctness",
+      "severity": "blocking",
+      "text": "decodeSecretKey silently corrupts passwords that happen to look like base64. The Kubernetes client library already base64-decodes secret.Data — the bytes are always the raw value. The isBase64 heuristic has many false positives: any password whose length is divisible by 4 and contains only [A-Za-z0-9+/=] (e.g. 'Test', 'Pass', any 16-char alphanumeric token) will be double-decoded into garbage bytes, causing authentication failures with no useful error. Remove the double-decode entirely; just return string(raw)."
+    },
+    {
+      "id": "tp-2-correctness",
+      "severity": "blocking",
+      "text": "resolveURL always returns a cluster-internal URL when status.endpoints is populated, making the command fail for all normal cases when run outside the cluster. The operator sets both status.endpoints.admin and status.endpoints.public to 'http://{name}-keycloak.{namespace}.svc.cluster.local:8080' (confirmed in keycloak_reconciler.py). The comment even acknowledges the tool runs outside the cluster, but then picks the internal URL first. Since a Ready Keycloak always has endpoints populated, the spec.hostname fallback (the only potentially external URL) is never reached unless --server-url is explicitly provided."
+    },
+    {
+      "id": "tp-6-reliability",
+      "severity": "minor",
+      "text": "http.DefaultClient has no timeout set, meaning any HTTP request (authentication or batch import) can hang indefinitely. The context is passed via NewRequestWithContext, but context.Background() has no deadline. A large batch (500 users) sent to an overloaded Keycloak could stall the process permanently. A custom http.Client with a reasonable timeout (e.g. 5 minutes for imports) should be used."
+    },
+    {
+      "id": "tp-9-correctness",
+      "severity": "blocking",
+      "text": "isBase64 only checks the standard base64 alphabet (+, /, =) but not the URL-safe variant (-, _). This is inconsistent with the stated goal of detecting double-encoded secrets, since some secret management tools produce URL-safe base64. More critically, the function returns true for any string of length divisible by 4 containing alphanumeric characters only — this includes common short passwords and tokens, producing false positives that corrupt valid credentials."
+    },
+    {
+      "id": "tp-12-testing",
+      "severity": "blocking",
+      "text": "The new credential resolution logic is not covered by tests, which is how the double-decoding issue in `decodeSecretKey` can slip through. Please add unit coverage for normally decoded Kubernetes Secret data, including values that are valid base64-looking plaintext, and for missing keys."
+    },
+    {
+      "id": "tp-13-testing",
+      "severity": "minor",
+      "text": "Only the chunk helper is tested, but the new import behavior itself (token acquisition, request payload, status handling, and `errors > 0` failure behavior) is untested. Please add `httptest` coverage for `ImportUsers`/`importBatch`, especially because this code performs non-atomic writes to Keycloak."
+    },
+    {
+      "id": "tp-14-documentation",
+      "severity": "minor",
+      "text": "The docs place `--server-url` only under explicit credentials, but the cluster resolver also accepts it and it can be required when the Keycloak status endpoints are cluster-local service DNS. The operator currently sets both `status.endpoints.admin` and `public` to `http://<name>-keycloak.<namespace>.svc.cluster.local:8080` in `src/keycloak_operator/services/keycloak_reconciler.py:464-466`, so users running the toolkit outside the cluster may need this override even while using cluster credentials."
+    },
+    {
+      "id": "tp-15-correctness",
+      "severity": "minor",
+      "text": "The command starts importing immediately after resolving the Keycloak instance, but it never verifies that the target realm and referenced clients have been materialized first. That was an explicit requirement of the linked issue, and without a preflight check user imports with client role mappings can partially fail after earlier batches/users have already been written."
+    }
+  ]
+}

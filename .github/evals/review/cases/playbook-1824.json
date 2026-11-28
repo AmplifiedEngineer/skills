@@ -1,0 +1,15 @@
+{
+  "id": "playbook-1824",
+  "split": "tune",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1824/head",
+  "commit": "48161346236dbf4e44ce47fb99c519d3840a87e2",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff 99b7754d36c118e5f4199fda498fe4dbf24c14e9 HEAD`. It adds `playbook pr checks` with a --watch mode and failure triage. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "watch-one-failed-read-ends-unreadable",
+      "severity": "blocking",
+      "text": "In --watch mode a single failed gh read is turned into an empty check list and ends the watch as unreadable, with no retry."
+    }
+  ]
+}

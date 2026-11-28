@@ -1,0 +1,25 @@
+{
+  "id": "playbook-855",
+  "split": "holdout",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/855/head",
+  "commit": "bdd0cec0997ad1724bb6a26f394aeab90d3766e5",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff ed4041dacacbf395ccced9105fddb6e1c0a17f8e HEAD`. It adds a cost budget per agent in auto mode, with closing steps allowed at the cap. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "counter-removes-live-holders-lock",
+      "severity": "blocking",
+      "text": "incr_counter removes the lock directory even when it did not acquire the lock, so it can delete a live holder's lock and let two writers in."
+    },
+    {
+      "id": "env-auto-deny-names-unusable-remedy",
+      "severity": "blocking",
+      "text": "Deny messages tell the user to run `playbook mode ask`, but that cannot lift the guard when auto mode comes from the PLAYBOOK_MODE environment variable."
+    },
+    {
+      "id": "dir-lock-never-heals-stale-lock",
+      "severity": "minor",
+      "text": "acquire_dir_lock never clears a lock directory left by a killed holder, so every later caller waits out its whole retry budget."
+    }
+  ]
+}

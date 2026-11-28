@@ -1,0 +1,15 @@
+{
+  "id": "playbook-791",
+  "split": "holdout",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/791/head",
+  "commit": "6def5455362b3f7e488261e93769623d18248c2e",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff c9b5f2f5cde9146bd0008e3672354211b51b8c66 HEAD`. It adds a local OTLP receiver and the `usage collect` command. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "collect-trusts-pid-and-any-listener",
+      "severity": "blocking",
+      "text": "running() accepts any live pid plus any listener on the port, so a reused pid and an unrelated listener make usage collect report that a collector is running and start none."
+    }
+  ]
+}

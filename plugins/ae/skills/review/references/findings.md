@@ -11,11 +11,37 @@
 
 ## Ways to find what a read-through misses
 
-Reading a diff top to bottom confirms that the code does what the author meant. These three checks look for what the author did not think of.
+Reading a diff top to bottom confirms that the code does what the author meant. These checks look for what the author did not think of. Each one matches a kind of item in the change map below.
 
-1. **Attack every check the change adds.** For each validator, pattern, parser, filter or guard, write two inputs the author would want rejected and decide from the code whether each one is. Vary the small things: no space, extra space, different case, an empty value, a second line. A check that only stops the polite form of bad input is a finding.
+1. **Attack every check the change adds.** For each validator, pattern, parser, filter or guard, first write what it is there to stop and what reads the value after it: git, a shell, a database, another parser. Then compare the two grammars. The check was written from the author's idea of the bad input. The reader downstream has its own rules for what it accepts, and they are often looser: optional spaces, either case, another separator, a second line. An input that the reader accepts and the check does not match gets through, and that is a finding. Write at least two such inputs and decide each one from the code. Do not judge a pattern by eye. Quote it, then test each input against it with a one-line script when you can run a command without touching the project. When you cannot, walk the input through the pattern piece by piece and write the walk in the ruling. Test both directions, and spend the most time on the first: bad input that gets through costs more than good input that is turned away.
 2. **Follow each new side effect to its other callers.** When the change makes a function call a network, a model, a program or a disk, find who else calls that function. Existing tests and other commands now do the same thing without knowing it.
 3. **Search for the old behaviour in words.** When behaviour a user can see changes, search the docs, help text and comments for a description of the old behaviour, including files the change did not touch.
+4. **Follow each piece of state through its life.** For each flag, status, file or record the change writes, find every place that sets it, every place that clears it and every place that reads it. Then walk the paths the author did not: a failure halfway, a retry, a resume, a second process doing the same thing at the same time. State that is set on one path and never cleared on another is a finding. So is a reader that takes a live value for a dead one.
+5. **Follow each new dependency to where it is provided.** For each new required parameter, constructor argument, injected service or generated call the change adds, find the place that builds the object or emits the code, and confirm that place provides it. A generator or a composition root that does not register the new dependency fails at run time for every caller that uses the generated code.
+6. **Follow each new file to what ships it.** For each new file the change adds, find the manifest that decides what a build, package or image includes: a `files` list, an include pattern, a Dockerfile `COPY`, a release script. A file that no manifest lists is missing from the artifact that users install.
+
+## The change map
+
+A reviewer who reads a diff notices some of what it adds and rules on what it notices. A map makes each addition a question that must get an answer. Before you judge anything, list what the change adds in the area you review, one numbered line each, with file and line:
+
+- every **check** it adds or changes: a validator, pattern, parser, filter or guard;
+- every **side effect** it adds: a call to a network, a model, another program or the disk;
+- every **behaviour** a user or caller can see that is now different;
+- every piece of **state** it writes: a flag, a status, a file or a record, with each path that sets it.
+
+Keep the map to facts: what and where. Give each pattern and each guard its own line. A function that applies six patterns is six items, because one line for the function gets one ruling and five patterns go untested.
+
+Then apply the matching check above to each item, and return the map with one ruling per item after your findings:
+
+```
+Map:
+M1 check `src/orders/parse.ts:88` order id pattern: tried `ORDER-12 ` with a trailing space and an empty value; walked both, both rejected -> ok
+M2 side effect `src/orders/export.ts:40` uploads the file: other callers are `test/export.test.ts:40` and `src/jobs/nightly.ts:212`; neither stubs the call -> finding 2
+M3 state `src/jobs/run.ts:61` sets `running`: not checked
+```
+
+- A ruling says what you tried or what you read, with a path and line. "Looks fine" is not a ruling.
+- Write `not checked` when you ran out of room. That is useful: the sweep picks it up.
 
 ## Proof by kind of claim
 
@@ -59,7 +85,7 @@ Findings and posted comments use [Conventional Comments](https://conventionalcom
 | thought | An idea for later. | non-blocking |
 | nitpick | A small preference. | non-blocking |
 
-Add `(blocking)` or `(non-blocking)` when the default does not fit, and a lens after it when useful: `issue (blocking, security): ...`. When you are not sure a problem exists, use `question`, not `issue`.
+Add `(blocking)` or `(non-blocking)` when the default does not fit, and a lens after it when useful: `issue (blocking, security): ...`. These two and the lens are the only decorations. When you are not sure a problem exists, use `question`, not `issue`.
 
 ## What blocks a merge
 
@@ -68,7 +94,7 @@ A blocking finding stops the author's work, so each one must earn it. When five 
 Mark a finding blocking only when one of these is true:
 
 - A user or operator meets the failure in normal use: wrong results, a crash, a hang, lost work.
-- Data is lost, corrupted or shown to someone who should not see it.
+- Data is lost, corrupted or shown to someone who should not see it. Secrets or personal data sent to an outside service by default count, even when the service is trusted.
 - The change breaks something that works today: an existing caller, an existing test, a documented contract.
 
 These are real findings and they do not block by default. Mark them `(non-blocking)`:

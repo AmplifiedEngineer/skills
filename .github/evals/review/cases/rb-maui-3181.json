@@ -1,0 +1,57 @@
+{
+  "id": "rb-maui-3181",
+  "split": "holdout",
+  "source": "reviewbench",
+  "source_key": "CommunityToolkit_Maui_3181-1e8d2e2f",
+  "repo": "CommunityToolkit/Maui",
+  "ref": "1e8d2e2f880cfe1d9bcbdfbc6078cb6b72fd35ce",
+  "commit": "1e8d2e2f880cfe1d9bcbdfbc6078cb6b72fd35ce",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .cs project. Get the diff with `git diff c7cb65bc98e429401e4f792f6b7aa21f94e81933 HEAD`. Title: Add stream media source. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-correctness",
+      "severity": "minor",
+      "text": "MPEG-TS detection uses only `header[0] is 0x47`, which is the ASCII code for 'G'. Any file whose first byte is 0x47 (common in many formats) will be misidentified as `video/mp2t` on Windows, causing `WinMediaSource.CreateFromStream` to reject it and silently fail playback. A valid MPEG-TS detection requires verifying the sync byte at 188-byte intervals, or at minimum checking multiple bytes."
+    },
+    {
+      "id": "tp-2-correctness",
+      "severity": "minor",
+      "text": "`loadingRequest.FinishLoading()` is always called regardless of whether `FillDataRequest` failed. When `FillDataRequest` catches an exception and responds with no data, AVFoundation is told the request succeeded (not errored). The correct behaviour is to call `loadingRequest.FinishLoadingWithError(NSError)` on failure so AVFoundation can raise a `MediaFailed` event instead of silently hanging."
+    },
+    {
+      "id": "tp-3-correctness",
+      "severity": "blocking",
+      "text": "`NotSupportedException` is thrown synchronously from `PlatformUpdateSource`. The call chain is: `MapSource` → `MediaManager.UpdateSource()` → `PlatformUpdateSource()`. `MapSource` discards the returned `ValueTask` without awaiting it, but because the Tizen implementation throws synchronously (not via a faulted task), the exception propagates up through the call stack as an unhandled exception, crashing the app. Signalling the failure via `MediaElement.MediaFailed()` or returning a faulted `ValueTask` would be more consistent with the other platforms."
+    },
+    {
+      "id": "tp-4-correctness",
+      "severity": "minor",
+      "text": "`GetStreamContentType` only recognises MP4/MOV/QuickTime and defaults to `\"public.mpeg-4\"` (a video container UTI) for everything else. A stream containing MP3, AAC, WAV, or any other format will receive `\"public.mpeg-4\"` as its content type. AVFoundation will then reject or misparse the data, causing silent playback failure for all non-MP4 audio streams. The shared `StreamExtensions.GetMimeType` already detects many more formats but is not used here."
+    },
+    {
+      "id": "tp-5-correctness",
+      "severity": "minor",
+      "text": "`CreateDataSource()` returns a new `StreamDataSource` every time it is called, but all instances wrap the same underlying `stream`. ExoPlayer's `ProgressiveMediaSource` can call `CreateDataSource()` more than once (e.g. for parallel or retry reads). Two concurrent `StreamDataSource` instances will race on `stream.Position` and `stream.Seek`, corrupting reads. The factory should either enforce single-instance use or create an independent stream per call (e.g. via a stream-provider callback)."
+    },
+    {
+      "id": "tp-10-correctness",
+      "severity": "blocking",
+      "text": "When the underlying stream is non-seekable (`length == C.LengthUnset`) and the `dataSpec.Length` is also `C.LengthUnset`, the conditional expression assigns `C.LengthUnset` (-1) to `bytesRemaining`. The very next check (`if (bytesRemaining < 0)`) will then throw `ArgumentOutOfRangeException`, breaking the legitimate case of \"read until end of stream\" for non-seekable sources. The negative-position guard should be performed on `dataSpec.Position` against `length`, not on the resulting `bytesRemaining`."
+    },
+    {
+      "id": "tp-11-correctness",
+      "severity": "minor",
+      "text": "`Stream.Read(buffer, 0, requestedLength)` is not guaranteed to return all requested bytes in a single call (this is especially true for network-backed streams or any non-MemoryStream). The current implementation responds with only the bytes returned by a single `Read` and then calls `loadingRequest.FinishLoading()` in the caller, so AVFoundation will receive truncated chunks. The read should loop until either `requestedLength` bytes have been read or end of stream is reached before calling `Respond`. Additionally, allocating `new byte[requestedLength]` for potentially large requests is wasteful — consider reading in fixed-size buffers and calling `Respond` multiple times."
+    },
+    {
+      "id": "tp-14-correctness",
+      "severity": "minor",
+      "text": "For non-seekable streams this reports a `ContentLength` of `0`, which tells AVFoundation the resource is empty even when there is data available. That makes non-seekable stream playback fail or end immediately; avoid setting a false zero length or require/validate seekable streams instead."
+    },
+    {
+      "id": "tp-15-correctness",
+      "severity": "minor",
+      "text": "`Stream.Read` is allowed to return fewer bytes than requested, but this loader responds with only a single read and then the request is finished by the caller. Partial reads will truncate the requested range and can cause playback stalls or corrupted media; keep reading/responding until the requested length is satisfied or EOF is reached."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "rb-catalog-75",
+  "split": "holdout",
+  "source": "reviewbench",
+  "source_key": "Imageomics_catalog_75-a8a7cdc7",
+  "repo": "Imageomics/catalog",
+  "ref": "a8a7cdc7b0cbac54485dbcf53cf6ae6ddbecfe92",
+  "commit": "a8a7cdc7b0cbac54485dbcf53cf6ae6ddbecfe92",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .js project. Get the diff with `git diff 5f10688a0afd8b2891d6cec32f0c3bfca9a7aaed HEAD`. Title: Add ADDITIONAL_HF_REPOS config option for Hugging Face repos outside the org. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-correctness",
+      "severity": "minor",
+      "text": "Throws if ADDITIONAL_HF_REPOS is absent from config (Array.isArray(undefined) === false). This is a breaking change for any existing config.yaml that doesn't include the new field. The PR description says the parameter is optional and defaults to [], but the script enforces its presence. The fix is to treat a missing key as an empty array before the validation check (e.g. rawConfig.ADDITIONAL_HF_REPOS ??= []) rather than throwing."
+    },
+    {
+      "id": "tp-2-correctness",
+      "severity": "blocking",
+      "text": "Validation treats a missing ADDITIONAL_HF_REPOS as a fatal config error, appending it to the missing list and throwing. For any existing deployment whose config.yaml predates this PR, the page will render the configuration error banner and fall back to the hardcoded defaults instead of simply treating the absent key as []. The PR advertises this as an optional field; the implementation should default it to [] rather than reject its absence."
+    },
+    {
+      "id": "tp-9-security",
+      "severity": "minor",
+      "text": "Merging outside-org Hugging Face items here means repository metadata controlled by external owners flows into the existing card renderer, where descriptions and tag labels are interpolated into `innerHTML` without escaping. An included third-party HF repo can later change its card metadata to inject markup/script into the catalog; sanitize these fields before rendering or only render them via text content."
+    }
+  ]
+}

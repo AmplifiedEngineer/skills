@@ -1,0 +1,15 @@
+{
+  "id": "playbook-1692",
+  "split": "holdout",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1692/head",
+  "commit": "3e64c27bee2ef02ba698a4972be22aef1fbb0a3b",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff bf37ae4d7f314d4452c22a35267109511145461d HEAD`. It moves the project to a new GitHub org and verifies release attestations under both org names. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "attest-timeout-skips-other-org-names",
+      "severity": "blocking",
+      "text": "A timeout on the first org name returns at once instead of trying the next, so a release attested under the old org name cannot be verified when the new name's call is slow."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "playbook-898",
+  "split": "tune",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/898/head",
+  "commit": "e1e22b792c9336d72f0cf364f2f53d043998a01b",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff e1d362482d1c6b9cbef9b77487cf44a4c5535de3 HEAD`. It adds a `code context` command with a --max-tokens budget. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "max-tokens-ignores-headers-and-omitted-list",
+      "severity": "blocking",
+      "text": "--max-tokens budgets the snippet text only, but the text output also prints a header per snippet and an omitted list, so the output exceeds the cap."
+    }
+  ]
+}

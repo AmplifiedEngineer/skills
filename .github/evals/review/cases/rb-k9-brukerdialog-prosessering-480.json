@@ -1,0 +1,22 @@
+{
+  "id": "rb-k9-brukerdialog-prosessering-480",
+  "split": "holdout",
+  "source": "reviewbench",
+  "source_key": "navikt_k9-brukerdialog-prosessering_480-f828e2d8",
+  "repo": "navikt/k9-brukerdialog-prosessering",
+  "ref": "f828e2d8d4c5ace8c7aa70389e52c7e61761c14d",
+  "commit": "f828e2d8d4c5ace8c7aa70389e52c7e61761c14d",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a .kt project. Get the diff with `git diff f396016e3e4517af046049e08b2433f9149423b0 HEAD`. Title: Aktivitetspenger inntektsrapportering. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "tp-1-correctness",
+      "severity": "blocking",
+      "text": "AKTIVITETSPENGER_INNTEKTRAPPORTERING uses 'FIXME_AVP_INNTEKT_BREVKODE' as the brevkode. This placeholder will be sent to Dokarkiv (journalpost archive) in production, causing journalføring to either fail or produce invalid/misclassified archival records for every income report submitted."
+    },
+    {
+      "id": "tp-2-reliability",
+      "severity": "minor",
+      "text": "markerOppgaveSomLøst is called after innsendingService.registrer. If markerOppgaveSomLøst throws (e.g. network failure), the income report has already been published to Kafka and will be fully processed (journalfiled, etc.), but the oppgave remains unsolved. Additionally, the duplicate-check cache key was stored before registrer, so the user cannot retry — they receive a 500 and the system is left in a permanently inconsistent state: task unsolved, data processed."
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "playbook-1674",
+  "split": "tune",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1674/head",
+  "commit": "ad1537759cf87f00e37cd2cecf950190d3aa59f1",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff c8a9b4caee3bf0b5ea2548afb056af5ac73f6ceb HEAD`. It labels each usage event by the account in effect at its time. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "reset-drops-manual-account-assignments",
+      "severity": "blocking",
+      "text": "A usage reset deletes the events but keeps the account moves, and re-ingest labels events only from session spans or the default account, so a manual account assign is lost."
+    }
+  ]
+}

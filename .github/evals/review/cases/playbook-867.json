@@ -1,0 +1,25 @@
+{
+  "id": "playbook-867",
+  "split": "tune",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/867/head",
+  "commit": "9aa3139328499068212121344f7edf4247be0ff3",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff ea20c1caa64574b5364a93ce15782e128ecdcd5b HEAD`. It puts time limits on subprocess calls and guards stdin reads. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "learn-timeout-reads-as-empty-history",
+      "severity": "blocking",
+      "text": "A timed out git scan in learn collect returns an empty string, so a timeout looks like a repo with no history and nothing reports it."
+    },
+    {
+      "id": "fifteen-second-git-limit-cuts-off-large-repos",
+      "severity": "blocking",
+      "text": "git add -A, switch, fetch and worktree add share a 15 second limit, so large repos time out in normal use."
+    },
+    {
+      "id": "attest-timeout-aborts-lenient-update",
+      "severity": "minor",
+      "text": "A timed out gh attestation verify is a hard error even in lenient update mode, where other gaps only warn."
+    }
+  ]
+}

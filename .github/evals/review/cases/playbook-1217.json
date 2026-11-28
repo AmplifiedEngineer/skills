@@ -1,0 +1,15 @@
+{
+  "id": "playbook-1217",
+  "split": "holdout",
+  "repo": "AmplifiedEngineer/playbook",
+  "ref": "refs/pull/1217/head",
+  "commit": "90750aa7a53428ba0b37e9c9a68fb010847a763e",
+  "prompt": "Review this change before it merges. The change is the last commit of this checkout, a Rust workspace. Get the diff with `git diff da5bfdfd3251b7b229e549d137d94e8c64178313 HEAD`. It removes the old collector service on upgrade. Review only this checkout at HEAD. Do not build or run tests. Reply with the full review report.",
+  "expected": [
+    {
+      "id": "migration-deletes-service-file-playbook-did-not-write",
+      "severity": "blocking",
+      "text": "Removal runs for every service path and deletes the file without checking that playbook wrote it, so a user's own file at that path is removed."
+    }
+  ]
+}
