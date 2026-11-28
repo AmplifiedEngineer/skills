@@ -1,0 +1,7 @@
+interface:
+  display_name: "Atlassian"
+  short_description: "Reach Jira, Confluence and Teamwork Graph through MCP, acli or twg"
+  default_prompt: "Use $atlassian to read this Jira work item or Confluence page with the first route that works."
+
+policy:
+  allow_implicit_invocation: true
